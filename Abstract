@@ -1,4 +1,0 @@
-近年來，人造神經網路(Artificial neural network; ANN)在各領域中有廣泛的運用，例如: 影像辨識、影音辨識，以及自然語言處理(Natural Language Processing; NLP)。
-過去大部分的人造神經網路架構，都是根據經驗手動尋找、調整，所需的資源、時間過多，研究如何自動搜尋神經網路架構(Neural Architecture Search; NAS)的重要性因而上升。
-但以往的神經網路架構搜尋演算法，在尋找的過程中，必須訓練一部分神經網路後才能得知架構的好壞，耗費許多時間、資源，故近年許多Traning-free的神經架構搜尋演算法不斷被提出，Traning-free演算法使用Training-Free Score Function評價神經網路架構，而不需訓練，相較以往，Traning-free的演算法更迅速、耗費的資源更少。
-然而Training-Free Score Function與神經網路訓練後的準確度相關性不高，搜尋的結果欠佳，本研究會結合三種不同的Training-Free Score Function，搭配基因演算法(Genetic Algorithm; GA)搜尋架構，並在NAS-Bench-101, NAS-Bench-201等可復現的架構集驗證結果。預計提出一個速度、準確度兼顧的神經網路架構搜尋演算法。
