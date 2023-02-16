@@ -18,7 +18,7 @@
 \setlength{\parindent}{12pt}
 
 \title{zero-shot nas}
-\author{謝承翰}
+\author{Hsieh Cheng-Han}
 \date{2023}
 
 \begin{document}
@@ -26,13 +26,12 @@
 
 \maketitle
 
-\section{摘要}
-近年來，人造神經網路(Artificial neural network; ANN)在各領域中有廣泛的運用，例如: 影像辨識、影音辨識，以及自然語言處理(Natural Language Processing; NLP)。\par
-過去大部分的人造神經網路架構，都是根據經驗手動尋找、調整，所需的資源、時間過多，研究如何自動搜尋神經網路架構(Neural Architecture Search; NAS)的重要性因而上升。\par
-但以往的神經網路架構搜尋演算法，在尋找的過程中，必須訓練一部分神經網路後才能得知架構的好壞，耗費許多時間、資源，故近年許多Traning-free的神經架構搜尋演算法不斷被提出，Traning-free演算法使用Training-Free Score Function評價神經網路架構，而不需訓練，相較以往，Traning-free的演算法更迅速、耗費的資源更少。\par
-然而Training-Free Score Function與神經網路訓練後的準確度相關性不高，搜尋的結果欠佳，本研究會結合三種不同的Training-Free Score Function，搭配基因演算法(Genetic Algorithm; GA)搜尋架構，並在NAS-Bench-101, NAS-Bench-201等可復現的架構集驗證結果。預計提出一個速度、準確度兼顧的神經網路架構搜尋演算法。\par
+\section{Abstract}
+In the last few years, Artificial Neural Network (ANN) has been used in a variety of fields, i.e., image classification, speech recognition, and Natural Language Processing (NLP).\par
+Most of the architectures of ANN are hand-designed by experts, consuming lots of time and resource. This problem induce the researches of Neural Architecture Search (NAS) algorithm, providing an automated, fast, and accurate approach to build a good architecture of ANN.\par
+However, the NAS algorithm in the past is time-consuming, which is caused by the fact that, during the searching, a candidate of architectures must be trained to know how the performance of this architecture. Thus, plenty of training-free NAS algorithm are developed in recent years. By using training-free score function to evaluate an architecture, there's no requirement for training architectures anymore. Compare with training-need NAS algorithm, training-free NAS algorithm tend to be faster and consuming less resource.\par
+Neverthesless, the low correlation between single Training-Free Score Function and the performance of an architecture limits the performance of training-free NAS algorithms. To mitigate this problem, we propose a genetic-based training-free NAS algorithm with hybrid training-free score function, which combines three highly heterogeneous training-free score functions to evaluate an architecture. To evaluate the performance of the proposed algorithm, we compared it with several NAS algorithms, including weight-sharing methods, non-weight-sharing methods, and NASWOT. We expect develope a faster and more accurate training-free NAS algorithm.\par
 
-\section{參考文獻}
 \begin{thebibliography}{9}
 \end{thebibliography}
 
