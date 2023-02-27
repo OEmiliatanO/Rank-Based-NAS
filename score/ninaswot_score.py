@@ -26,8 +26,7 @@ def get_batch_jacobian(net, x, target, device, args=None):
     jacob = x.grad.detach()
     return jacob, target.detach(), y.detach(), out.detach()
 
-def score_nas(network, train_loader, device, args):
-    #try:
+def score_naswot(network, train_loader, device, args):
     if args.dropout:
         add_dropout(network, args.sigma)
     if args.init != '':
@@ -54,7 +53,6 @@ def score_nas(network, train_loader, device, args):
                 
         for name, module in network.named_modules():    
             if 'ReLU' in str(type(module)):    
-                #hooks[name] = module.register_forward_hook(counting_hook)    
                 module.register_forward_hook(counting_forward_hook)    
                 module.register_backward_hook(counting_backward_hook)    
 
@@ -75,11 +73,9 @@ def score_nas(network, train_loader, device, args):
         s.append(get_score_func(args.score)(jacobs, labels))
     
     return np.mean(s)
-    #except Exception as e:
-    #    print(e)
-    #    return np.nan
 
-def score_gu(network, train_loader, device, args):
+@torch.no_grad()
+def score_ni(network, train_loader, device, args):
     network = network.to(device)
     data_iter = iter(train_loader)
     x, target = next(data_iter)
@@ -95,13 +91,13 @@ def score_gu(network, train_loader, device, args):
     return -np.sum(np.square(o-o_))
 
 def ninaswot_score(network, train_loader, device, stds, means, args):
-    scoreNAS = score_nas(network, train_loader, device, args)
-    scoreGU  = score_gu(network, train_loader, device, args)
-    std_of_nas = stds["nas"]
-    mean_of_nas = means["nas"]
+    scoreNAS = score_naswot(network, train_loader, device, args)
+    scoreGU  = score_ni(network, train_loader, device, args)
+    std_of_nas = stds["naswot"]
+    mean_of_nas = means["naswot"]
     stand_score_nas = (scoreNAS - mean_of_nas) / std_of_nas
-    std_of_gu = stds["gu"]
-    mean_of_gu = means["gu"]
+    std_of_gu = stds["ni"]
+    mean_of_gu = means["ni"]
     stand_score_gu = (scoreGU - mean_of_gu) / std_of_gu
     return stand_score_nas*2+stand_score_gu
 
