@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch import nn
 
-def init_net_gu(net, device):
+def init_net_gaussian(net, device):
     with torch.no_grad():
         for m in net.modules():
             if isinstance(m, nn.Conv2d):
@@ -33,13 +33,9 @@ def entropy_score(network, train_loader, device):
             if isinstance(inp, tuple):
                 inp = inp[0]
             #print(f"inp.size() = {inp.size()}")
-            #for i in range(inp.size()[0]):
-            #    for j in range(inp.size()[1]):
-            #        network.features.append(torch.std(inp[i][j]))
             #print(f"torch.mean(inp) = {torch.mean(inp)}")
             #print(f"torch.std(inp)  = {torch.std(inp)}")
             network.features.append(torch.sum(torch.abs(inp), dim = [1,2,3]))
-            #print(f"network.features[-1].size() = {network.features[-1].size()}")
         except:
             pass
 
@@ -57,15 +53,12 @@ def entropy_score(network, train_loader, device):
     x, target = x.to(device), target.to(device)
 
     noise = x.new(x.size()).normal_(0, 1).to(device)
-    #print(f"x.shape = {x.shape}")
     jacobs, labels, y, out = get_batch_jacobian(network, noise, target, device, args)
     out, _ = network(noise)
     out = out.to(device).detach()
     scores = 0
     for i in range(len(network.features)):
         scores += torch.log(torch.mean(network.features[i]))
-        #scores += torch.log(torch.std(network.features[i]))
-        #print(f"scores = {scores}")
     del network.features
     print(f"scores = {scores}")
     return scores
