@@ -22,7 +22,7 @@ def init_net_gaussian(net, device):
                     nn.init.zeros_(m.bias)
             else:
                 continue
-    return net.to(device)
+    return net
 
 def entropy_score(network, train_loader, device):
     network.features = []
@@ -60,6 +60,5 @@ def entropy_score(network, train_loader, device):
     for i in range(len(network.features)):
         scores += torch.log(torch.mean(network.features[i]))
     del network.features
-    print(f"scores = {scores}")
     return scores
 

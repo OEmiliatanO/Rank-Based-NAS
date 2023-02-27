@@ -1,8 +1,7 @@
 import numpy as np
 import torch
 
-def ntk_score(xloader, network, recalbn=0, train_mode=False, num_batch=-1):
-    device = torch.cuda.current_device()
+def ntk_score(network, train_loader, device, recalbn=0, train_mode=False, num_batch=-1):
     ntk = []
     if train_mode:
         network.train()
@@ -10,13 +9,13 @@ def ntk_score(xloader, network, recalbn=0, train_mode=False, num_batch=-1):
         network.eval()
     ######
     grads = []
-    for i, (inputs, targets) in enumerate(xloader):
+    for i, (x, targets) in enumerate(train_loader):
         if num_batch > 0 and i >= num_batch: break
-        inputs = inputs.cuda(device=device, non_blocking=True)
+        x = x.to(device)
             
         network.zero_grad()
-        inputs_ = inputs.clone().cuda(device=device, non_blocking=True)
-        logit = network(inputs_)
+        x_ = x.clone().to(device)
+        logit = network(x_)
         if isinstance(logit, tuple):
             logit = logit[1]  # 201 networks: return features and logits
         for _idx in range(len(inputs_)):
