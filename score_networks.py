@@ -58,7 +58,6 @@ def get_batch_jacobian(net, x, target, device, args=None):
     return jacob, target.detach(), y.detach(), out.detach()
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(f"device = {device}")
 savedataset = args.dataset
 dataset = 'fake' if 'fake' in args.dataset else args.dataset
 args.dataset = args.dataset.replace('fake', '')
@@ -90,31 +89,10 @@ try:
 except:
     accs = np.zeros(len(searchspace))
 
-"""
-scores_nas = []
-scores_gu = []
-arches = np.random.randint(0, 15625, 100)
-for arch in arches:
-    uid = searchspace[arch]
-    network = searchspace.get_network(uid)
-    scores_nas.append(net_score.score_nas(network, train_loader, device, args))
-    scores_gu.append(net_score.score_gu(network, train_loader, device, args))
-
-print("mean, std is calculated.")
-
-scores_nas = np.array(scores_nas)
-scores_gu = np.array(scores_gu)
-calstd = lambda x: np.ma.masked_invalid(x).std()
-calmean = lambda x: np.ma.masked_invalid(x).mean()
-stds = {"nas": calstd(scores_nas), "gu": calstd(scores_gu)}
-means = {"nas": calmean(scores_nas), "gu": calmean(scores_gu)}
-"""
-
 means_ni , stds_ni  = get_mean_std_ni(searchspace, n)
 means_nas, stds_nas = get_mean_std_nas(searchspace, n)
 means_ent, stds_ent = get_mean_std_ent(searchspace, n)
 means_ntk, stds_ntk = get_mean_std_ntk(searchspace, n)
-
 
 for i, (uid, network) in enumerate(searchspace):
     try:
