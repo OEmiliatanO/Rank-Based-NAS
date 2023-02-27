@@ -83,25 +83,25 @@ else:
 scores_ninaswot = np.zeros(len(searchspace))
 scores_entropy  = np.zeros(len(searchspace))
 scores_ntk      = np.zeros(len(searchspace))
+scores          = np.zeros(len(searchspace))
 
 try:
     accs = np.load(accfilename + '.npy')
 except:
     accs = np.zeros(len(searchspace))
 
-means_ni , stds_ni  = get_mean_std_ni(searchspace, n)
-means_nas, stds_nas = get_mean_std_nas(searchspace, n)
-means_ent, stds_ent = get_mean_std_ent(searchspace, n)
-means_ntk, stds_ntk = get_mean_std_ntk(searchspace, n)
+means, stds = score.get_mean_std(searchspace, 100, train_loader, device, args)
 
 for i, (uid, network) in enumerate(searchspace):
     try:
-        #scores_ninaswot[i] = score_ninaswot(network, train_loader, device, {"nas": stds_nas, "ni": stds_ni}, {"nas": means_nas, "ni": means_ni}, args)
-        #scores_ntk[i]      = score_ntk(network, train_loader, device, {"nas": stds_ntk, "ni": stds_ntk}, args)
-        #network = init_net_gu(network, device)
-        #scores_entropy[i]  = score_entropy(network, train_loader, device, {"nas": stds_ent, "ni": stds_ent}, args)
-        network = init_net_gu(network, device)
-        scores[i] = entropy(network, train_loader, device)
+        #scores_ninaswot[i] = score_ninaswot(network, train_loader, device, stds, means, args)
+        standardize = lambda x, m, s: (x-m)/s
+        scores_ntk[i]      = standardize(score_ntk(network, train_loader, device, {"nas": stds_ntk, "ni": stds_ntk}, args), means["ntk"], stds["ntk"])
+        #network = init_net_gaussian(network, device)
+        #scores_entropy[i]  = entropy_score(network, train_loader, device, {"nas": stds_ent, "ni": stds_ent}, args)
+        
+        scores[i] = scores_ntk[i]
+
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
         accs_ = accs[~np.isnan(scores)]
         scores_ = scores[~np.isnan(scores)]
