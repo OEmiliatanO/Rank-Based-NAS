@@ -1,6 +1,6 @@
 from utils import add_dropout, init_network
 from .ntk_score import ntk_score
-from .ninaswot_score import ninaswot_score, ni_score, nas_score, get_batch_jacobian
+from .ninaswot_score import ninaswot_score, ni_score, naswot_score, get_batch_jacobian
 from .entropy_score import entropy_score, init_net_gaussian
 
 def get_mean_std(searchspace, sample_n, train_loader, device, args):
@@ -13,10 +13,10 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
         uid = searchspace[arch]
         network = searchspace.get_network(uid)
 
-        scores_naswot.append(score_naswot(network, train_loader, device, args))
-        scores_ni.append(score_ni(network, train_loader, device, args))
+        scores_naswot.append(naswot_score(network, train_loader, device, args))
+        scores_ni.append(ni_score(network, train_loader, device, args))
         scores_ntk.append(ntk_score(network, train_loader, device))
-        network = init_net_gaussian(network)
+        network = init_net_gaussian(network, device)
         scores_entropy.append(entropy_score(network, train_loader, device))
 
     scores_naswot  = np.array(scores_naswot)
