@@ -26,7 +26,7 @@ def get_batch_jacobian(net, x, target, device, args=None):
     jacob = x.grad.detach()
     return jacob, target.detach(), y.detach(), out.detach()
 
-def score_naswot(network, train_loader, device, args):
+def naswot_score(network, train_loader, device, args):
     if args.dropout:
         add_dropout(network, args.sigma)
     if args.init != '':
@@ -75,7 +75,7 @@ def score_naswot(network, train_loader, device, args):
     return np.mean(s)
 
 @torch.no_grad()
-def score_ni(network, train_loader, device, args):
+def ni_score(network, train_loader, device, args):
     network = network.to(device)
     data_iter = iter(train_loader)
     x, target = next(data_iter)

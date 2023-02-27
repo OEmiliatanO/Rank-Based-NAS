@@ -1,6 +1,6 @@
 from utils import add_dropout, init_network
 from .ntk_score import ntk_score
-from .ninaswot_score import ninaswot_score, score_ni, score_nas, get_batch_jacobian
+from .ninaswot_score import ninaswot_score, ni_score, nas_score, get_batch_jacobian
 from .entropy_score import entropy_score, init_net_gaussian
 
 def get_mean_std(searchspace, sample_n, train_loader, device, args):
@@ -27,4 +27,5 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
     calmean = lambda x: np.ma.masked_invalid(x).mean()
     stds  = {"naswot": calstd(scores_naswot), "ni": calstd(scores_ni), "entropy": calstd(scores_entropy), "ntk": calstd(scores_ntk)}
     means = {"naswot": calmean(scores_naswot), "ni": calmean(scores_ni), "entropy": calmean(scores_entropy), "ntk": calmean(scores_ntk)}
+
     return stds, means
