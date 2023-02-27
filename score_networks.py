@@ -5,12 +5,14 @@ import random
 import numpy as np
 import torch
 import os
+import time
+from tqdm import tqdm, trange
 from torch import nn
-from scores import get_score_func
 from scipy import stats
 from pycls.models.nas.nas import Cell
 from utils import add_dropout, init_network
-import score
+from statistics import mean
+from score import *
 
 parser = argparse.ArgumentParser(description='NAS Without Training')
 parser.add_argument('--data_loc', default='../cifardata/', type=str, help='dataset folder')
@@ -48,15 +50,6 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
-
-def get_batch_jacobian(net, x, target, device, args=None):
-    net.zero_grad()
-    x.requires_grad_(True)
-    y, out = net(x)
-    y.backward(torch.ones_like(y))
-    jacob = x.grad.detach()
-    return jacob, target.detach(), y.detach(), out.detach()
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 savedataset = args.dataset
 dataset = 'fake' if 'fake' in args.dataset else args.dataset
@@ -90,24 +83,29 @@ try:
 except:
     accs = np.zeros(len(searchspace))
 
-means, stds = score.get_mean_std(searchspace, 100, train_loader, device, args)
+#means, stds = score.get_mean_std(searchspace, 100, train_loader, device, args)
+means, stds = {"ntk": 0}, {"ntk": 1}
 
+nruns = tqdm(total = len(searchspace))
+times = []
 for i, (uid, network) in enumerate(searchspace):
+    st = time.time()
     try:
-        #scores_ninaswot[i] = score_ninaswot(network, train_loader, device, stds, means, args)
+        #scores_ninaswot[i] = ninaswot_score(network, train_loader, device, stds, means, args)
         standardize = lambda x, m, s: (x-m)/s
-        scores_ntk[i]      = standardize(score_ntk(network, train_loader, device, {"nas": stds_ntk, "ni": stds_ntk}, args), means["ntk"], stds["ntk"])
+        scores_ntk[i] = standardize(ntk_score(network, train_loader, device), means["ntk"], stds["ntk"])
         #network = init_net_gaussian(network, device)
-        #scores_entropy[i]  = entropy_score(network, train_loader, device, {"nas": stds_ent, "ni": stds_ent}, args)
-        
+        #scores_entropy[i]  = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
+
         scores[i] = scores_ntk[i]
+        #print(f"score={scores[i]}")
 
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
         accs_ = accs[~np.isnan(scores)]
         scores_ = scores[~np.isnan(scores)]
         numnan = np.isnan(scores).sum()
         tau, p = stats.kendalltau(accs_[:max(i-numnan, 1)], scores_[:max(i-numnan, 1)])
-        print(f'correlation = {tau}')
+        #print(f'correlation = {tau}')
         if i % 1000 == 0:
             np.save(filename, scores)
             np.save(accfilename, accs)
@@ -116,5 +114,9 @@ for i, (uid, network) in enumerate(searchspace):
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
         scores[i] = np.nan
         break
+    times.append(time.time()-st)
+    nruns.set_description(f"average elapse={mean(times):.2f}, correlation={tau:.2f}, last score={scores[i]:.2f}")
+    nruns.update(1)
+
 np.save(filename, scores)
 np.save(accfilename, accs)

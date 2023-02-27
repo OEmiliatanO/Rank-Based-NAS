@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch import nn
+from .ninaswot_score import get_batch_jacobian
 
 def init_net_gaussian(net, device):
     with torch.no_grad():
@@ -24,7 +25,7 @@ def init_net_gaussian(net, device):
                 continue
     return net
 
-def entropy_score(network, train_loader, device):
+def entropy_score(network, train_loader, device, args):
     network.features = []
     def forward_hook(module, inp, out):
         try:
@@ -58,7 +59,7 @@ def entropy_score(network, train_loader, device):
     out = out.to(device).detach()
     scores = 0
     for i in range(len(network.features)):
-        scores += torch.log(torch.mean(network.features[i]))
+        scores += torch.log(1+torch.mean(network.features[i]))
     del network.features
     return scores
 
