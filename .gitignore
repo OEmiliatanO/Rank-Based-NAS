@@ -4,6 +4,7 @@
 *.synctex.gz
 NAS-Bench-201.pth
 nasbench_full.tfrecord
+nasbench/
 nds_data/
 __pycache__/
 nasbench/
