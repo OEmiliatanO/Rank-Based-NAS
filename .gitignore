@@ -7,3 +7,4 @@ nasbench_full.tfrecord
 nds_data/
 __pycache__/
 nasbench/
+results/
