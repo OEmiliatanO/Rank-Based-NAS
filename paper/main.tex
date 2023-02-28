@@ -1,0 +1,61 @@
+\documentclass[twocolumn,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{CJKutf8}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{indentfirst}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    }
+\usepackage[a4paper, top = 2.5cm, bottom = 2.5cm, left = 3.17cm, right = 3.17cm]{geometry}
+\setlength{\parindent}{12pt}
+
+\title{GA-based Training-Free NAS Algorithm with Hybrid Score Function}
+\author{Hsieh Cheng-Han}
+\date{2023}
+
+\begin{document}
+\begin{CJK*}{UTF8}{bsmi}
+
+\maketitle
+
+\section{Abstract}
+
+    Most neural architecture search methods (NASs) are time-consuming caused by 
+    the fact that, during the searching, a candidate architectures must be 
+    trained to evaluate how good of this architecture. This is why some of 
+    training-free NAS algorithms have been proposed in recent years.
+
+    Although the training-free NASs are typically faster than training-based 
+    NAS method, however, the correlation between score value and the result 
+    of an architecture is not well enough in most cases.
+    
+    To address this problem, we propose a genetic-based training-free NAS 
+    algorithm with hybrid training-free score function, which combines three 
+    highly heterogeneous training-free score functions to evaluate an architecture. 
+    In this method, the genetic algorithm plays a role to guide the searches 
+    of NAS algorithm while the hybrid training-free score function plays the 
+    role to evaluate a new candidate architecture during the convergencr process 
+    of GA. More precisely, the first score function is noise immunity for 
+    neural architecture search without search (NINASWOT), as an evaluation of 
+    pattern recognition, second one is Maximum-Entropy Detection (MAE-DET), 
+    as an evaluation of the entropy of an architecture and the third one is 
+    condition number of neural tangent kernel (NTK), as an evaluation of 
+    the speed of converge.
+    
+    To evaluate the performance of the proposed algorithm, we compared it 
+    with several NAS algorithms, including weight-sharing methods, 
+    non-weight-sharing methods, and neural architecture search without training (NASWOT). 
+    We expect develope a faster and more accurate training-free NAS algorithm.
+
+\begin{thebibliography}{9}
+\end{thebibliography}
+
+
+\end{CJK*}
+\end{document}
