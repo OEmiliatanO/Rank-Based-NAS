@@ -1,7 +1,4 @@
-# Neural Architecture Search Without Training 
-
-:warning: Note: this repository has been updated to reflect the [second version](https://arxiv.org/abs/2006.04647) of the paper 
-For the [original version of the paper](https://arxiv.org/abs/2006.04647v1), refer to the tag [v1.0](https://github.com/BayesWatch/nas-without-training/releases/tag/v1.0).:warning:
+# Genetic Based Neural Architecture Search with Hybrid Score Function
 
 ## Usage 
 
@@ -27,15 +24,7 @@ Reproduce all of the results by running
 
 The code is licensed under the MIT licence.
 
-## Citing us
+## Acknowledgement
+- code based from NASWOT
+- code based from NAS-bench-201
 
-If you use or build on our work, please consider citing us:
-
-```bibtex
-@inproceedings{mellor2021neural,
-    title={Neural Architecture Search without Training},
-    author={Joseph Mellor and Jack Turner and Amos Storkey and Elliot J. Crowley},
-    year={2021},
-    booktitle={International Conference on Machine Learning}
-}
-```
