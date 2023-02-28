@@ -51,6 +51,7 @@ np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(f"device is {device}")
 savedataset = args.dataset
 dataset = 'fake' if 'fake' in args.dataset else args.dataset
 args.dataset = args.dataset.replace('fake', '')
@@ -93,19 +94,17 @@ for i, (uid, network) in enumerate(searchspace):
     try:
         #scores_ninaswot[i] = ninaswot_score(network, train_loader, device, stds, means, args)
         standardize = lambda x, m, s: (x-m)/s
-        scores_ntk[i] = standardize(ntk_score(network, train_loader, device), means["ntk"], stds["ntk"])
+        scores_ntk[i] = standardize(ntk_score(network, train_loader, device, train_mode=args.trainval), means["ntk"], stds["ntk"])
         #network = init_net_gaussian(network, device)
         #scores_entropy[i]  = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
 
         scores[i] = scores_ntk[i]
-        #print(f"score={scores[i]}")
 
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
         accs_ = accs[~np.isnan(scores)]
         scores_ = scores[~np.isnan(scores)]
         numnan = np.isnan(scores).sum()
         tau, p = stats.kendalltau(accs_[:max(i-numnan, 1)], scores_[:max(i-numnan, 1)])
-        #print(f'correlation = {tau}')
         if i % 1000 == 0:
             np.save(filename, scores)
             np.save(accfilename, accs)
