@@ -1,6 +1,9 @@
 1. introduction
 automated machine learning (AutoML) is now a popular field in computer science, because the ultimate goal, automating the machine learning process, which reduce the human efforts and computational resource.
-to achieve the goal, lots of researches proposed method on different stage of AutoML, e.g., data preparation, data preprocess, hyperparameter optimization, and neural architecture search (NAS). among them, NAS has recently gain a big amount of attention. 
+
+to achieve the goal, lots of researches proposed method for different stage of AutoML, e.g., data preprocess[], hyperparameter optimization[], and neural architecture search (NAS). among them, NAS has recently gain a big amount of attention. 
+
+NAS, as its name imply, is to search a "good" neural architecture. however it's hard to define a "good" neural architecture, since the problems human want to solve are diverse nowadays. a good neural architecture for one problem may not suitable for another problem.
 
 training-free NAS is main stream
 
