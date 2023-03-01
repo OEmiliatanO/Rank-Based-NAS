@@ -27,6 +27,7 @@ def get_batch_jacobian(net, x, target, device, args=None):
     return jacob, target.detach(), y.detach(), out.detach()
 
 def naswot_score(network, train_loader, device, args):
+    #print(f"before naswot cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
     if args.dropout:
         add_dropout(network, args.sigma)
     if args.init != '':
@@ -50,11 +51,12 @@ def naswot_score(network, train_loader, device, args):
         def counting_backward_hook(module, inp, out):    
             module.visited_backwards = True    
 
-                
+        forward_handler  = []
+        backward_handler = []
         for name, module in network.named_modules():    
-            if 'ReLU' in str(type(module)):    
-                module.register_forward_hook(counting_forward_hook)    
-                module.register_backward_hook(counting_backward_hook)    
+            if 'ReLU' in str(type(module)):
+                forward_handler.append(module.register_forward_hook(counting_forward_hook))
+                backward_handler.append(module.register_backward_hook(counting_backward_hook))
 
     network = network.to(device)    
     s = []
@@ -72,10 +74,18 @@ def naswot_score(network, train_loader, device, args):
     else:
         s.append(get_score_func(args.score)(jacobs, labels))
     
+    #print(f"after naswot cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
+    for i in range(len(foward_handler)):
+        forward_handler[i].remove()
+        backward_handler[i].remove()
+
+    del network
+    torch.cuda.empty_cache()
     return np.mean(s)
 
 @torch.no_grad()
 def ni_score(network, train_loader, device, args):
+    #print(f"before ni cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
     network = network.to(device)
     data_iter = iter(train_loader)
     x, target = next(data_iter)
@@ -88,16 +98,19 @@ def ni_score(network, train_loader, device, args):
     o_, _ = network(x2)
     o = o.detach().cpu().numpy()
     o_ = o_.detach().cpu().numpy()
+    #print(f"after ni cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
+    del network
+    torch.cuda.empty_cache()
     return -np.sum(np.square(o-o_))
 
 def ninaswot_score(network, train_loader, device, stds, means, args):
-    scoreNAS = score_naswot(network, train_loader, device, args)
-    scoreGU  = score_ni(network, train_loader, device, args)
-    std_of_nas = stds["naswot"]
+    scoreNASWOT = naswot_score(network, train_loader, device, args)
+    scoreNI     = ni_score(network, train_loader, device, args)
+    std_of_nas  = stds["naswot"]
     mean_of_nas = means["naswot"]
-    stand_score_nas = (scoreNAS - mean_of_nas) / std_of_nas
-    std_of_gu = stds["ni"]
-    mean_of_gu = means["ni"]
-    stand_score_gu = (scoreGU - mean_of_gu) / std_of_gu
-    return stand_score_nas*2+stand_score_gu
+    stand_score_naswot = (scoreNASWOT - mean_of_nas) / std_of_nas
+    std_of_ni  = stds["ni"]
+    mean_of_ni = means["ni"]
+    stand_score_ni  = (scoreNI - mean_of_ni) / std_of_ni
+    return stand_score_naswot*2+stand_score_ni
 

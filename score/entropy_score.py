@@ -26,6 +26,7 @@ def init_net_gaussian(net, device):
     return net
 
 def entropy_score(network, train_loader, device, args):
+    #print(f"before entropy cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
     network.features = []
     def forward_hook(module, inp, out):
         try:
@@ -43,10 +44,12 @@ def entropy_score(network, train_loader, device, args):
     def backward_hook(module, inp, out):
         module.visitied_backwards = True
 
+    forward_handler  = []
+    backward_handler = []
     for name, module in network.named_modules():
         if 'ReLU' in str(type(module)):
-            module.register_forward_hook(forward_hook)
-            module.register_backward_hook(backward_hook)
+            forward_handler.append(module.register_forward_hook(forward_hook))
+            backward_handler.append(module.register_backward_hook(backward_hook))
 
     network = network.to(device)
     data_iter = iter(train_loader)
@@ -60,6 +63,11 @@ def entropy_score(network, train_loader, device, args):
     scores = 0
     for i in range(len(network.features)):
         scores += torch.log(1+torch.mean(network.features[i]))
+    for i in range(len(forward_handler)):
+        forward_handler[i].remove()
+        backward_handler[i].remove()
     del network.features
-    return scores
+    torch.cuda.empty_cache()
+    #print(f"after entropy cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
+    return scores.detach().cpu()
 
