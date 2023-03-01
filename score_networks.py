@@ -33,7 +33,7 @@ parser.add_argument('--trainval', action='store_true')
 parser.add_argument('--dropout', action='store_true')
 parser.add_argument('--dataset', default='cifar10', type=str)
 parser.add_argument('--maxofn', default=1, type=int, help='score is the max of this many evaluations of the network')
-parser.add_argument('--n_samples', default=100, type=int)
+parser.add_argument('--n_samples', default=15, type=int)
 parser.add_argument('--n_runs', default=500, type=int)
 parser.add_argument('--stem_out_channels', default=16, type=int, help='output channels of stem convolution (nasbench101)')
 parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of modules (nasbench101)')
@@ -84,21 +84,35 @@ try:
 except:
     accs = np.zeros(len(searchspace))
 
-#means, stds = score.get_mean_std(searchspace, 100, train_loader, device, args)
-means, stds = {"ntk": 0}, {"ntk": 1}
+print(f"Start calculate means and stds in {args.n_samples} samples")
+#print(f"now cuda memory allocated: {torch.cuda.memory_allocated(0)/1024/1024/1024}")
+means, stds = get_mean_std(searchspace, 15, train_loader, device, args)
+print(f"Done")
+print(f"means = {means}")
+print(f"stds  = {stds}")
+#means, stds = {"ntk": 0}, {"ntk": 1}
 
 nruns = tqdm(total = len(searchspace))
 times = []
+print(f"now score the whole arches")
 for i, (uid, network) in enumerate(searchspace):
     st = time.time()
     try:
-        #scores_ninaswot[i] = ninaswot_score(network, train_loader, device, stds, means, args)
         standardize = lambda x, m, s: (x-m)/s
+        
+        # ninaswot
+        # ninaswot has mean 0, and std sqrt5 (naswot*2+ni)
+        scores_ninaswot[i] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), 0, np.sqrt(5))
+        
+        # ntk
         scores_ntk[i] = standardize(ntk_score(network, train_loader, device, train_mode=args.trainval), means["ntk"], stds["ntk"])
-        #network = init_net_gaussian(network, device)
-        #scores_entropy[i]  = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
 
-        scores[i] = scores_ntk[i]
+        # entropy
+        network = init_net_gaussian(network, device)
+        scores_entropy[i]  = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
+
+        # (1,1,1) weight
+        scores[i] = scores_ninaswot[i] + scores_ntk[i] + scores_entropy[i]
 
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
         accs_ = accs[~np.isnan(scores)]
