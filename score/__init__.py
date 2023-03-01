@@ -4,6 +4,9 @@ from .ninaswot_score import ninaswot_score, ni_score, naswot_score, get_batch_ja
 from .entropy_score import entropy_score, init_net_gaussian
 import numpy as np
 
+def stadnardize(x, m, s):
+    return (x-m)/s
+
 def get_mean_std(searchspace, sample_n, train_loader, device, args):
     scores_naswot  = []
     scores_ni      = []
