@@ -12,7 +12,7 @@ from statistics import mean
 import time
 from utils import add_dropout
 from search import GA
-from score import net_score
+from score import *
 
 
 parser = argparse.ArgumentParser(description='NAS Without Training')
@@ -80,21 +80,9 @@ else:
     acc_type = 'x-test'
     val_acc_type = 'x-valid'
 
-scores_nas = []
-scores_gu = []
-arches = np.random.randint(0, 15625, 100)
-for arch in arches:
-    uid = searchspace[arch]
-    network = searchspace.get_network(uid)
-    scores_nas.append(net_score.score_nas(network, train_loader, device, args))
-    scores_gu.append(net_score.score_gu(network, train_loader, device, args))
-
-scores_nas = np.array(scores_nas)
-scores_gu = np.array(scores_gu)
-calstd = lambda x: np.ma.masked_invalid(x).std()
-calmean = lambda x: np.ma.masked_invalid(x).mean()
-stds = {"nas": calstd(scores_nas), "gu": calstd(scores_gu)}
-means = {"nas": calmean(scores_nas), "gu": calmean(scores_gu)}
+means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+means["ninaswot"] = 0
+stds["ninaswot"] = np.sqrt(5)
 
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
 
