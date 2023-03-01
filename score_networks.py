@@ -98,7 +98,7 @@ print(f"now score the whole arches")
 for i, (uid, network) in enumerate(searchspace):
     st = time.time()
     try:
-        standardize = lambda x, m, s: (x-m)/s
+        #standardize = lambda x, m, s: (x-m)/s
         
         # ninaswot
         # ninaswot has mean 0, and std sqrt5 (naswot*2+ni)
