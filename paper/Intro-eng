@@ -1,24 +1,20 @@
 1. introduction
-automated machine learning (AutoML) is now a popular field in computer science, because the ultimate goal, automating the machine learning process, which reduce the human efforts and computational resource.
-to achieve the goal, lots of researches proposed method on different stage of AutoML, e.g., data preparation, data preprocess, hyperparameter optimization, and neural architecture search (NAS). among them, NAS has recently gain a big amount of attention. Start with the work of Zoph & Le(2017)[https://arxiv.org/abs/1611.01578], using a controller network to generate proposed network, which is then trained to be an indicator as reward or punishment though REINFORCE, which then adjust the controller network for next proposal.
+Neural architecture search (NAS) has recently drawn a big amount of attention, since the ability to automatically design a "good" neural architecture. By leveraging machine learning algorithms (Zoph & Le, 2016[https://arxiv.org/abs/1611.01578]), NAS algorithms can explore a search space, which is comprised of numerous potential architectures, to find out a good architectures that outperform those designed by human experts. In recent years, the use of NAS is widespread, from object detection (Sun et al., 2021[https://arxiv.org/abs/2111.13336]), image recognition (Mellor et al., 2020[https://arxiv.org/abs/2006.04647]) and speech recognition (Zheng et al., 2020[https://arxiv.org/abs/2011.05649], Mehrotra et al., 2021[https://openreview.net/forum?id=CU0APx9LMaL]) to natural language processing(Jiang et al., 2019[https://aclanthology.org/D19-1367/], Klyuchnikov et al., 2020[https://arxiv.org/abs/2006.07116], Wang et al., 2020[https://arxiv.org/abs/2005.14187]).
 
-while, NAS is still too slow in some application.
+Despite the promising results of NAS, there are still many challenges to conquer. One of the major problems is the extremely high computational cost to search for an optimal architecture, which can make NAS impractical for real-world applications, particularly on resource-constrained platforms like embedded system. The reason why NAS is costly is that during the searching, a candidate architecture must be trained to evaluate how good of this architecture.
 
-training-free NAS is main stream
+To overcome this challenge, recent works developed and proposed lots of method which is so called training-free NAS. Some use mean absolute error random sampling (MRS) (Camero et al., 2018[https://arxiv.org/abs/1805.07159], Camero et al., 2020[https://arxiv.org/abs/2001.10726], Camero et al., 2021[https://arxiv.org/abs/2106.15295]) as a training-free score function and some use neural tangent kernel (NTK) (Chen et al., 2021[https://arxiv.org/abs/2102.11535], Wang et al., 2022[https://arxiv.org/abs/2203.09137], Shu et al., 2021[https://arxiv.org/abs/2109.00817]), while some use gradient-based methods (Zhang & Jia, 2021[https://arxiv.org/abs/2110.08616], Cavagnero et al., 2022[https://arxiv.org/abs/2207.05135], Abdelfattah et al., 2021[https://arxiv.org/abs/2101.08134]).
 
 2. what is unknown?
-score functions have low correlation
+However, most of score functions suffer from low correlation between score value and the result of an architecture, leading to a trap that no matter how good the search method is used, we can hardly find an optimal architecture.
 
 3. how and why
-one score function can only evaulate one perspect/characteristic of a architecture, leading to poor prediction.
+The major problem causes the low correlation is that a single score function can only evaluate one perspect/characteristic of an architecture.
 
 4. method
-try to merge three different score functions, which are highly heterogeneous. so that, we can evaluate a architecture from different aspects.
+By cooperating three heterogeneous score functions with genetic-based search method, we shall evaulate an architecture from different aspects.
 
 5. results
-expect the result shall find a good architecture.
+It's shall find good architectures in reasonable time and computational resource.
 
-6. discssion
-based on the expectation, the method can find a good architecture since the three heterogeneous score functions can evaluate a architecture from different ways.
-
-7. conclusion
+6. conclusion
