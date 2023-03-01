@@ -22,9 +22,8 @@ Reproduce all of the results by running
 ./scorehook.sh
 ```
 
-The code is licensed under the MIT licence.
-
 ## Acknowledgement
-- code based from NASWOT
-- code based from NAS-bench-201
-
+- code based on NAS-bench-201
+- code based on NASWOT
+- code based on TENAS
+- code based on MAE-DET
