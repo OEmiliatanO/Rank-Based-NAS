@@ -48,14 +48,17 @@ class GA():
             self.population[i].acc = acc
             self.population[i].uid = uid
             if self.population[i].gene not in self.DICT:
-                self.population[i].fitness = self.DICT[self.population[i].gene] = net_score.scores(network, self.train_loader, self.device, self.stds, self.means, self.args)
+                self.population[i].fitness = self.DICT[self.population[i].gene] = (standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswot"]), standardize(ntk_score(network, self.train_loader, self.device, train_mode=args.trainval), self.means["ntk"], self.stds["ntk"]), standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]
+            # TODO
+            """
             if self.population[i].fitness > self.best_chrom.fitness or self.best_chrom.gene == "":
                 self.best_chrom.fitness = self.population[i].fitness
                 self.best_chrom.acc = self.population[i].acc
                 self.best_chrom.uid = self.population[i].uid
                 self.best_chrom.gene = copy.deepcopy(self.population[i].gene)
+            """
             del network
 
     def mutation(self, chrom):
