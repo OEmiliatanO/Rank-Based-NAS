@@ -1,14 +1,15 @@
-from score import net_score
+from score import *
 import copy
 import random
 import numpy as np
 
 class chromosome():
-    def __init__(self, gene = "", fitness = 0, acc = 0, uid = 0):
+    def __init__(self, gene = "", fitness = (0,0,0), acc = 0, uid = 0):
+    """ fitness: (ninaswot, ntk, entropy) """
         self.gene = gene
         self.fitness = fitness
-        self.acc = 0
-        self.uid = 0
+        self.acc = acc
+        self.uid = uid
 
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):

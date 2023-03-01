@@ -11,8 +11,6 @@
     linkcolor=blue,
     filecolor=magenta,      
     urlcolor=cyan,
-    pdftitle={Overleaf Example},
-    pdfpagemode=FullScreen,
     }
 \usepackage[a4paper, top = 2.5cm, bottom = 2.5cm, left = 3.17cm, right = 3.17cm]{geometry}
 \setlength{\parindent}{12pt}
@@ -27,10 +25,33 @@
 \maketitle
 
 \section{Abstract}
-    In the last few years, Artificial Neural Network (ANN) has been used in a variety of fields, i.e., image classification, speech recognition, and Natural Language Processing.\par
-Most of the architectures of ANN are hand-designed by experts, consuming lots of time and resource. This problem induce the researches of Neural Architecture Search (NAS) algorithm, providing an automated, fast, and accurate approach to build a good architecture of ANN.\par
-    However, the NAS algorithms in the past were time-consuming, which were caused by the fact that, during the searching, a candidate of architectures must be trained to know how the performance of this architecture. Thus, plenty of training-free NAS algorithm are developed in recent years. By using training-free score function to evaluate an architecture, there's no requirement for training architectures anymore. Compare with training-required NAS algorithms, training-free NAS algorithms tend to be faster and consuming less resource.\par
-    Neverthesless, the low correlation between single Training-Free Score Function and the performance of an architecture limits the performance of training-free NAS algorithms. To mitigate this problem, we propose a genetic-based training-free NAS algorithm with hybrid training-free score function, which combines three highly heterogeneous training-free score functions to evaluate an architecture. To evaluate the performance of the proposed algorithm, we compared it with several NAS algorithms, including weight-sharing methods, non-weight-sharing methods, and neural architecture search without training (NASWOT). We expect develope a faster and more accurate training-free NAS algorithm.\par
+
+    Most neural architecture search methods (NASs) are time-consuming caused by 
+    the fact that, during the searching, a candidate architectures must be 
+    trained to evaluate how good of this architecture. This is why some of 
+    training-free NAS algorithms have been proposed in recent years.
+
+    Although the training-free NASs are typically faster than training-based 
+    NAS method, however, the correlation between score value and the result 
+    of an architecture is not well enough in most cases.
+    
+    To address this problem, we propose a genetic-based training-free NAS 
+    algorithm with hybrid training-free score function, which combines three 
+    highly heterogeneous training-free score functions to evaluate an architecture. 
+    In this method, the genetic algorithm plays a role to guide the searches 
+    of NAS algorithm while the hybrid training-free score function plays the 
+    role to evaluate a new candidate architecture during the convergencr process 
+    of GA. More precisely, the first score function is noise immunity for 
+    neural architecture search without search (NINASWOT), as an evaluation of 
+    pattern recognition, second one is Maximum-Entropy Detection (MAE-DET), 
+    as an evaluation of the entropy of an architecture and the third one is 
+    condition number of neural tangent kernel (NTK), as an evaluation of 
+    the speed of converge.
+    
+    To evaluate the performance of the proposed algorithm, we compared it 
+    with several NAS algorithms, including weight-sharing methods, 
+    non-weight-sharing methods, and neural architecture search without training (NASWOT). 
+    We expect develope a faster and more accurate training-free NAS algorithm.
 
 \begin{thebibliography}{9}
 \end{thebibliography}
