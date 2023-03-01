@@ -19,6 +19,7 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
         scores_ntk.append(ntk_score(network, train_loader, device))
         network = init_net_gaussian(network, device)
         scores_entropy.append(entropy_score(network, train_loader, device, args))
+        del network
 
     scores_naswot  = np.array(scores_naswot)
     scores_ni      = np.array(scores_ni)
