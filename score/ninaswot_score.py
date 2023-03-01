@@ -75,7 +75,7 @@ def naswot_score(network, train_loader, device, args):
         s.append(get_score_func(args.score)(jacobs, labels))
     
     #print(f"after naswot cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
-    for i in range(len(foward_handler)):
+    for i in range(len(forward_handler)):
         forward_handler[i].remove()
         backward_handler[i].remove()
 
