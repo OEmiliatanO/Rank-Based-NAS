@@ -12,7 +12,7 @@ However, most of score functions suffer from low correlation between score value
 The major problem causes the low correlation is that a single score function can only evaluate one perspect/characteristic of an architecture.
 
 4. method
-By cooperating three heterogeneous score functions with genetic-based search method, we shall evaulate an architecture from different aspects.
+By cooperating three heterogeneous score functions with genetic-based search method, we shall evaulate an architecture from different aspects. More specifically, the first score function is noise immunity for neural architecture search without search (NINASWOT) (Wu et al. 2021[https://dl.acm.org/doi/abs/10.1145/3491396.3506510]), as an evaluation of pattern recognition ability. Second one is maximum-entropy detection (MAE-DET) (Sun et al. 2021[https://arxiv.org/abs/2111.13336]), as an evaluation of the entropy of an architecture. Third one is condition number of neural tangent kernel (NTK) (Chen et al. 2021[https://arxiv.org/abs/2102.11535]), as an evaluation of the trainability.
 
 5. results
 It's shall find good architectures in reasonable time and computational resource.
