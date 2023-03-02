@@ -8,4 +8,5 @@ nasbench/
 nds_data/
 __pycache__/
 nasbench/
-results/
+results/*.npy
+results/*.pdf
