@@ -13,3 +13,4 @@ nasbench/
 results/*.npy
 results/*.pickle
 results/*.pdf
+.vscode/
