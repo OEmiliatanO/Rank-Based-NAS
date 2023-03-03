@@ -1,26 +1,25 @@
-\documentclass[twocolumn,10pt]{article}
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+%\documentclass[sigconf]{acmart}
+%\let\Bbbk\relax %% fix bug
 \usepackage[utf8]{inputenc}
-\usepackage{CJKutf8}
 \usepackage{graphicx}
 \usepackage{listings}
-\usepackage{hyperref}
+\usepackage{url}
 \usepackage{indentfirst}
-
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,      
-    urlcolor=cyan,
-    }
-\usepackage[a4paper, top = 2.5cm, bottom = 2.5cm, left = 3.17cm, right = 3.17cm]{geometry}
-\setlength{\parindent}{12pt}
+\usepackage{comment}
+\usepackage{algorithm}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amstext}
+\usepackage{amsopn}
+\usepackage{algpseudocode}
 
 \title{GA-based Training-Free NAS Algorithm with Hybrid Score Function}
 \author{Hsieh Cheng-Han}
 \date{2023}
 
 \begin{document}
-\begin{CJK*}{UTF8}{bsmi}
 
 \maketitle
 
@@ -53,9 +52,80 @@
     non-weight-sharing methods, and neural architecture search without training (NASWOT). 
     We expect develope a faster and more accurate training-free NAS algorithm.
 
-\begin{thebibliography}{9}
-\end{thebibliography}
+\section{Introduction}
 
+% introduction
+    Neural architecture search (NAS) has recently drawn a big amount of 
+    attention, since the ability to automatically design a "good" neural 
+    architecture. By leveraging machine learning algorithms (Zoph \& Le,\ \cite{https://doi.org/10.48550/arxiv.1611.01578}), 
+    NAS algorithms can explore a search space, which is comprised of 
+    numerous potential architectures, to find out a good architectures 
+    that outperform those designed by human experts. In recent years, 
+    the use of NAS is widespread, from object detection (Sun et al.,\ \cite{https://doi.org/10.48550/arxiv.2111.13336}), 
+    image recognition (Mellor et al.,\ \cite{https://doi.org/10.48550/arxiv.2006.04647}) 
+    and speech recognition (Zheng et al.,\ \cite{https://doi.org/10.48550/arxiv.2011.05649}, 
+    Mehrotra et al.,\ \cite{mehrotra2021nasbenchasr}) to 
+    natural language processing(Jiang et al.,\ \cite{jiang-etal-2019-improved}, 
+    Klyuchnikov et al.,\ \cite{https://doi.org/10.48550/arxiv.2006.07116}, 
+    Wang et al.,\ \cite{https://doi.org/10.48550/arxiv.2005.14187}).
 
-\end{CJK*}
+    Despite the promising results of NAS, there are still many challenges 
+    to conquer. One of the major problems is the extremely high computational 
+    cost to search for an optimal architecture, which can make NAS impractical 
+    for real-world applications, particularly on resource-constrained 
+    platforms like embedded system. The reason why NAS is costly is that 
+    during the searching, a candidate architecture must be trained to 
+    evaluate how good of this architecture.
+
+    To overcome this challenge, recent works developed and proposed lots 
+    of method which is so called training-free NAS. Some use mean absolute 
+    error random sampling (MRS) (Camero et al.,\ \cite{https://doi.org/10.48550/arxiv.1805.07159}, 
+    Camero et al.,\ \cite{Camero_2021}, Camero et al.,\ \cite{https://doi.org/10.48550/arxiv.2106.15295}) 
+    as a training-free score function and some use neural tangent kernel 
+    (NTK) (Chen et al.,\ \cite{https://doi.org/10.48550/arxiv.2102.11535}, 
+    Wang et al.,\ \cite{https://doi.org/10.48550/arxiv.2203.09137}, 
+    Shu et al.,\ \cite{https://doi.org/10.48550/arxiv.2109.00817}), while some use 
+    gradient-based methods (Zhang \& Jia,\ \cite{https://doi.org/10.48550/arxiv.2110.08616}, 
+    Cavagnero et al.,\ \cite{https://doi.org/10.48550/arxiv.2207.05135}, 
+    Abdelfattah et al.,\ \cite{https://doi.org/10.48550/arxiv.2101.08134}).
+% what is unknown?
+    However, most of score functions suffer from low correlation between 
+    score value and the result of an architecture, leading to a trap that 
+    no matter how good the search method is used, we can hardly find an 
+    optimal architecture.
+% how and why
+    The major problem causes the low correlation is that a single score 
+    function can only evaluate one perspect/characteristic of an architecture.
+% method
+    By cooperating three heterogeneous score functions with genetic-based 
+    search method, we shall evaulate an architecture from different aspects. 
+    More specifically, the first score function is noise immunity for neural 
+    architecture search without search (NINASWOT) (Wu et al.\ \cite{10.1145/3491396.3506510}). 
+    Based on the work of Mellor et al., they proposed the measurement of 
+    the correlation between binary activation paterns of input data at each 
+    ReLU layer. Later, Wu et al. found a high score obtained by such a 
+    function may not correspond to a high-performence model. Thus, they 
+    additionally applied noisy immunity method, called NINASWOT. Second one 
+    is maximum-entropy detection (MAE-DET) (Sun et al.\ \cite{https://doi.org/10.48550/arxiv.2111.13336}). 
+    Based on the work of Sun et al., they proposed to find the maximum of 
+    the differential entropy by calculating the variance of the output at 
+    the final layer with the input Gaussian noise images. Third one is 
+    condition number of  neural tangent kernel (NTK) (Chen et al.\ \cite{https://doi.org/10.48550/arxiv.2102.11535}), 
+    which is defined as 
+    \begin{equation}
+        \mathcal{K_N}=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}
+    \end{equation}
+    Chen et al. used the condition number of NTK as the score function to estimate the performance of a network.
+% results
+    It's shall find good architectures in reasonable time and computational resource.
+% conclusion
+    The major contribution of this paper can be summarized as follow:
+    \begin{itemize}
+        \item 
+    \end{itemize}
+
+    The remainder of this paper is organized as follows:
+
+    \bibliographystyle{IEEEtran}
+    \bibliography{main}
 \end{document}
