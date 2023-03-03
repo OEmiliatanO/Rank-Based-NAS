@@ -12,9 +12,13 @@ However, most of score functions suffer from low correlation between score value
 The major problem causes the low correlation is that a single score function can only evaluate one perspect/characteristic of an architecture.
 
 4. method
-By cooperating three heterogeneous score functions with genetic-based search method, we shall evaulate an architecture from different aspects. More specifically, the first score function is noise immunity for neural architecture search without search (NINASWOT) (Wu et al. 2021[https://dl.acm.org/doi/abs/10.1145/3491396.3506510]), as an evaluation of pattern recognition ability. Second one is maximum-entropy detection (MAE-DET) (Sun et al. 2021[https://arxiv.org/abs/2111.13336]), as an evaluation of the entropy of an architecture. Third one is condition number of neural tangent kernel (NTK) (Chen et al. 2021[https://arxiv.org/abs/2102.11535]), as an evaluation of the trainability.
+By cooperating three heterogeneous score functions with genetic-based search method, we shall evaulate an architecture from different aspects. More specifically, the first score function is noise immunity for neural architecture search without search (NINASWOT) (Wu et al. 2021[https://dl.acm.org/doi/abs/10.1145/3491396.3506510]). Based on the work of Mellor et al., they proposed the measurement of the correlation between binary activation paterns of input data at each ReLU layer. Later, Wu et al. (Wu et al. 2021[https://dl.acm.org/doi/abs/10.1145/3491396.3506510]) found a high score obtained by such a function may not correspond to a high-performence model. Thus, they additionally applied noisy immunity method, called NINASWOT. Second one is maximum-entropy detection (MAE-DET) (Sun et al. 2021[https://arxiv.org/abs/2111.13336]). Based on the work of Sun et al., they proposed to find the maximum of the differential entropy by calculating the variance of the output at the final layer with the input Gaussian noise images. Third one is condition number of neural tangent kernel (NTK) (Chen et al. 2021[https://arxiv.org/abs/2102.11535]), which is defined as $\mathcal K_N=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}$. Chen et al. used the condition number of NTK as the score function to estimate the performance of a network.
 
 5. results
 It's shall find good architectures in reasonable time and computational resource.
 
 6. conclusion
+The major contribution of this paper can be summarized as follow:
+- 
+
+The remainder of this paper is organized as follows:
