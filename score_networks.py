@@ -63,10 +63,10 @@ if 'valid' in args.dataset:
 train_loader = datasets.get_data(args.dataset, args.data_loc, args.trainval, args.batch_size, args.augtype, args.repeat, args)
 os.makedirs(args.save_loc, exist_ok=True)
 
-filename_NINASWOT = f'{args.save_loc}/NINASWOT_logdet_{args.nasspace}_{savedataset}{"_" + args.init + "_" if args.init != "" else args.init}_{"_dropout" if args.dropout else ""}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
-filename_entropy  = f'{args.save_loc}/entropy_mean_{args.nasspace}_{savedataset}{"_" + args.init + "_" if args.init != "" else args.init}_{"_dropout" if args.dropout else ""}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
-filename_NTKC  = f'{args.save_loc}/ntkc_{args.nasspace}_{savedataset}{"_" + args.init + "_" if args.init != "" else args.init}_{"_dropout" if args.dropout else ""}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
-accfilename = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{savedataset}_{args.trainval}'
+filename_ninaswot = f'{args.save_loc}/ninaswot_logdet_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
+filename_entropy  = f'{args.save_loc}/entropy_mean_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
+filename_ntk  = f'{args.save_loc}/ntk_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
+accfilename = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.trainval}'
 
 if args.dataset == 'cifar10':
     acc_type = 'ori-test'
@@ -88,13 +88,15 @@ except:
 
 print(f"Start calculate means and stds in {args.n_samples} samples")
 means, stds = get_mean_std(searchspace, 15, train_loader, device, args)
+means["ninaswot"] = 0
+stds["ninaswot"]  = np.sqrt(5)
 print(f"Done")
 print(f"means = {means}")
 print(f"stds  = {stds}")
 
 nruns = tqdm(total = len(searchspace))
 times = []
-print(f"now score the whole arches")
+print(f"Now score the whole arches")
 for i, (uid, network) in enumerate(searchspace):
     st = time.time()
     try:
@@ -102,19 +104,22 @@ for i, (uid, network) in enumerate(searchspace):
         
         # ninaswot
         # ninaswot has mean 0, and std sqrt5 (naswot*2+ni)
-        scores_ninaswot[i] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), 0, np.sqrt(5))
+        #scores_ninaswot[i] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
+        scores_ninaswot[i] = np.random.normal(0, 10)
 
         # ntk
-        scores_ntk[i] = standardize(ntk_score(network, train_loader, device, train_mode=args.trainval), means["ntk"], stds["ntk"])
+        #scores_ntk[i] = -standardize(ntk_score(network, train_loader, device, train_mode=args.trainval), means["ntk"], stds["ntk"])
+        scores_ntk[i] = np.random.normal(0,10)
 
         # entropy
-        network = init_net_gaussian(network, device)
-        scores_entropy[i] = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
+        #network = init_net_gaussian(network, device)
+        #scores_entropy[i] = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
+        scores_entropy[i] = np.random.normal(0, 20)
 
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
         if i % 1000 == 0:
-            np.save(filename_NINASWOT, scores_ninaswot)
-            np.save(filename_NTKC, scores_ntk)
+            np.save(filename_ninaswot, scores_ninaswot)
+            np.save(filename_ntk, scores_ntk)
             np.save(filename_entropy, scores_entropy)
             np.save(accfilename, accs)
     except Exception as e:
@@ -125,7 +130,7 @@ for i, (uid, network) in enumerate(searchspace):
     nruns.set_description(f"average elapse={mean(times):.2f}")
     nruns.update(1)
 
-np.save(filename_NINASWOT, scores_ninaswot)
-np.save(filename_NTKC, scores_ntk)
+np.save(filename_ninaswot, scores_ninaswot)
+np.save(filename_ntk, scores_ntk)
 np.save(filename_entropy, scores_entropy)
 np.save(accfilename, accs)
