@@ -104,17 +104,14 @@ for i, (uid, network) in enumerate(searchspace):
         
         # ninaswot
         # ninaswot has mean 0, and std sqrt5 (naswot*2+ni)
-        #scores_ninaswot[i] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
-        scores_ninaswot[i] = np.random.normal(0, 10)
+        scores_ninaswot[i] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
 
         # ntk
-        #scores_ntk[i] = -standardize(ntk_score(network, train_loader, device, train_mode=args.trainval), means["ntk"], stds["ntk"])
-        scores_ntk[i] = np.random.normal(0,10)
+        scores_ntk[i] = -standardize(ntk_score(network, train_loader, device, train_mode=args.trainval), means["ntk"], stds["ntk"])
 
         # entropy
-        #network = init_net_gaussian(network, device)
-        #scores_entropy[i] = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
-        scores_entropy[i] = np.random.normal(0, 20)
+        network = init_net_gaussian(network, device)
+        scores_entropy[i] = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
 
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
         if i % 1000 == 0:
