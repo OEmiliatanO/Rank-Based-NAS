@@ -39,4 +39,4 @@ def ntk_score(network, train_loader, device, recalbn=0, train_mode=True, num_bat
     del network
     torch.cuda.empty_cache()
     #print(f"after ntk cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
-    return -score
+    return score

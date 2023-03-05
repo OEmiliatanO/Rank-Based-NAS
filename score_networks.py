@@ -63,8 +63,10 @@ if 'valid' in args.dataset:
 train_loader = datasets.get_data(args.dataset, args.data_loc, args.trainval, args.batch_size, args.augtype, args.repeat, args)
 os.makedirs(args.save_loc, exist_ok=True)
 
-filename = f'{args.save_loc}/{args.save_string}_{args.score}_{args.nasspace}_{savedataset}{"_" + args.init + "_" if args.init != "" else args.init}_{"_dropout" if args.dropout else ""}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
-accfilename = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{savedataset}_{args.trainval}'
+filename_ninaswot = f'{args.save_loc}/ninaswot_logdet_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
+filename_entropy  = f'{args.save_loc}/entropy_mean_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
+filename_ntk  = f'{args.save_loc}/ntk_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
+accfilename = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.trainval}'
 
 if args.dataset == 'cifar10':
     acc_type = 'ori-test'
@@ -85,16 +87,16 @@ except:
     accs = np.zeros(len(searchspace))
 
 print(f"Start calculate means and stds in {args.n_samples} samples")
-#print(f"now cuda memory allocated: {torch.cuda.memory_allocated(0)/1024/1024/1024}")
 means, stds = get_mean_std(searchspace, 15, train_loader, device, args)
+means["ninaswot"] = 0
+stds["ninaswot"]  = np.sqrt(5)
 print(f"Done")
 print(f"means = {means}")
 print(f"stds  = {stds}")
-#means, stds = {"ntk": 0}, {"ntk": 1}
 
 nruns = tqdm(total = len(searchspace))
 times = []
-print(f"now score the whole arches")
+print(f"Now score the whole arches")
 for i, (uid, network) in enumerate(searchspace):
     st = time.time()
     try:
@@ -102,34 +104,30 @@ for i, (uid, network) in enumerate(searchspace):
         
         # ninaswot
         # ninaswot has mean 0, and std sqrt5 (naswot*2+ni)
-        scores_ninaswot[i] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), 0, np.sqrt(5))
-        
+        scores_ninaswot[i] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
+
         # ntk
-        scores_ntk[i] = standardize(ntk_score(network, train_loader, device, train_mode=args.trainval), means["ntk"], stds["ntk"])
+        scores_ntk[i] = -standardize(ntk_score(network, train_loader, device, train_mode=args.trainval), means["ntk"], stds["ntk"])
 
         # entropy
         network = init_net_gaussian(network, device)
-        scores_entropy[i]  = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
-
-        # (1,1,1) weight
-        scores[i] = scores_ninaswot[i] + scores_ntk[i] + scores_entropy[i]
+        scores_entropy[i] = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
 
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
-        accs_ = accs[~np.isnan(scores)]
-        scores_ = scores[~np.isnan(scores)]
-        numnan = np.isnan(scores).sum()
-        tau, p = stats.kendalltau(accs_[:max(i-numnan, 1)], scores_[:max(i-numnan, 1)])
         if i % 1000 == 0:
-            np.save(filename, scores)
+            np.save(filename_ninaswot, scores_ninaswot)
+            np.save(filename_ntk, scores_ntk)
+            np.save(filename_entropy, scores_entropy)
             np.save(accfilename, accs)
     except Exception as e:
         print(e)
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
-        scores[i] = np.nan
         break
     times.append(time.time()-st)
-    nruns.set_description(f"average elapse={mean(times):.2f}, correlation={tau:.2f}, last score={scores[i]:.2f}")
+    nruns.set_description(f"average elapse={mean(times):.2f}")
     nruns.update(1)
 
-np.save(filename, scores)
+np.save(filename_ninaswot, scores_ninaswot)
+np.save(filename_ntk, scores_ntk)
+np.save(filename_entropy, scores_entropy)
 np.save(accfilename, accs)

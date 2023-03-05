@@ -71,7 +71,7 @@
     Wang et al.,\ \cite{https://doi.org/10.48550/arxiv.2005.14187}).
 
     Despite the promising results of NAS, there are still many challenges 
-    to conquer. One of the major problems is the extremely high computational 
+    to conquer. One major problem is the extremely high computational 
     cost to search for an optimal architecture, which can make NAS impractical 
     for real-world applications, particularly on resource-constrained 
     platforms like embedded system. The reason why NAS is costly is that 
@@ -89,33 +89,37 @@
     some use gradient-based methods (Zhang \& Jia,\ \cite{https://doi.org/10.48550/arxiv.2110.08616}, 
     Cavagnero et al.,\ \cite{https://doi.org/10.48550/arxiv.2207.05135}, 
     Abdelfattah et al.,\ \cite{https://doi.org/10.48550/arxiv.2101.08134}).
+
 % what is unknown?
     However, most of score functions suffer from low correlation between 
-    score value and the result of an architecture, leading to a trap that 
-    no matter how good the search method is used, we can hardly find an 
-    optimal architecture.
-% how and why
+    score value and the result of an architecture, leading to a predicament 
+    that no matter how good the search method is used, we can hardly find 
+    an optimal architecture. 
     The major problem causes the low correlation is that a single score 
     function can only evaluate one perspect/characteristic of an architecture.
+    
 % method
-    By cooperating three heterogeneous score functions with genetic-based 
-    search method, we shall evaulate an architecture from different aspects. 
-    More specifically, the first score function is noise immunity for neural 
-    architecture search without search (NINASWOT) (Wu et al.\ \cite{10.1145/3491396.3506510}). 
-    Based on the work of Mellor et al., they proposed the measurement of 
-    the correlation between binary activation paterns of input data at each 
-    ReLU layer. Later, Wu et al. found a high score obtained by such a 
-    function may not correspond to a high-performence model. Thus, they 
-    additionally applied noisy immunity method, called NINASWOT. Second one 
-    is maximum-entropy detection (MAE-DET) (Sun et al.\ \cite{https://doi.org/10.48550/arxiv.2111.13336}). 
+    Based on the fact above, we propose cooperating three heterogeneous score 
+    functions with genetic-based search method, we shall evaulate an architecture 
+    from different aspects. More specifically, the first score function is 
+    noise immunity for neural architecture search without training (NINASWOT) 
+    (Wu et al.\ \cite{10.1145/3491396.3506510}). Starting with the work of Mellor 
+    et al., they proposed the measurement of the correlation between binary 
+    activation paterns of input data at each ReLU layer, named as neural architecture 
+    search without training (NASWOT). Later, Wu et al. found a high score obtained 
+    by such a function may not correspond to a high-performence model. Thus, 
+    they additionally applied noisy immunity method on NASWOT, named as NINASWOT. 
+    Second one is maximum-entropy detection (MAE-DET) (Sun et al.\ \cite{https://doi.org/10.48550/arxiv.2111.13336}). 
     Based on the work of Sun et al., they proposed to find the maximum of 
     the differential entropy by calculating the variance of the output at 
-    the final layer with the input Gaussian noise images. Third one is 
-    condition number of  neural tangent kernel (NTK) (Chen et al.\ \cite{https://doi.org/10.48550/arxiv.2102.11535}), 
-    which is defined as 
+    the final layer with the input Gaussian noise images and random weights on 
+    Gaussian distribution. Third one is condition number of neural tangent kernel 
+    (NTK) (Chen et al.\ \cite{https://doi.org/10.48550/arxiv.2102.11535}), which is 
+    defined as 
     \begin{equation}
         \mathcal{K_N}=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}
     \end{equation}
+<<<<<<< HEAD
     Chen et al. used the condition number of NTK as the score function to 
     estimate the performance of a network.
 % results
@@ -134,6 +138,26 @@
     brief introduction to state-of-the-art NAS techniques and describe the 
     method in detail. Section 3 gives a detailed descriptions of the proposed 
     method. Section 4 provides the results of the simulation.
+=======
+    Chen et al. used the condition number of NTK as the score to estimate the performance of an architecture.
+
+% results
+    The simulation results on cifar-10, cifar-100, and ImageNet-16-120 
+    shall show that the proposed method can find good architectures in 
+    reasonable time and computational resource. (TODO)
+
+% conclusion
+    The major contribution of this paper can be summarized as follow:
+    \begin{itemize}
+        \item Develope a genetic-based neural architecture search method based on three hybrid score function.
+        \item (TODO)
+    \end{itemize}
+
+    The remainder of this paper is organized as follows: Section 2 provides the 
+    detail about the three heterogeneous score functions. Section 3 gives a detailed 
+    description about the proposed method. Section 4 provide the simulation results 
+    in different search space. The conclusion and further prospect are gived in Section 5.
+>>>>>>> 43e479a2b0dd8d55e1be069a6354b2b9803c3bca
 
     \bibliographystyle{IEEEtran}
     \bibliography{main}
