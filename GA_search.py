@@ -5,7 +5,6 @@ import random
 import numpy as np
 import torch
 import os
-from scores import get_score_func
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import trange
 from statistics import mean
@@ -17,8 +16,8 @@ from score import *
 
 parser = argparse.ArgumentParser(description='NAS Without Training')
 
-parser.add_argument('--maxn_pop', default=30, type=int, help='number of population')
-parser.add_argument('--maxn_iter', default=50, type=int, help='number of iteration')
+parser.add_argument('--maxn_pop', default=10, type=int, help='number of population')
+parser.add_argument('--maxn_iter', default=30, type=int, help='number of iteration')
 parser.add_argument('--prob_mut', default=0.07, type=float, help='probability of mutation')
 parser.add_argument('--prob_cr', default=0.8, type = float, help='probability of crossover')
 
@@ -42,7 +41,7 @@ parser.add_argument('--trainval', action='store_true')
 parser.add_argument('--activations', action='store_true')
 parser.add_argument('--cosine', action='store_true')
 parser.add_argument('--dataset', default='cifar10', type=str)
-parser.add_argument('--n_samples', default=100, type=int)
+parser.add_argument('--n_samples', default=15, type=int)
 parser.add_argument('--n_runs', default=500, type=int)
 parser.add_argument('--stem_out_channels', default=16, type=int, help='output channels of stem convolution (nasbench101)')
 parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of modules (nasbench101)')
@@ -70,8 +69,6 @@ chosen    = []
 acc       = []
 val_acc   = []
 topscores = []
-order_fn = np.nanargmax
-
 
 if args.dataset == 'cifar10':
     acc_type = 'ori-test'
@@ -80,13 +77,16 @@ else:
     acc_type = 'x-test'
     val_acc_type = 'x-valid'
 
+print(f"now calculate means and stds")
 means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 means["ninaswot"] = 0
-stds["ninaswot"] = np.sqrt(5)
+stds["ninaswot"]  = np.sqrt(5)
+print(f"means = {means}\nstds = {stds}")
+print(f"========================================")
 
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
 
-runs = trange(args.n_runs, desc='acc: nan  topscores: nan')
+runs = trange(args.n_runs, desc='acc: nan topscores: nan')
 for N in runs:
     start = time.time()
 
@@ -97,12 +97,8 @@ for N in runs:
     topscores.append(score)
     acc.append(acc_)
 
-    if not args.dataset == 'cifar10' or args.trainval:
-        val_acc.append(searchspace.get_final_accuracy(uid, val_acc_type, args.trainval))
-    #    val_acc.append(info.get_metrics(dset, val_acc_type)['accuracy'])
-
     times.append(time.time()-start)
-    runs.set_description(f"acc: {mean(acc):.2f}%  topscores:{mean(topscores):.2f}  time:{mean(times):.2f}")
+    runs.set_description(f"acc: {mean(acc):.3f}%  topscores:{mean(topscores):.2f}  time:{mean(times):.2f}")
 
 print(f"Final mean test accuracy: {np.mean(acc)}")
 #if len(val_acc) > 1:
@@ -115,5 +111,5 @@ state = {'accs': acc,
          }
 
 dset = args.dataset if not (args.trainval and args.dataset == 'cifar10') else 'cifar10-valid'
-fname = f"{args.save_loc}/{args.save_string}_{args.score}_{args.nasspace}_{dset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}.t7"
+fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{dset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}.t7"
 torch.save(state, fname)
