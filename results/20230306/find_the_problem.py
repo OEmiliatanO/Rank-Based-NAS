@@ -35,6 +35,13 @@ arches = []
 for i in range(len(acc)):
     arches.append(arch(i, acc[i], ninaswot[i], entropy[i], ntk[i], tot[i]))
 
+arches.sort(key = lambda this: this.ntk)
+print("================================================")
+print(f"sort by tot")
+print(f"no.\tacc\tninas\tentropy\tntk\ttot")
+for this in arches:
+    print(f"{this.no}\t{this.acc:.3f}\t{this.ninaswot:>.3f}\t{this.entropy:>.3f}\t{this.ntk:>.3f}\t{this.tot:>.3f}")
+
 def sort_and_prune(arches, what, proposition):
     arches.sort(key = lambda this: eval(f"this.{what}"), reverse = True)
     print("================================================")
