@@ -1,4 +1,11 @@
-python score_networks.py --save_string all_score --trainval --augtype none --repeat 1 --sigma 0.05 --nasspace nasbench201 --batch_size 128 --GPU 0 --dataset cifar10
+python score_networks.py --save_string all_score --trainval --augtype none --repeat 1 --sigma 0.05 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 50 --dataset cifar10
+
+<<plot_example
+python process_data.py --oper ninaswot_add_ntk_add_entropy --save_string all_score --save_loc $1 --trainval --augtype none --repeat 1 --sigma 0.05 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 50 --dataset cifar10
+python plot_2d_scores.py --targets acc-ninaswot_add_ntk_add_entropy --save_string all_score --save_loc $1 --trainval --augtype none --repeat 1 --sigma 0.05 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 50 --dataset cifar10
+python plot_3d_scores.py --save_string all_score --save_loc $1 --trainval --augtype none --repeat 1 --sigma 0.05 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 50 --dataset cifar10
+plot_example
+
 #python score_networks.py --save_string all_score --trainval --augtype none --repeat 1 --score 1_-1_1 --sigma 0.05 --nasspace nasbench201 --batch_size 128 --GPU 0 --dataset cifar100 --data_loc ../cifar100/
 #python score_networks.py --save_string all_score --trainval --augtype none --repeat 1 --score 1_-1_1 --sigma 0.05 --nasspace nasbench201 --batch_size 128 --GPU 0 --dataset ImageNet16-120 --data_loc ../imagenet16/Imagenet16/
 
