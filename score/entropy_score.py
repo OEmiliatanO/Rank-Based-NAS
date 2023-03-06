@@ -69,5 +69,5 @@ def entropy_score(network, train_loader, device, args):
     del network.features
     torch.cuda.empty_cache()
     #print(f"after entropy cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
-    return scores.detach().cpu()
+    return scores.detach().cpu().numpy()
 
