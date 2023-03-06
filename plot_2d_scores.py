@@ -51,6 +51,24 @@ for fname in filenames:
 
 scores = [np.load(filenames[i]) for i in range(len(filenames))]
 
+assert len(scores[0]) == 15625, "the length of scores isn't correct"
+
+####
+mask = np.full(scores[0].shape, False)
+for i, fname in enumerate(filenames):
+    if "acc" in fname:
+        max_score = np.argmax(scores[i])
+        mask = scores[1-i] > scores[1-i][max_score]
+the_problems = []
+for i in range(len(mask)):
+    if mask[i] == True:
+        the_problems.append(i)
+the_problems = np.array(the_problems)
+wheres_the_problems = f'{args.save_loc}/acc-{targets[1]}_the_problems_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
+np.save(wheres_the_problems, the_problems)
+print(f"save the problems: {the_problems}")
+####
+
 mask = scores[1] < 0 | np.isinf(scores[1]) | np.isnan(scores[1])
 
 scores[0] = scores[0][~mask]
