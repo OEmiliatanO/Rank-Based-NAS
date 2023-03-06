@@ -3,7 +3,6 @@ import torch
 import time
 
 def ntk_score(network, train_loader, device, recalbn=0, train_mode=True, num_batch=1):
-    #print(f"before ntk cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
     ntk = []
     if train_mode:
         network.train()
@@ -38,5 +37,4 @@ def ntk_score(network, train_loader, device, recalbn=0, train_mode=True, num_bat
     score = np.nan_to_num((eigenvalues[-1] / eigenvalues[0]).item(), copy=True, nan=100000.0)
     del network
     torch.cuda.empty_cache()
-    #print(f"after ntk cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
     return score
