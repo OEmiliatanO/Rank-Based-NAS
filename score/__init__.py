@@ -1,6 +1,6 @@
 from utils import add_dropout, init_network
 from .ntk_score import ntk_score
-from .ninaswot_score import ninaswot_score, ni_score, naswot_score, get_batch_jacobian
+from .ninaswot_score import ninaswot_score, ni_score, naswot_score
 from .entropy_score import entropy_score, init_net_gaussian
 import numpy as np
 from tqdm import tqdm
@@ -47,3 +47,15 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
     del scores_naswot, scores_ni, scores_ntk, scores_entropy, times
 
     return means, stds
+
+def score_tot(network, train_loader, stds, means, device, args):
+    ninaswot = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
+    ntk = -standardize(ntk_score(network, train_loader, device), means["ntk"], stds["ntk"])
+    network = init_net_gaussian(network, device)
+    entropy = standardize(entropy_score(network, train_loader, device, args), means["entropy"], stds["entropy"])
+    tot = ninaswot + ntk + entropy
+    del network
+    if not np.isfinite(tot):
+        return -1000000
+    else:
+        return tot
