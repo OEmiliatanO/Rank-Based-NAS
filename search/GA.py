@@ -2,14 +2,15 @@ from score import *
 import copy
 import random
 import numpy as np
+from tqdm import tqdm
+import time
 
 class chromosome():
-    def __init__(self, gene = "", fitness = (0,0,0), acc = 0, uid = 0):
-    """ fitness: (ninaswot, ntk, entropy) """
+    def __init__(self, gene = "", fitness = 0, acc = 0, uid = 0):
         self.gene = gene
         self.fitness = fitness
-        self.acc = acc
-        self.uid = uid
+        self.acc = 0
+        self.uid = 0
 
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
@@ -48,17 +49,14 @@ class GA():
             self.population[i].acc = acc
             self.population[i].uid = uid
             if self.population[i].gene not in self.DICT:
-                self.population[i].fitness = self.DICT[self.population[i].gene] = (standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswot"]), standardize(ntk_score(network, self.train_loader, self.device, train_mode=args.trainval), self.means["ntk"], self.stds["ntk"]), standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
+                self.population[i].fitness = self.DICT[self.population[i].gene] = score_tot(network, self.train_loader, self.stds, self.means, self.device, self.args)
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]
-            # TODO
-            """
             if self.population[i].fitness > self.best_chrom.fitness or self.best_chrom.gene == "":
                 self.best_chrom.fitness = self.population[i].fitness
                 self.best_chrom.acc = self.population[i].acc
                 self.best_chrom.uid = self.population[i].uid
                 self.best_chrom.gene = copy.deepcopy(self.population[i].gene)
-            """
             del network
 
     def mutation(self, chrom):
@@ -106,6 +104,7 @@ class GA():
     def find_best(self):
         self.init_population()
         self.evaluate()
+        nruns = tqdm(total = self.MAXN_ITERATION)
         for _ in range(self.MAXN_ITERATION):
             offsprings = []
             for i in range(self.MAXN_POPULATION//2):
@@ -127,6 +126,8 @@ class GA():
             
             self.population = offsprings
             self.evaluate()
+            nruns.set_description(f"evolution: best score = {self.best_chrom.fitness:.3f}, acc = {self.best_chrom.acc:.3f}")
+            nruns.update(1)
         network, uid, acc = gene2net(self.best_chrom.gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.trainval)
         return self.best_chrom.fitness, acc, uid
 
