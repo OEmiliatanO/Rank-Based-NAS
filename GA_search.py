@@ -7,16 +7,16 @@ import torch
 import os
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import trange
-from statistics import mean
+from statistics import mean, stdev
 import time
 from utils import add_dropout
-from search import GA
+from search.GA_based_on_rank import GA
 from score import *
 
 
 parser = argparse.ArgumentParser(description='NAS Without Training')
 
-parser.add_argument('--maxn_pop', default=10, type=int, help='number of population')
+parser.add_argument('--maxn_pop', default=25, type=int, help='number of population')
 parser.add_argument('--maxn_iter', default=30, type=int, help='number of iteration')
 parser.add_argument('--prob_mut', default=0.07, type=float, help='probability of mutation')
 parser.add_argument('--prob_cr', default=0.8, type = float, help='probability of crossover')
@@ -48,6 +48,8 @@ parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of module
 parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modules per stack (nasbench101)')
 parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
 
+parser.add_argument('--proposition', default="[0.2,0.6,0.5]", type=str)
+
 args = parser.parse_args()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
 
@@ -78,7 +80,17 @@ else:
     val_acc_type = 'x-valid'
 
 print(f"now calculate means and stds")
-means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+#means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+means = {}
+stds = {}
+means["ni"] = -0.08314655303955078
+stds["ni"]  =  0.1266118600610186
+means["naswot"] = 1595.0483017680253
+stds["naswot"] = 77.00454622052088
+means["ntk"] = 8064.954524536133
+stds["ntk"] = 21509.86140267155
+means["entropy"] = 721.064296875
+stds["entropy"] = 280.67810232781636
 means["ninaswot"] = 0
 stds["ninaswot"]  = np.sqrt(5)
 print(f"means = {means}\nstds = {stds}")
@@ -91,14 +103,14 @@ for N in runs:
     start = time.time()
 
     # nas-bench-201 spec
-    sol = GA.GA(6, 5, searchspace, train_loader, device, stds, means, acc_type, args)
+    sol = GA(6, 5, searchspace, train_loader, device, stds, means, acc_type, args)
     score, acc_, uid = sol.find_best()
     chosen.append(uid)
     topscores.append(score)
     acc.append(acc_)
 
     times.append(time.time()-start)
-    runs.set_description(f"acc: {mean(acc):.3f}%  topscores:{mean(topscores):.2f}  time:{mean(times):.2f}")
+    runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.2f},{topscores[-1][1]:.2f},{topscores[-1][2]:.2f})  time:{mean(times):.2f}")
 
 print(f"Final mean test accuracy: {np.mean(acc)}")
 #if len(val_acc) > 1:
