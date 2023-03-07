@@ -4,10 +4,11 @@ import sys
 ninaswot = np.load("ninaswot_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
 entropy  = np.load("entropy_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
 ntk      = np.load("ntk_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
-tot      = ninaswot + entropy + ntk
+tot      = ninaswot + ntk
 acc      = np.load("all_score_accs_nasbench201_cifar10_True.npy")
 
-the_problems = np.load("acc-ninaswot_add_ntk_add_entropy_the_problems_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+#the_problems = np.load("acc-ninaswot_add_ntk_add_entropy_the_problems_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+the_problems = np.load("acc-ninaswot_add_ntk_the_problems_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
 
 max_acc = np.argmax(acc)
 print(f"the max acc is {max_acc}")
