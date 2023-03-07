@@ -5,14 +5,26 @@ import numpy as np
 
 class chromosome():
     def __init__(self, gene = "", fitness = (0,0,0), acc = 0, uid = 0):
-    """ fitness: (ninaswot, ntk, entropy) """
+        """ fitness: (ninaswot, ntk, entropy) """
         self.gene = gene
         self.fitness = fitness
         self.acc = acc
         self.uid = uid
 
+###
+base = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/20230306"
+###
+
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
+        #### cheat
+        self.ninaswot = np.load(f"{base}/ninaswot_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+        self.ntk      = np.load(f"{base}/ntk_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+        self.entropy  = np.load(f"{base}/entropy_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+        assert len(self.ninaswot) == 15625, "broken: ninaswot"
+        assert len(self.ntk) == 15625, "broken: ntk"
+        assert len(self.entropy) == 15625, "broken: entropy"
+        ####
         self.MAXN_POPULATION = args.maxn_pop
         self.MAXN_ITERATION = args.maxn_iter
         self.PROB_MUTATION = args.prob_mut
@@ -29,6 +41,7 @@ class GA():
         self.means = means
         self.acc_type = acc_type
         self.best_chrom = chromosome()
+        self.proposition = eval(args.proposition)
         self.NAS_201_ops = ['none', 'skip_connect', 'nor_conv_1x1', 'nor_conv_3x3', 'avg_pool_3x3']
 
     def init_population(self):
@@ -48,17 +61,20 @@ class GA():
             self.population[i].acc = acc
             self.population[i].uid = uid
             if self.population[i].gene not in self.DICT:
-                self.population[i].fitness = self.DICT[self.population[i].gene] = (standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswot"]), standardize(ntk_score(network, self.train_loader, self.device, train_mode=args.trainval), self.means["ntk"], self.stds["ntk"]), standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
+                #self.population[i].fitness = self.DICT[self.population[i].gene] = \
+                #(standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswot"]), \
+                # -standardize(ntk_score(network, self.train_loader, self.device, train_mode=self.args.trainval), self.means["ntk"], self.stds["ntk"]), \
+                # standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
+                self.population[i].fitness = self.DICT[self.population[i].gene] = (self.ninaswot[self.population[i].uid], self.ntk[self.population[i].uid], 0)
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]
-            # TODO
-            """
-            if self.population[i].fitness > self.best_chrom.fitness or self.best_chrom.gene == "":
+            # global optimum
+            if sum(self.population[i].fitness) > sum(self.best_chrom.fitness) or self.best_chrom.gene == "":
                 self.best_chrom.fitness = self.population[i].fitness
                 self.best_chrom.acc = self.population[i].acc
                 self.best_chrom.uid = self.population[i].uid
                 self.best_chrom.gene = copy.deepcopy(self.population[i].gene)
-            """
+            
             del network
 
     def mutation(self, chrom):
@@ -76,10 +92,10 @@ class GA():
         cand = random.sample(self.population, N)
         maxi = smaxi = cand[0]
         for chrom in cand:
-            if maxi.fitness < chrom.fitness:
+            if sum(maxi.fitness) < sum(chrom.fitness):
                 smaxi = maxi
                 maxi = chrom
-            elif smaxi.fitness < chrom.fitness:
+            elif sum(smaxi.fitness) < sum(chrom.fitness):
                 smaxi = chrom
         return maxi, smaxi
 
@@ -106,19 +122,17 @@ class GA():
     def find_best(self):
         self.init_population()
         self.evaluate()
-        for _ in range(self.MAXN_ITERATION):
+        for i in range(self.MAXN_ITERATION):
             offsprings = []
-            for i in range(self.MAXN_POPULATION//2):
+            while len(offsprings) < self.MAXN_POPULATION:
                 p = self.select_2chrom_fromN()
                 
                 if random.randint(0,99) < self.PROB_CROSS*100:
-                #if random.uniform(0,1) < self.PROB_CROSS:
                     offspring0, offspring1 = self.crossover(p[0], p[1])
                 else:
                     offspring0, offspring1 = p[0], p[1]
  
                 if random.randint(0,99) < self.PROB_MUTATION*100:
-                #if random.uniform(0,1) < self.PROB_MUTATION:
                     offspring0 = self.mutation(offspring0)
                     offspring1 = self.mutation(offspring1)
                 
@@ -127,7 +141,14 @@ class GA():
             
             self.population = offsprings
             self.evaluate()
+            offsprings.sort(key = lambda this: sum(this.fitness), reverse = True)
+            offsprings = offsprings[:int(len(offsprings)*0.5)]
+        
+        #offsprings.sort(key = lambda this: this.fitness[0], reverse = True)
+        #if random.randint(0,99) <= 49:
         network, uid, acc = gene2net(self.best_chrom.gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.trainval)
+        #else:
+        #    network, uid, acc = gene2net(offsprings[0].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.trainval)
         return self.best_chrom.fitness, acc, uid
 
 def gene2sect(gene, ops):
@@ -139,7 +160,6 @@ def gene2net(gene, ops, searchspace, acc_type, trainval):
     arch = "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*gene_sect)
     idx = searchspace.query_index_by_arch(arch)
     uid = searchspace[idx]
-    #print(f"arch={arch}, idx={idx}, uid={uid}")
     network = searchspace.get_network(uid)
     acc = searchspace.get_final_accuracy(uid, acc_type, trainval)
     return network, uid, acc
