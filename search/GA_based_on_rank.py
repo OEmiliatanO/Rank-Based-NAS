@@ -12,15 +12,22 @@ class chromosome():
         self.uid = uid
 
 ###
-base = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/20230306"
+cifar10_base  = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/20230306"
+cifar100_base = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/20230308"
 ###
 
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
         #### cheat
-        self.ninaswot = np.load(f"{base}/ninaswot_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
-        self.ntk      = np.load(f"{base}/ntk_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
-        self.entropy  = np.load(f"{base}/entropy_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+        if "cifar10" in args.dataset:
+            self.ninaswot = np.load(f"{cifar10_base}/ninaswot_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+            self.ntk      = np.load(f"{cifar10_base}/ntk_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+            self.entropy  = np.load(f"{cifar10_base}/entropy_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+        elif "cifar100" in args.dataset:
+            self.ninaswot = np.load(f"{cifar100_base}/ninaswot_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+            self.ntk      = np.load(f"{cifar100_base}/ntk_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+            self.entropy  = np.load(f"{cifar100_base}/entropy_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+
         assert len(self.ninaswot) == 15625, "broken: ninaswot"
         assert len(self.ntk) == 15625, "broken: ntk"
         assert len(self.entropy) == 15625, "broken: entropy"
