@@ -114,10 +114,10 @@ for i, (uid, network) in enumerate(searchspace):
 
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
         if i % 1000 == 0:
-            np.save(filename_ninaswot, scores['ninaswot'])
-            np.save(filename_ntk, scores['ntk'])
-            np.save(filename_entropy, scores['entropy'])
-            np.save(accfilename, accs)
+            np.save(filenames['ninaswot'], scores['ninaswot'])
+            np.save(filenames['ntk'], scores['ntk'])
+            np.save(filenames['entropy'], scores['entropy'])
+            np.save(filenames['acc'], accs)
     except Exception as e:
         print(e)
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
