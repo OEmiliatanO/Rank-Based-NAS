@@ -114,9 +114,9 @@ for i, (uid, network) in enumerate(searchspace):
 
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.trainval)
         if i % 1000 == 0:
-            np.save(filename_ninaswot, scores_ninaswot)
-            np.save(filename_ntk, scores_ntk)
-            np.save(filename_entropy, scores_entropy)
+            np.save(filename_ninaswot, scores['ninaswot'])
+            np.save(filename_ntk, scores['ntk'])
+            np.save(filename_entropy, scores['entropy'])
             np.save(accfilename, accs)
     except Exception as e:
         print(e)
