@@ -1,1 +1,1 @@
-python GA_search.py --save_string all_score --trainval --augtype none --repeat 1 --sigma 0.05 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 50 --dataset cifar10
+python GA_search.py --maxn_pop 100 --maxn_iter 10 --prob_mut 0.1 --prob_cr 0.8 --save_loc $1 --save_string all_score --trainval --augtype none --repeat 1 --sigma 0.05 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 50 --dataset cifar10
