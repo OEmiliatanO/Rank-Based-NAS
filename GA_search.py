@@ -14,7 +14,7 @@ from search.GA_based_on_rank import GA
 from score import *
 
 
-parser = argparse.ArgumentParser(description='NAS Without Training')
+parser = argparse.ArgumentParser(description='Genetic-Based NAS algorithm with Hybrid Score Functions')
 
 parser.add_argument('--maxn_pop', default=25, type=int, help='number of population')
 parser.add_argument('--maxn_iter', default=30, type=int, help='number of iteration')
