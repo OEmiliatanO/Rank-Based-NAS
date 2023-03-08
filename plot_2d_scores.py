@@ -30,6 +30,7 @@ parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modul
 parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
 
 parser.add_argument('--targets', default="ninaswot-acc")
+parser.add_argument('--find_the_problem', action='store_true')
 
 args = parser.parse_args()
 
@@ -54,22 +55,23 @@ scores = [np.load(filenames[i]) for i in range(len(filenames))]
 assert len(scores[0]) == 15625, "the length of scores isn't correct"
 
 ####
-mask = np.full(scores[0].shape, False)
-for i, fname in enumerate(filenames):
-    if "acc" in fname:
-        max_score = np.argmax(scores[i])
-        mask = scores[1-i] > scores[1-i][max_score]
-the_problems = []
-for i in range(len(mask)):
-    if mask[i] == True:
-        the_problems.append(i)
-the_problems = np.array(the_problems)
-wheres_the_problems = f'{args.save_loc}/acc-{targets[1]}_the_problems_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
-np.save(wheres_the_problems, the_problems)
-print(f"save the problems: {the_problems}")
+if args.find_the_problem:
+    mask = np.full(scores[0].shape, False)
+    for i, fname in enumerate(filenames):
+        if "acc" in fname:
+            max_score = np.argmax(scores[i])
+            mask = scores[1-i] > scores[1-i][max_score]
+    the_problems = []
+    for i in range(len(mask)):
+        if mask[i] == True:
+            the_problems.append(i)
+    the_problems = np.array(the_problems)
+    wheres_the_problems = f'{args.save_loc}/acc-{targets[1]}_the_problems_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
+    np.save(wheres_the_problems, the_problems)
+    print(f"save the problems: {the_problems}")
 ####
 
-mask = scores[1] < 0 | np.isinf(scores[1]) | np.isnan(scores[1])
+mask = np.isinf(scores[1]).astype(bool) | np.isnan(scores[1]).astype(bool) | (scores[1] < 0).astype(bool)
 
 scores[0] = scores[0][~mask]
 scores[1] = scores[1][~mask]
@@ -79,10 +81,12 @@ for i, fname in enumerate(filenames):
     if "acc" in fname:
         print(f"the maximum found acc according to score is {scores[i][np.argmax(scores[1-i])]}")
         max_score = np.argmax(scores[i])
-        mask = scores[1-i] > scores[1-i][max_score]
+        if args.find_the_problem:
+            mask = scores[1-i] > scores[1-i][max_score]
 
-scores[0] = scores[0][mask]
-scores[1] = scores[1][mask]
+if args.find_the_problem:
+    scores[0] = scores[0][mask]
+    scores[1] = scores[1][mask]
 
 tau, p = stats.kendalltau(scores[0], scores[1])
 
@@ -98,6 +102,6 @@ filename_result = f'{args.save_loc}/{args.save_string}_{args.targets}_{args.nass
 print("result file :" + filename_result + ".png")
 print("result file :" + filename_result + ".pdf")
 
-ax.scatter(scores[0], scores[1], s = 0.3)
+ax.scatter(x=scores[0], y=scores[1], s = 0.3)
 plt.savefig(filename_result + ".png")
 plt.savefig(filename_result + ".pdf")
