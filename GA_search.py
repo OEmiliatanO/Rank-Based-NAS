@@ -80,7 +80,8 @@ else:
     val_acc_type = 'x-valid'
 
 print(f"now calculate means and stds")
-#means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+"""
 means = {}
 stds = {}
 means["ni"] = -0.08314655303955078
@@ -93,6 +94,7 @@ means["entropy"] = 721.064296875
 stds["entropy"] = 280.67810232781636
 means["ninaswot"] = 0
 stds["ninaswot"]  = np.sqrt(5)
+"""
 print(f"means = {means}\nstds = {stds}")
 print(f"========================================")
 
@@ -123,5 +125,5 @@ state = {'accs': acc,
          }
 
 dset = args.dataset if not (args.trainval and args.dataset == 'cifar10') else 'cifar10-valid'
-fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{dset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}.t7"
+fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{dset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}_{args.maxn_pop}_{args.maxn_iter}_{args.prob_cr}_{args.prob_mut}.t7"
 torch.save(state, fname)
