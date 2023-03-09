@@ -106,7 +106,7 @@ for i, (uid, network) in enumerate(searchspace):
         scores['ninaswot'][i] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
 
         # ntk
-        scores['ntk'][i] = -standardize(ntk_score(network, train_loader, device, train_mode=args.trainval), means["ntk"], stds["ntk"])
+        scores['ntk'][i] = -standardize(ntk_score(network, train_loader, device), means["ntk"], stds["ntk"])
 
         # entropy
         network = init_net_gaussian(network, device)
