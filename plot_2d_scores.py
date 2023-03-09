@@ -71,7 +71,10 @@ if args.find_the_problem:
     print(f"save the problems: {the_problems}")
 ####
 
-mask = np.isinf(scores[1]).astype(bool) | np.isnan(scores[1]).astype(bool) | (scores[1] < 0).astype(bool)
+mask = np.isinf(scores[1]).astype(bool) |\
+np.isnan(scores[1]).astype(bool) |\
+(scores[1] > 10).astype(bool) |\
+(scores[1] < 0).astype(bool)
 
 scores[0] = scores[0][~mask]
 scores[1] = scores[1][~mask]
