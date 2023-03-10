@@ -80,8 +80,9 @@ else:
     val_acc_type = 'x-valid'
 
 print(f"now calculate means and stds")
-means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+#means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 """
+# cifar10
 means = {}
 stds = {}
 means["ni"] = -0.08314655303955078
@@ -95,6 +96,20 @@ stds["entropy"] = 280.67810232781636
 means["ninaswot"] = 0
 stds["ninaswot"]  = np.sqrt(5)
 """
+# cifar100
+means = {}
+stds = {}
+means["ni"] = -0.07765040397644044
+stds["ni"]  =  0.12295018402244674
+means["naswot"] = 1592.1985007236365
+stds["naswot"] = 77.2502068400697
+means["ntk"] = 9979.810939865112
+stds["ntk"] = 23336.402907292802
+means["entropy"] = 721.064296875
+stds["entropy"] = 280.67810232781636
+means["ninaswot"] = 0
+stds["ninaswot"]  = np.sqrt(5)
+
 print(f"means = {means}\nstds = {stds}")
 print(f"========================================")
 
@@ -112,7 +127,7 @@ for N in runs:
     acc.append(acc_)
 
     times.append(time.time()-start)
-    runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.2f},{topscores[-1][1]:.2f},{topscores[-1][2]:.2f})  time:{mean(times):.2f}")
+    runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f})  time:{mean(times):.2f}")
 
 print(f"Final mean test accuracy: {np.mean(acc)}")
 #if len(val_acc) > 1:
