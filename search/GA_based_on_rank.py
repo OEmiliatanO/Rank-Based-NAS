@@ -19,14 +19,14 @@ cifar100_base = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hy
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
         #### cheat
-        if "cifar10" in args.dataset:
+        if "cifar10" == args.dataset:
             self.ninaswot = np.load(f"{cifar10_base}/ninaswot_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
             self.ntk      = np.load(f"{cifar10_base}/ntk_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
             self.entropy  = np.load(f"{cifar10_base}/entropy_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
-        elif "cifar100" in args.dataset:
-            self.ninaswot = np.load(f"{cifar100_base}/ninaswot_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
-            self.ntk      = np.load(f"{cifar100_base}/ntk_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
-            self.entropy  = np.load(f"{cifar100_base}/entropy_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
+        elif "cifar100" == args.dataset:
+            self.ninaswot = np.load(f"{cifar100_base}/ninaswot_nasbench201_cifar100_none_0.05_1_True_128_1_1.npy")
+            self.ntk      = np.load(f"{cifar100_base}/ntk_nasbench201_cifar100_none_0.05_1_True_128_1_1.npy")
+            self.entropy  = np.load(f"{cifar100_base}/entropy_nasbench201_cifar100_none_0.05_1_True_128_1_1.npy")
 
         assert len(self.ninaswot) == 15625, "broken: ninaswot"
         assert len(self.ntk) == 15625, "broken: ntk"
@@ -76,7 +76,7 @@ class GA():
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]
             # global optimum
-            if sum(self.population[i].fitness) > sum(self.best_chrom.fitness) or self.best_chrom.gene == "":
+            if (sum(self.population[i].fitness) > sum(self.best_chrom.fitness) or self.best_chrom.gene == "") and self.population[i].fitness >= (0,0,0) and self.population[i].fitness <= (50,50,50):
                 self.best_chrom.fitness = self.population[i].fitness
                 self.best_chrom.acc = self.population[i].acc
                 self.best_chrom.uid = self.population[i].uid
