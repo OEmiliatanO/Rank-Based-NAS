@@ -14,6 +14,15 @@ class chromosome():
 
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
+        #### cheat
+        if args.valid:
+            base_loc  = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}"
+        elif args.test:
+            base_loc  = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}-test"
+        self.ninaswot = np.load(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.ntk      = np.load(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.entropy  = np.load(f"{base_loc}/entropy_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        ####
         self.MAXN_POPULATION = args.maxn_pop
         self.MAXN_ITERATION = args.maxn_iter
         self.PROB_MUTATION = args.prob_mut
@@ -45,11 +54,15 @@ class GA():
 
     def evaluate(self):
         for i in range(len(self.population)):
-            network, uid, acc = gene2net(self.population[i].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.trainval)
+            network, uid, acc = gene2net(self.population[i].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
             self.population[i].acc = acc
             self.population[i].uid = uid
             if self.population[i].gene not in self.DICT:
-                self.population[i].fitness = self.DICT[self.population[i].gene] = score_tot(network, self.train_loader, self.stds, self.means, self.device, self.args)
+                #self.population[i].fitness = self.DICT[self.population[i].gene] = \
+                #(standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswpt"]), \
+                #-standardize(ntk_score(network, self.train_loader, self.device), self.means["ntk"], self.stds["ntk"]), \
+                #standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
+                self.population[i].fitness = self.DICT[self.population[i].gene] = self.ninaswot[self.populatopn[i].uid]
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]
             if self.population[i].fitness > self.best_chrom.fitness or self.best_chrom.gene == "":
@@ -85,7 +98,7 @@ class GA():
         gene_sect_len = self.MAXN_OPERATION
         genelist0 = [p0.gene[i:i+gene_sect_len] for i in range(0, len(p0.gene), gene_sect_len)]
         genelist1 = [p1.gene[i:i+gene_sect_len] for i in range(0, len(p1.gene), gene_sect_len)]
-        
+        """
         l0 = random.randint(1, self.MAXN_CONNECTION)
         r0 = random.choice([i for i in range(l0)] + [i for i in range(l0 + 1, self.MAXN_CONNECTION)])
         if l0>r0: l0,r0 = r0, l0
@@ -98,13 +111,12 @@ class GA():
         break_point = random.randint(1, self.MAXN_CONNECTION-1)
         newgenelist0 = genelist0[:break_point] + genelist1[break_point:]
         newgenelist1 = genelist1[:break_point] + genelist0[break_point:]
-        """
+        
         return chromosome("".join(newgenelist0)), chromosome("".join(newgenelist1))
 
     def find_best(self):
         self.init_population()
         self.evaluate()
-        nruns = tqdm(total = self.MAXN_ITERATION)
         for _ in range(self.MAXN_ITERATION):
             offsprings = []
             for i in range(self.MAXN_POPULATION//2):
@@ -126,22 +138,20 @@ class GA():
             
             self.population = offsprings
             self.evaluate()
-            nruns.set_description(f"evolution: best score = {self.best_chrom.fitness:.3f}, acc = {self.best_chrom.acc:.3f}")
-            nruns.update(1)
-        network, uid, acc = gene2net(self.best_chrom.gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.trainval)
+        network, uid, acc = gene2net(self.best_chrom.gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
         return self.best_chrom.fitness, acc, uid
 
 def gene2sect(gene, ops):
     gene_sect_len = len(ops)
     return [ops[gene[i:i+gene_sect_len].find("1")] for i in range(0, len(gene), gene_sect_len)]
 
-def gene2net(gene, ops, searchspace, acc_type, trainval):
+def gene2net(gene, ops, searchspace, acc_type, valid):
     gene_sect = gene2sect(gene, ops)
     arch = "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*gene_sect)
     idx = searchspace.query_index_by_arch(arch)
     uid = searchspace[idx]
     #print(f"arch={arch}, idx={idx}, uid={uid}")
     network = searchspace.get_network(uid)
-    acc = searchspace.get_final_accuracy(uid, acc_type, trainval)
+    acc = searchspace.get_final_accuracy(uid, acc_type, valid)
     return network, uid, acc
 
