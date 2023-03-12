@@ -18,7 +18,11 @@ parser.add_argument('--sigma', default=0.05, type=float, help='noise level if au
 parser.add_argument('--init', default='', type=str)
 parser.add_argument('--GPU', default='0', type=str)
 parser.add_argument('--seed', default=1, type=int)
-parser.add_argument('--trainval', action='store_true')
+
+parser.add_argument('--valid', action='store_true')
+parser.add_argument('--test', action='store_true')
+parser.add_argument('--train', action='store_true')
+
 parser.add_argument('--dropout', action='store_true')
 parser.add_argument('--dataset', default='cifar10', type=str)
 parser.add_argument('--maxofn', default=1, type=int, help='score is the max of this many evaluations of the network')
@@ -34,17 +38,42 @@ parser.add_argument('--find_the_problem', action='store_true')
 
 args = parser.parse_args()
 
+def remap_dataset_names(dataset, valid, test, train):
+    cifar10 = 'cifar10'
+    if dataset == cifar10 and valid:
+        return cifar10 + '-valid', 'x-valid'
+    if dataset == cifar10 and test:
+        return cifar10, 'ori-test'
+    if dataset == cifar10 and train:
+        return cifar10, 'train'
+
+    assert not train, "train label"
+    cifar100 = 'cifar100'
+    if dataset == cifar100 and valid:
+        return cifar100, 'x-valid'
+    if dataset == cifar100 and test:
+        return cifar100, 'x-test'
+    
+    ImageNet16_120 = "ImageNet16-120"
+    if dataset == ImageNet16_120 and valid:
+        return ImageNet16_120, 'x-valid'
+    if dataset == ImageNet16_120 and test:
+        return ImageNet16_120, 'x-test'
+    assert False, "Unknown dataset: {args.dataset}"
+
+args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
+
 targets = args.targets
 targets = targets.split('-')
 assert len(targets) == 2, "length of targets must be 2"
 print(targets[0])
 print(targets[1])
 
-filenames = [f'{args.save_loc}/{targets[i]}_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}.npy' for i in range(len(targets))]
+filenames = [f'{args.save_loc}/{targets[i]}_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy' for i in range(len(targets))]
 
 for i, fname in enumerate(filenames):
     if "acc" in fname:
-        filenames[i] = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.trainval}.npy'
+        filenames[i] = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.valid}.npy'
         break
 
 for fname in filenames:
@@ -66,7 +95,7 @@ if args.find_the_problem:
         if mask[i] == True:
             the_problems.append(i)
     the_problems = np.array(the_problems)
-    wheres_the_problems = f'{args.save_loc}/acc-{targets[1]}_the_problems_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
+    wheres_the_problems = f'{args.save_loc}/acc-{targets[1]}_the_problems_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
     np.save(wheres_the_problems, the_problems)
     print(f"save the problems: {the_problems}")
 ####
@@ -83,6 +112,7 @@ mask = np.full(scores[0].shape, False)
 for i, fname in enumerate(filenames):
     if "acc" in fname:
         print(f"the maximum found acc according to score is {scores[i][np.argmax(scores[1-i])]}")
+        print(f"and the maximum acc is {np.max(scores[i])}")
         max_score = np.argmax(scores[i])
         if args.find_the_problem:
             mask = scores[1-i] > scores[1-i][max_score]
@@ -100,7 +130,7 @@ ax.set_xlabel(f'{targets[0]}')
 ax.set_ylabel(f'{targets[1]}')
 ax.set_title(f'{args.nasspace} {args.dataset} \n $\\tau=${tau:.3f}')
 
-filename_result = f'{args.save_loc}/{args.save_string}_{args.targets}_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}'
+filename_result = f'{args.save_loc}/{args.save_string}_{args.targets}_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
 
 print("result file :" + filename_result + ".png")
 print("result file :" + filename_result + ".pdf")
