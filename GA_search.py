@@ -10,7 +10,8 @@ from tqdm import trange
 from statistics import mean, stdev
 import time
 from utils import add_dropout
-from search.GA_based_on_rank import GA
+#from search.GA_based_on_rank import GA
+from search.GA import GA
 from score import *
 
 
@@ -37,7 +38,11 @@ parser.add_argument('--sigma', default=0.05, type=float, help='noise level if au
 parser.add_argument('--GPU', default='0', type=str)
 parser.add_argument('--seed', default=1, type=int)
 parser.add_argument('--init', default='', type=str)
-parser.add_argument('--trainval', action='store_true')
+
+parser.add_argument('--valid', action='store_true')
+parser.add_argument('--test', action='store_true')
+parser.add_argument('--train', action='store_true')
+
 parser.add_argument('--activations', action='store_true')
 parser.add_argument('--cosine', action='store_true')
 parser.add_argument('--dataset', default='cifar10', type=str)
@@ -47,8 +52,6 @@ parser.add_argument('--stem_out_channels', default=16, type=int, help='output ch
 parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of modules (nasbench101)')
 parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modules per stack (nasbench101)')
 parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
-
-parser.add_argument('--proposition', default="[0.2,0.6,0.5]", type=str)
 
 args = parser.parse_args()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
@@ -61,27 +64,51 @@ np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-searchspace = nasspace.get_search_space(args)
-train_loader = datasets.get_data(args.dataset, args.data_loc, args.trainval, args.batch_size, args.augtype, args.repeat, args)
-os.makedirs(args.save_loc, exist_ok=True)
 
+def remap_dataset_names(dataset, valid, test, train):
+    cifar10 = 'cifar10'
+    if dataset == cifar10 and valid:
+        return cifar10 + '-valid', 'x-valid'
+    if dataset == cifar10 and test:
+        return cifar10, 'ori-test'
+    if dataset == cifar10 and train:
+        return cifar10, 'train'
+
+    assert not train, "no train label"
+    cifar100 = 'cifar100'
+    if dataset == cifar100 and valid:
+        return cifar100, 'x-valid'
+    if dataset == cifar100 and test:
+        return cifar100, 'x-test'
+
+    ImageNet16_120 = 'ImageNet16-120'
+    if dataset == ImageNet16_120 and valid:
+        return ImageNet16_120, 'x-valid'
+    if dataset == ImageNet16_120 and test:
+        return ImageNet16_120, 'x-test'
+    assert False, "Unknown dataset {args.dataset}"
+
+
+print(f"Initialize the train loader...")
+print(f"dataset = {args.dataset}, data location = {args.data_loc}, validation = {args.valid}")
+train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.repeat, args)
+
+print(f"Initialize the nas bench...")
+args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
+print(f"dataset = {args.dataset}, validation = {args.valid}")
+searchspace = nasspace.get_search_space(args)
+
+print(f"Make sure {args.save_loc} exist.")
+os.makedirs(args.save_loc, exist_ok=True)
 
 times     = []
 chosen    = []
 acc       = []
-val_acc   = []
 topscores = []
 
-if args.dataset == 'cifar10':
-    acc_type = 'ori-test'
-    val_acc_type = 'x-valid'
-else:
-    acc_type = 'x-test'
-    val_acc_type = 'x-valid'
-
-print(f"now calculate means and stds")
+print(f"Now calculate means and standards.")
 #means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
-"""
+
 # cifar10
 means = {}
 stds = {}
@@ -95,8 +122,9 @@ means["entropy"] = 721.064296875
 stds["entropy"] = 280.67810232781636
 means["ninaswot"] = 0
 stds["ninaswot"]  = np.sqrt(5)
-"""
+
 # cifar100
+"""
 means = {}
 stds = {}
 means["ni"] = -0.07765040397644044
@@ -109,12 +137,15 @@ means["entropy"] = 721.064296875
 stds["entropy"] = 280.67810232781636
 means["ninaswot"] = 0
 stds["ninaswot"]  = np.sqrt(5)
+"""
 
+print(f"Calculation is done.")
 print(f"means = {means}\nstds = {stds}")
 print(f"========================================")
 
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
 
+print(f"========================================")
 runs = trange(args.n_runs, desc='acc: nan topscores: nan')
 for N in runs:
     start = time.time()
@@ -127,11 +158,10 @@ for N in runs:
     acc.append(acc_)
 
     times.append(time.time()-start)
-    runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f})  time:{mean(times):.2f}")
+    #runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f})  time:{mean(times):.2f}")
+    runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  uid: {uid}  topscores:{topscores[-1]:.3f}  time:{mean(times):.2f}")
 
-print(f"Final mean test accuracy: {np.mean(acc)}")
-#if len(val_acc) > 1:
-#    print(f"Final mean validation accuracy: {np.mean(val_acc)}")
+print(f"Final mean accuracy: {np.mean(acc)}")
 
 state = {'accs': acc,
          'chosen': chosen,
@@ -139,6 +169,5 @@ state = {'accs': acc,
          'topscores': topscores,
          }
 
-dset = args.dataset if not (args.trainval and args.dataset == 'cifar10') else 'cifar10-valid'
-fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{dset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}_{args.maxn_pop}_{args.maxn_iter}_{args.prob_cr}_{args.prob_mut}.t7"
+fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dateset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}_{args.valid}_{args.test}_{args.maxn_pop}_{args.maxn_iter}_{args.prob_cr}_{args.prob_mut}.t7"
 torch.save(state, fname)
