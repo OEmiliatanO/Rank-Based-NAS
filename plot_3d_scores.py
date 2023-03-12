@@ -17,7 +17,11 @@ parser.add_argument('--sigma', default=0.05, type=float, help='noise level if au
 parser.add_argument('--init', default='', type=str)
 parser.add_argument('--GPU', default='0', type=str)
 parser.add_argument('--seed', default=1, type=int)
-parser.add_argument('--trainval', action='store_true')
+
+parser.add_argument('--valid', action='store_true')
+parser.add_argument('--test', action='store_true')
+parser.add_argument('--train', action='store_true')
+
 parser.add_argument('--dropout', action='store_true')
 parser.add_argument('--dataset', default='cifar10', type=str)
 parser.add_argument('--maxofn', default=1, type=int, help='score is the max of this many evaluations of the network')
@@ -30,11 +34,34 @@ parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbenc
 
 args = parser.parse_args()
 
-filename_ninaswot = f'{args.save_loc}/ninaswot_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
-filename_entropy  = f'{args.save_loc}/entropy_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
-filename_ntk  = f'{args.save_loc}/ntk_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
-filename_acc = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.trainval}.npy'
-filename_pickle = f'{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.trainval}_{args.batch_size}_{args.maxofn}_{args.seed}.pickle'
+def remap_dataset_names(dataset, valid, test, train):
+    cifar10 = 'cifar10'
+    if dataset == cifar10 and valid:
+        return cifar10 + '-valid', 'x-valid'
+    if dataset == cifar10 and test:
+        return cifar10, 'ori-test'
+    if dataset == cifar10 and train:
+        return cifar10, 'train'
+
+    assert not train, "train label"
+    cifar100 = 'cifar100'
+    if dataset == cifar100 and valid:
+        return cifar100, 'x-valid'
+    if dataset == cifar100 and test:
+        return cifar100, 'x-test'
+
+    ImageNet16_120 = "ImageNet16-120"
+    if dataset == ImageNet16_120 and valid:
+        return ImageNet16_120, 'x-valid'
+    if dataset == ImageNet16_120 and test:
+        return ImageNet16_120, 'x-test'
+    assert False, f"Unknown dataset: {args.dataset}"
+
+filename_ninaswot = f'{args.save_loc}/ninaswot_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
+filename_entropy  = f'{args.save_loc}/entropy_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
+filename_ntk  = f'{args.save_loc}/ntk_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
+filename_acc = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.valid}.npy'
+filename_pickle = f'{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.pickle'
 
 filenames = {"ninaswot": filename_ninaswot, "entropy": filename_entropy, "ntk": filename_ntk, "acc": filename_acc, "pickle": filename_pickle}
 
