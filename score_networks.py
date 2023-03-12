@@ -103,11 +103,7 @@ filenames = {"ninaswot": filename_ninaswot, "ntk": filename_ntk, "acc": filename
 print(f"files to save: {filenames}")
 
 scores = dict(zip(["ninaswot", "ntk", "gradsign"],[np.zeros(len(searchspace)) for i in range(3)]))
-
-try:
-    accs = np.load(filenames['acc'] + '.npy')
-except:
-    accs = np.zeros(len(searchspace))
+accs = np.zeros(len(searchspace))
 
 print(f"Start calculate means and stds in {args.n_samples} samples")
 means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
