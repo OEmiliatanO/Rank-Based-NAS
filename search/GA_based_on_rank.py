@@ -5,28 +5,24 @@ import numpy as np
 
 class chromosome():
     def __init__(self, gene = "", fitness = (0,0,0), acc = 0, uid = 0):
-        """ fitness: (ninaswot, ntk, entropy) """
+        """ fitness: (ninaswot, ntk, ...) """
         self.gene = gene
         self.fitness = fitness
         self.acc = acc
         self.uid = uid
 
-###
-cifar10_base  = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/20230306"
-cifar100_base = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/20230308"
-###
-
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
         #### cheat
-        if "cifar10" == args.dataset:
-            self.ninaswot = np.load(f"{cifar10_base}/ninaswot_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
-            self.ntk      = np.load(f"{cifar10_base}/ntk_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
-            self.entropy  = np.load(f"{cifar10_base}/entropy_nasbench201_cifar10_none_0.05_1_True_128_1_1.npy")
-        elif "cifar100" == args.dataset:
-            self.ninaswot = np.load(f"{cifar100_base}/ninaswot_nasbench201_cifar100_none_0.05_1_True_128_1_1.npy")
-            self.ntk      = np.load(f"{cifar100_base}/ntk_nasbench201_cifar100_none_0.05_1_True_128_1_1.npy")
-            self.entropy  = np.load(f"{cifar100_base}/entropy_nasbench201_cifar100_none_0.05_1_True_128_1_1.npy")
+        if args.valid:
+            base_loc  = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}"
+        elif args.test:
+            base_loc  = "/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}-test"
+
+        self.ninaswot = np.load(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.ntk      = np.load(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.entropy  = np.load(f"{base_loc}/entropy_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        ####
 
         assert len(self.ninaswot) == 15625, "broken: ninaswot"
         assert len(self.ntk) == 15625, "broken: ntk"
@@ -49,6 +45,7 @@ class GA():
         self.acc_type = acc_type
         self.best_chrom = chromosome()
         self.proposition = eval(args.proposition)
+        self.candiate = {"ninaswot":[], "ntk":[]}
         self.NAS_201_ops = ['none', 'skip_connect', 'nor_conv_1x1', 'nor_conv_3x3', 'avg_pool_3x3']
 
     def init_population(self):
@@ -64,24 +61,26 @@ class GA():
 
     def evaluate(self):
         for i in range(len(self.population)):
-            network, uid, acc = gene2net(self.population[i].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.trainval)
+            network, uid, acc = gene2net(self.population[i].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
             self.population[i].acc = acc
             self.population[i].uid = uid
             if self.population[i].gene not in self.DICT:
                 #self.population[i].fitness = self.DICT[self.population[i].gene] = \
                 #(standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswot"]), \
-                # -standardize(ntk_score(network, self.train_loader, self.device, train_mode=self.args.trainval), self.means["ntk"], self.stds["ntk"]), \
-                # standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
-                self.population[i].fitness = self.DICT[self.population[i].gene] = (self.ninaswot[self.population[i].uid], self.ntk[self.population[i].uid], 0)
+                #-standardize(ntk_score(network, self.train_loader, self.device), self.means["ntk"], self.stds["ntk"]), \
+                #standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
+                self.population[i].fitness = self.DICT[self.population[i].gene] = (self.ninaswot[self.population[i].uid], self.ntk[self.population[i].uid], self.ninaswot[self.population[i].uid]+self.ntk[self.population[i].uid])
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]
+
+            """
             # global optimum
             if (sum(self.population[i].fitness) > sum(self.best_chrom.fitness) or self.best_chrom.gene == "") and self.population[i].fitness >= (0,0,0) and self.population[i].fitness <= (50,50,50):
                 self.best_chrom.fitness = self.population[i].fitness
                 self.best_chrom.acc = self.population[i].acc
                 self.best_chrom.uid = self.population[i].uid
                 self.best_chrom.gene = copy.deepcopy(self.population[i].gene)
-            
+            """
             del network
 
     def mutation(self, chrom):
@@ -148,26 +147,47 @@ class GA():
             
             self.population = offsprings
             self.evaluate()
-            offsprings.sort(key = lambda this: sum(this.fitness), reverse = True)
+            
+            offsprings.sort(key = lambda this: this.fitness[0], reverse = True) # ninaswot rank
+            self.candiate["ninaswot"].append(offsprings[0])
+            self.candiate["ntk"].append(offsprings[0])
+
+            offsprings.sort(key = lambda this: this.fitness[1], reverse = True) # ntk rank
+            self.candiate["ninaswot"].append(offsprings[0])
+            self.candiate["ntk"].append(offsprings[0])
+            
+            offsprings.sort(key = lambda this: this.fitness[2], reverse = True) # tot rank
             offsprings = offsprings[:int(len(offsprings)*0.5)]
         
         #offsprings.sort(key = lambda this: this.fitness[0], reverse = True)
         #if random.randint(0,99) <= 49:
-        network, uid, acc = gene2net(self.best_chrom.gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.trainval)
+        self.candiate["ninaswot"].sort(key = lambda this: this.fitness[0], reverse = True)
+        self.candiate["ntk"].sort(key = lambda this: this.fitness[1], reverse = True)
+        rank = {}
+        best_rank = None
+        for rk, chrom in enumerate(self.candiate["ninaswot"]):
+            rank[chrom.uid] = rk+1
+        for rk, chrom in enumerate(self.candiate["ntk"]):
+            rank[chrom.uid] += rk+1
+            if best_rank > rank[chrom.uid] or best_rank == None:
+                best_rank = rank[chrom.uid]
+                self.best_chrom = chrom
+
+        network, uid, acc = gene2net(self.best_chrom.gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
         #else:
-        #    network, uid, acc = gene2net(offsprings[0].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.trainval)
+        #    network, uid, acc = gene2net(offsprings[0].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
         return self.best_chrom.fitness, acc, uid
 
 def gene2sect(gene, ops):
     gene_sect_len = len(ops)
     return [ops[gene[i:i+gene_sect_len].find("1")] for i in range(0, len(gene), gene_sect_len)]
 
-def gene2net(gene, ops, searchspace, acc_type, trainval):
+def gene2net(gene, ops, searchspace, acc_type, valid):
     gene_sect = gene2sect(gene, ops)
     arch = "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*gene_sect)
     idx = searchspace.query_index_by_arch(arch)
     uid = searchspace[idx]
     network = searchspace.get_network(uid)
-    acc = searchspace.get_final_accuracy(uid, acc_type, trainval)
+    acc = searchspace.get_final_accuracy(uid, acc_type, valid)
     return network, uid, acc
 
