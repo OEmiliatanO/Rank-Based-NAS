@@ -11,8 +11,6 @@ class chromosome():
         self.fitness = fitness
         self.acc = 0
         self.uid = 0
-###
-###
 
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
