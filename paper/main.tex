@@ -207,10 +207,13 @@
         s=\log\lvert K_H\rvert
     \end{equation}
     The rationale behind is to see how dissimilar the linear region activated by 
-    the ReLU units.
+    the ReLU units between two inputs. An architecture shall learn better 
+    when inputs are well separated.
+    Later, Wu et al. \cite{10.1145/3491396.3506510} 
     
-    On the other hand, Chen et al. proposed using the condition number of NTK 
-    as an evaluation of the trainability, definde as
+    On the other hand, instead of using the correlation of binary activation 
+    patterns as score. Chen et al. proposed using the condition number of NTK 
+    as an evaluation of the trainability, defined as
     \begin{equation}
         \mathcal{K_N}=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}
     \end{equation}
