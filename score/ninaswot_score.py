@@ -75,7 +75,6 @@ def ni_score(network, train_loader, device, args):
     o_, _ = network(x2)
     o = o.detach().cpu().numpy()
     o_ = o_.detach().cpu().numpy()
-    #print(f"after ni cuda memory allocated = {torch.cuda.memory_allocated(0)/1024/1024/1024}")
     del network
     torch.cuda.empty_cache()
     return -np.sum(np.square(o-o_))
