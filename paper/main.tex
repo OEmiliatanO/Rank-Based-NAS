@@ -1,29 +1,72 @@
-\documentclass[conference]{IEEEtran}
-\IEEEoverridecommandlockouts
-%\documentclass[sigconf]{acmart}
-%\let\Bbbk\relax %% fix bug
+%\documentclass[conference]{IEEEtran}
+%\IEEEoverridecommandlockouts
+\documentclass[sigconf]{acmart}
+\let\Bbbk\relax %% fix bug
 \usepackage[utf8]{inputenc}
-\usepackage{graphicx}
-\usepackage{listings}
-\usepackage{url}
-\usepackage{indentfirst}
-\usepackage{comment}
-\usepackage{algorithm}
+
+% =======================
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{amstext}
 \usepackage{amsopn}
-\usepackage{algpseudocode}
+%\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
 
-\title{GA-based Training-Free NAS Algorithm with Hybrid Score Function}
-\author{Hsieh Cheng-Han}
-\date{2023}
+\usepackage{textcomp}
+
+\usepackage{boxedminipage}
+\usepackage{enumerate}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{times}
+\usepackage{version}
+% \usepackage[pdftex]{graphicx}
+\usepackage{epsfig}
+\usepackage{epsf}
+%\usepackage{graphics}
+\usepackage{caption}
+\usepackage{subfigure}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+%\PassOptionsToPackage{bookmarks={false}}{hyperref}
+%%%%%%%%%%%%
+\usepackage{comment}
+\usepackage{multicol}
+\usepackage{booktabs}
+\usepackage{dblfloatfix}
+% ==========================
+\input lstset.tex
+\input macros.tex
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
 
 \begin{document}
 
-\maketitle
+\title{GA-based Training-Free NAS Algorithm with Hybrid Score Function}
 
-\section{Abstract}
+\author{Hsieh Cheng-Han}
+\email{emiliaistruelove@gmail.com}
+\affiliation{%
+  \institution{Department of Computer Science and Engineering, National Sun Yat-sen University}
+  \streetaddress{70 Lienhai Rd}
+  \city{Kaohsiung}
+  \country{Taiwan}
+}
+
+\author{Chun-Wei Tsai}
+\email{cwtsai@mail.cse.nsysu.edu.tw}
+\affiliation{%
+  \institution{Department of Computer Science and Engineering, National Sun Yat-sen University}
+  \streetaddress{70 Lienhai Rd}
+  \city{Kaohsiung}
+  \country{Taiwan}
+}
+
+\begin{abstract}
 
     Most neural architecture searches (NASs) are time-consuming caused by 
     the fact that, during the searching, a candidate architecture must be 
@@ -52,23 +95,26 @@
     non-weight-sharing methods, and neural architecture search without training (NASWOT). 
     We expect develope a faster and more accurate training-free NAS algorithm.
 
+\end{abstract}
+\maketitle
+
 \section{Introduction}
+\label{sec:introduction}
 
 % introduction
     Neural architecture search (NAS) has recently drawn a big amount of 
     attention, since the ability to automatically design a "good" neural 
-    architecture. By leveraging machine learning algorithms (Zoph \& Le,
-    \ \cite{https://doi.org/10.48550/arxiv.1611.01578}), NAS algorithms 
-    can explore a search space, which is comprised of numerous potential 
-    architectures, to find out a good architectures that outperform those 
-    designed by human experts. In recent years, the use of NAS is widespread, 
-    from object detection (Sun et al.,\ \cite{https://doi.org/10.48550/arxiv.2111.13336}), 
-    image recognition (Mellor et al.,\ \cite{https://doi.org/10.48550/arxiv.2006.04647}) 
-    and speech recognition (Zheng et al.,\ \cite{https://doi.org/10.48550/arxiv.2011.05649}, 
-    Mehrotra et al.,\ \cite{mehrotra2021nasbenchasr}) to natural language 
-    processing(Jiang et al.,\ \cite{jiang-etal-2019-improved}, 
-    Klyuchnikov et al.,\ \cite{https://doi.org/10.48550/arxiv.2006.07116}, 
-    Wang et al.,\ \cite{https://doi.org/10.48550/arxiv.2005.14187}).
+    architecture. By leveraging machine learning algorithms \cite{https://doi.org/10.48550/arxiv.1611.01578}, 
+    NAS algorithms can explore a search space, which is comprised of numerous 
+    potential architectures, to find out a good architectures that outperform 
+    those designed by human experts. In recent years, the use of NAS is 
+    widespread, from object detection \cite{https://doi.org/10.48550/arxiv.2111.13336}, 
+    image recognition \cite{https://doi.org/10.48550/arxiv.2006.04647} 
+    and speech recognition \cite{https://doi.org/10.48550/arxiv.2011.05649} 
+    \cite{mehrotra2021nasbenchasr} to natural language 
+    processing. \cite{jiang-etal-2019-improved} 
+    \cite{https://doi.org/10.48550/arxiv.2006.07116} 
+    \cite{https://doi.org/10.48550/arxiv.2005.14187}
 
     Despite the promising results of NAS, there are still many challenges 
     to conquer. One major problem is the extremely high computational 
@@ -79,16 +125,31 @@
     evaluate how good of this architecture.
 
     To overcome this challenge, recent works developed and proposed lots 
-    of method which is so called training-free NAS. Some use mean absolute 
-    error random sampling (MRS) (Camero et al.,\ \cite{https://doi.org/10.48550/arxiv.1805.07159}, 
-    Camero et al.,\ \cite{Camero_2021}, Camero et al.,\ \cite{https://doi.org/10.48550/arxiv.2106.15295}) 
-    as a training-free score function and some use neural tangent kernel 
-    (NTK) (Chen et al.,\ \cite{https://doi.org/10.48550/arxiv.2102.11535}, 
-    Wang et al.,\ \cite{https://doi.org/10.48550/arxiv.2203.09137}, 
-    Shu et al.,\ \cite{https://doi.org/10.48550/arxiv.2109.00817}), while 
-    some use gradient-based methods (Zhang \& Jia,\ \cite{https://doi.org/10.48550/arxiv.2110.08616}, 
-    Cavagnero et al.,\ \cite{https://doi.org/10.48550/arxiv.2207.05135}, 
-    Abdelfattah et al.,\ \cite{https://doi.org/10.48550/arxiv.2101.08134}).
+    of method which is so called training-free NAS. 
+    % NINASWOT
+    For example, Mellor et al. \cite{https://doi.org/10.48550/arxiv.2006.04647} proposed the 
+    measurement of the correlation between the binary activation paterns, 
+    induced by the untrained network at two inputs, named as neural architecture 
+    search without training (NASWOT). The correlation is defined as the 
+    logarithmic determinant of the kernel matrix, as follows:
+    \begin{equation}
+        s=\log\lvert K_H\rvert
+    \end{equation}
+    where $K_H$ is the kernel matrix.
+    Later, Wu et al. \cite{10.1145/3491396.3506510} found a high score 
+    obtained by such a function may not correspond to a high-performence 
+    model. Thus, they additionally applied noisy immunity method on NASWOT, 
+    named as noisy immunity for NASWOT (NINASWOT).
+    % NTK
+    For another example, Chen et al. proposed to compute the condition 
+    number of neural tangent kernel (NTK) \cite{https://doi.org/10.48550/arxiv.2102.11535} 
+    \cite{https://doi.org/10.48550/arxiv.2203.09137} \cite{https://doi.org/10.48550/arxiv.2109.00817}, 
+    which is defined as 
+    \begin{equation}
+        \mathcal{K_N}=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}
+    \end{equation}
+    and used as the score to estimate the trainability of an architecture.
+	% unknown
 
 % what is unknown?
     However, most of score functions suffer from low correlation between 
@@ -99,45 +160,76 @@
     function can only evaluate one perspect/characteristic of an architecture.
     
 % method
-    Based on the fact above, we propose cooperating three heterogeneous score 
+    To address the problem, we propose cooperating three heterogeneous score 
     functions with genetic-based search method, we shall evaulate an architecture 
     from different aspects. More specifically, the first score function is 
-    noise immunity for neural architecture search without training (NINASWOT) 
-    (Wu et al.\ \cite{10.1145/3491396.3506510}). Starting with the work of Mellor 
-    et al., they proposed the measurement of the correlation between binary 
-    activation paterns of input data at each ReLU layer, named as neural architecture 
-    search without training (NASWOT). Later, Wu et al. found a high score obtained 
-    by such a function may not correspond to a high-performence model. Thus, 
-    they additionally applied noisy immunity method on NASWOT, named as NINASWOT. 
-    Second one is maximum-entropy detection (MAE-DET) (Sun et al.\ \cite{https://doi.org/10.48550/arxiv.2111.13336}). 
-    Based on the work of Sun et al., they proposed to find the maximum of 
-    the differential entropy by calculating the variance of the output at 
-    the final layer with the input Gaussian noise images and random weights on 
-    Gaussian distribution. Third one is condition number of neural tangent kernel 
-    (NTK) (Chen et al.\ \cite{https://doi.org/10.48550/arxiv.2102.11535}), which is 
-    defined as 
-    \begin{equation}
-        \mathcal{K_N}=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}
-    \end{equation}
-    Chen et al. used the condition number of NTK as the score to estimate the performance of an architecture.
-
-% results
-    The simulation results on cifar-10, cifar-100, and ImageNet-16-120 
-    shall show that the proposed method can find good architectures in 
-    reasonable time and computational resource. (TODO)
+    NINASWOT \cite{10.1145/3491396.3506510} as an indicator of the ability 
+    to distinguish two images. The second one is the condition number of NTK 
+    \cite{https://doi.org/10.48550/arxiv.2102.11535} as score to estimate the 
+    trainability of an architecture. The last one is (TBD).
 
 % conclusion
     The major contribution of this paper can be summarized as follow:
     \begin{itemize}
-        \item Develope a genetic-based neural architecture search method based on three hybrid score function.
-        \item (TODO)
+        \item Develope a genetic-based neural architecture search method based on three hybrid score functions.
+        \item Cooperating three score functions to get a higher correlation between score and accuracy.
     \end{itemize}
+    % expect what
 
     The remainder of this paper is organized as follows: Section 2 provides the 
     detail about the three heterogeneous score functions. Section 3 gives a detailed 
     description about the proposed method. Section 4 provide the simulation results 
-    in different search space. The conclusion and further prospect are gived in Section 5.
+    in different search space. The conclusion and further prospect are gived in 
+    Section 5.
+
+    \section{Related Works}
+    In these days, the studies of training-free neural architecture search (NAS) 
+    go viral, since the ability to accelerate the design of a neural network 
+    architecture used on specific application, while in the same time, by using 
+    training-free score function, training-free NAS cleverly avoid the drawback 
+    of long-time training. 
+
+    Mellor et al. \cite{https://doi.org/10.48550/arxiv.2006.04647} proposed a 
+    score function without the requirement for training. 
+    Consider a mini-batch of data $X=\{x_i\}^N_{i=1}$ mapped through a neural 
+    network as $f(x_i)$. The indicator variables from each ReLU units in $f$ 
+    at $x_i$ form a binary code $c_i$ that define the linear region.
+    The correlation between binary codes for the whole mini-batch can be examined 
+    by computing the kernel matrix
+    \begin{equation}
+        K_H=\begin{pmatrix}N_A-d_H(c_1,c_2)&\cdots&N_A-d_H(c_1,c_N)\\\vdots&\ddots&\vdots\\N_A-d_H(c_N,c_1)&\cdots&N_A-d_H(c_N,c_1)\end{pmatrix}
+    \end{equation}
+    where $N_A$ is the number of ReLU units and $d_H(c_i,c_j)$ is the hamming 
+    distance between the binary code $c_i$ and $c_j$.
+    With the kernel matrix, the score of an architecture can be evaluate as 
+    follow:
+    \begin{equation}
+        s=\log\lvert K_H\rvert
+    \end{equation}
+    The rationale behind is to see how dissimilar the linear region activated by 
+    the ReLU units between two inputs. An architecture shall learn better 
+    when inputs are well separated.
+    Later, Wu et al. \cite{10.1145/3491396.3506510} 
+    
+    On the other hand, instead of using the correlation of binary activation 
+    patterns as score. Chen et al. proposed using the condition number of NTK 
+    as an evaluation of the trainability, defined as
+    \begin{equation}
+        \mathcal{K_N}=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}
+    \end{equation}
+    where $\lambda_{\textrm{max}}(\hat\Theta)$ and $\lambda_{\textrm{min}}(\hat\Theta)$ 
+    are the maximum and minimum eigenvalues of NTK ($\hat\Theta$) respectively.
+    The rationale behind is based on the work of Lee et al. \cite{Lee_2020} and 
+    Xiao et al. \cite{DBLP:journals/corr/abs-1912-13053}, which concluded briefly, 
+    the training dynamics of a wide neural network can be solved as 
+    \begin{equation}
+        \mu_t(\textbf{X}_{\textrm{train}})=(\textbf{I}-e^{-\eta\hat\Theta_{\textrm{train}}t})\textbf{Y}_{\textrm{train}}
+    \end{equation}
+
 
     \bibliographystyle{IEEEtran}
     \bibliography{main}
 \end{document}
+
+
+
