@@ -209,7 +209,22 @@
     The rationale behind is to see how dissimilar the linear region activated by 
     the ReLU units between two inputs. An architecture shall learn better 
     when inputs are well separated.
-    Later, Wu et al. \cite{10.1145/3491396.3506510} 
+    Based on the work of Mellor et al., Wu et al. \cite{10.1145/3491396.3506510} 
+    found, in some case, an architecture with high NASWOT score may put different 
+    input data, which are originally in the same class, to different classes. 
+    
+    To fix this defect, Wu et al. proposed using noise immunity to additionally 
+    evaluate an architecture. The score function first pick a mini-batch of data, 
+    denoted $X$, and then add Gaussion noise on it, denoted $X'$ and defined by $X'=X+z$ 
+    where $z$ is the Gaussion noise. By passing $X$ and $X'$ through the untrained 
+    architecture, the sum of the square differences between outputs 
+    $O=\begin{matrix}o_1,o_2,\cdots,o_C\end{matrix}$ and 
+    $O'=\begin{matrix}o_1',o_2',\cdots,o_C'\end{matrix}$ can be calculated as 
+    follows:
+    \begin{equation}
+        n=-\sum^C_{n=1}(o_i-o_i')^2
+    \end{equation}
+    where $C$ is the number of classes determined by the input data.
     
     On the other hand, instead of using the correlation of binary activation 
     patterns as score. Chen et al. proposed using the condition number of NTK 
@@ -220,12 +235,20 @@
     where $\lambda_{\textrm{max}}(\hat\Theta)$ and $\lambda_{\textrm{min}}(\hat\Theta)$ 
     are the maximum and minimum eigenvalues of NTK ($\hat\Theta$) respectively.
     The rationale behind is based on the work of Lee et al. \cite{Lee_2020} and 
-    Xiao et al. \cite{DBLP:journals/corr/abs-1912-13053}, which concluded briefly, 
-    the training dynamics of a wide neural network can be solved as 
-    \begin{equation}
-        \mu_t(\textbf{X}_{\textrm{train}})=(\textbf{I}-e^{-\eta\hat\Theta_{\textrm{train}}t})\textbf{Y}_{\textrm{train}}
+    Xiao et al. \cite{https://doi.org/10.48550/arxiv.1912.13053}, which concluded briefly, 
+    the training dynamics of a wide neural network can be written in terms of the 
+    spectrum of the NTK:
+    \begin{equation}\label{eq:6}
+        \mu_t(\textbf{X}_{\textrm{train}})_i=(\textbf{I}-e^{-\eta\lambda_it})\textbf{Y}_{\textrm{train,}i}
     \end{equation}
-
+    where $\lambda_i$ are the eigenvalues of $\hat\Theta_{\textrm{train}}$ 
+    and they're ordered as $\lambda_0\geq\cdots\geq\lambda_m$. 
+    According to the hypothesis proposed by Lee et al. \cite{Lee_2020}, the maximum 
+    feasible learning rate scale as $\eta\sim2/\lambda_0$. Plug this scaling for 
+    $\eta$ in Eq. \ref{eq:6}, we see that the $\lambda_m$ will converge exponentially 
+    at a rate given by $1/K_N$ where $K_N=\frac{\lambda_0}{\lambda_m}$.
+    Then it can be concluded that if $K_N$ is lower, the corresponding architecture is 
+    more trainable.
 
     \bibliographystyle{IEEEtran}
     \bibliography{main}
