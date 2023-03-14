@@ -14,4 +14,4 @@ results/*.npy
 results/*.pickle
 results/*.pdf
 .vscode/
-.t7
+*.t7
