@@ -44,7 +44,6 @@ class GA():
         self.means = means
         self.acc_type = acc_type
         self.best_chrom = chromosome()
-        self.proposition = eval(args.proposition)
         self.candiate = {"ninaswot":[], "ntk":[]}
         self.NAS_201_ops = ['none', 'skip_connect', 'nor_conv_1x1', 'nor_conv_3x3', 'avg_pool_3x3']
 
@@ -169,7 +168,7 @@ class GA():
             rank[chrom.uid] = rk+1
         for rk, chrom in enumerate(self.candiate["ntk"]):
             rank[chrom.uid] += rk+1
-            if best_rank > rank[chrom.uid] or best_rank == None:
+            if best_rank == None or best_rank > rank[chrom.uid]:
                 best_rank = rank[chrom.uid]
                 self.best_chrom = chrom
 
