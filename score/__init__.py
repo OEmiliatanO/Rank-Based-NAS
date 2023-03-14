@@ -47,8 +47,8 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
     
     calstd  = lambda x: np.ma.masked_invalid(x).std()
     calmean = lambda x: np.ma.masked_invalid(x).mean()
-    stds  = {"naswot": calstd(scores_naswot), "ni": calstd(scores_ni), "ntk": calstd(scores_ntk)}
-    means = {"naswot": calmean(scores_naswot), "ni": calmean(scores_ni), "ntk": calmean(scores_ntk)}
+    stds  = {"naswot": calstd(scores_naswot), "ni": calstd(scores_ni), "ntk": calstd(scores_ntk), "ninaswot": np.sqrt(5)}
+    means = {"naswot": calmean(scores_naswot), "ni": calmean(scores_ni), "ntk": calmean(scores_ntk), "ninaswot": 0}
     
     del scores_naswot, scores_ni, scores_ntk, times
 
