@@ -107,38 +107,38 @@ acc       = []
 topscores = []
 
 print(f"Now calculate means and standards.")
-means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+#means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 
-# cifar10
-"""
-means = {}
-stds = {}
-means["ni"] = -0.08314655303955078
-stds["ni"]  =  0.1266118600610186
-means["naswot"] = 1595.0483017680253
-stds["naswot"] = 77.00454622052088
-means["ntk"] = 8064.954524536133
-stds["ntk"] = 21509.86140267155
-means["entropy"] = 721.064296875
-stds["entropy"] = 280.67810232781636
-means["ninaswot"] = 0
-stds["ninaswot"]  = np.sqrt(5)
-"""
-# cifar100
-"""
-means = {}
-stds = {}
-means["ni"] = -0.07765040397644044
-stds["ni"]  =  0.12295018402244674
-means["naswot"] = 1592.1985007236365
-stds["naswot"] = 77.2502068400697
-means["ntk"] = 9979.810939865112
-stds["ntk"] = 23336.402907292802
-means["entropy"] = 721.064296875
-stds["entropy"] = 280.67810232781636
-means["ninaswot"] = 0
-stds["ninaswot"]  = np.sqrt(5)
-"""
+if args.dataset == 'cifar10-valid':
+    # cifar10-valid
+    means = {}
+    stds = {}
+    means["ni"]       =    -0.08287504196166992
+    stds["ni"]        =     0.1338795386377707
+    means["naswot"]   =  1595.1744876295015
+    stds["naswot"]    =    76.14891987423042
+    means["ntk"]      = 10149.060118942261
+    stds["ntk"]       = 28253.425318545123
+    means["ninaswot"] = 0
+    stds["ninaswot"]  = np.sqrt(5)
+elif args.dataset == 'cifar100':
+    # cifar100
+    means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+    """
+    means = {}
+    stds = {}
+    means["ni"] = -0.07765040397644044
+    stds["ni"]  =  0.12295018402244674
+    means["naswot"] = 1592.1985007236365
+    stds["naswot"] = 77.2502068400697
+    means["ntk"] = 9979.810939865112
+    stds["ntk"] = 23336.402907292802
+    means["ninaswot"] = 0
+    stds["ninaswot"]  = np.sqrt(5)
+    """
+else:
+    means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+
 
 print(f"Calculation is done.")
 print(f"means = {means}\nstds = {stds}")
