@@ -44,7 +44,7 @@ class GA():
         self.means = means
         self.acc_type = acc_type
         self.best_chrom = chromosome()
-        self.candiate = {"ninaswot":[], "ntk":[]}
+        self.candiate = {"ninaswot":set(), "ntk":set()}
         self.NAS_201_ops = ['none', 'skip_connect', 'nor_conv_1x1', 'nor_conv_3x3', 'avg_pool_3x3']
 
     def init_population(self):
@@ -68,9 +68,9 @@ class GA():
                 #(standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswot"]), \
                 #-standardize(ntk_score(network, self.train_loader, self.device), self.means["ntk"], self.stds["ntk"]), \
                 #standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
-                self.population[i].fitness = self.DICT[self.population[i].gene] = (self.ninaswot[self.population[i].uid], self.ntk[self.population[i].uid], self.ninaswot[self.population[i].uid]+self.ntk[self.population[i].uid])
+                self.population[i].fitness = self.DICT[self.population[i].uid] = (self.ninaswot[self.population[i].uid], self.ntk[self.population[i].uid], self.ninaswot[self.population[i].uid]+self.ntk[self.population[i].uid])
             else:
-                self.population[i].fitness = self.DICT[self.population[i].gene]
+                self.population[i].fitness = self.DICT[self.population[i].uid]
 
             """
             # global optimum
@@ -148,34 +148,35 @@ class GA():
             self.evaluate()
             
             offsprings.sort(key = lambda this: this.fitness[0], reverse = True) # ninaswot rank
-            self.candiate["ninaswot"].append(offsprings[0])
-            self.candiate["ntk"].append(offsprings[0])
+            self.candiate["ninaswot"].add(offsprings[0].uid)
+            self.candiate["ntk"].add(offsprings[0].uid)
 
             offsprings.sort(key = lambda this: this.fitness[1], reverse = True) # ntk rank
-            self.candiate["ninaswot"].append(offsprings[0])
-            self.candiate["ntk"].append(offsprings[0])
+            self.candiate["ninaswot"].add(offsprings[0].uid)
+            self.candiate["ntk"].add(offsprings[0].uid)
             
-            offsprings.sort(key = lambda this: this.fitness[2], reverse = True) # tot rank
-            offsprings = offsprings[:int(len(offsprings)*0.5)]
+            #offsprings.sort(key = lambda this: this.fitness[2], reverse = True) # tot rank
+            offsprings = offsprings[:int(len(offsprings)*0.3)]
         
         #offsprings.sort(key = lambda this: this.fitness[0], reverse = True)
         #if random.randint(0,99) <= 49:
-        self.candiate["ninaswot"].sort(key = lambda this: this.fitness[0], reverse = True)
-        self.candiate["ntk"].sort(key = lambda this: this.fitness[1], reverse = True)
+        ninaswot_rk = sorted(list(self.candiate["ninaswot"]), key = lambda this: self.DICT[this][0], reverse = True)
+        ntk_rk      = sorted(list(self.candiate["ntk"]), key = lambda this: self.DICT[this][1], reverse = True)
         rank = {}
         best_rank = None
-        for rk, chrom in enumerate(self.candiate["ninaswot"]):
-            rank[chrom.uid] = rk+1
-        for rk, chrom in enumerate(self.candiate["ntk"]):
-            rank[chrom.uid] += rk+1
-            if best_rank == None or best_rank > rank[chrom.uid]:
-                best_rank = rank[chrom.uid]
-                self.best_chrom = chrom
-
-        network, uid, acc = gene2net(self.best_chrom.gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
+        for rk, uid in enumerate(ninaswot_rk):
+            rank[uid] = rk+1
+        for rk, uid in enumerate(ntk_rk):
+            rank[uid] += rk+1
+            if best_rank == None or best_rank > rank[uid]:
+                best_rank = rank[uid]
+                best_uid = uid
+        
+        #print(f"select best rank: {best_rank}")
+        network, uid, acc = uid2net(best_uid, self.searchspace, self.acc_type, self.args.valid)
         #else:
         #    network, uid, acc = gene2net(offsprings[0].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
-        return self.best_chrom.fitness, acc, uid
+        return self.DICT[uid], acc, uid
 
 def gene2sect(gene, ops):
     gene_sect_len = len(ops)
@@ -190,3 +191,7 @@ def gene2net(gene, ops, searchspace, acc_type, valid):
     acc = searchspace.get_final_accuracy(uid, acc_type, valid)
     return network, uid, acc
 
+def uid2net(uid, searchspace, acc_type, valid):
+    network = searchspace.get_network(uid)
+    acc = searchspace.get_final_accuracy(uid, acc_type, valid)
+    return network, uid, acc
