@@ -46,7 +46,7 @@ parser.add_argument('--train', action='store_true')
 parser.add_argument('--activations', action='store_true')
 parser.add_argument('--cosine', action='store_true')
 parser.add_argument('--dataset', default='cifar10', type=str)
-parser.add_argument('--n_samples', default=15, type=int)
+parser.add_argument('--n_samples', default=50, type=int)
 parser.add_argument('--n_runs', default=500, type=int)
 parser.add_argument('--stem_out_channels', default=16, type=int, help='output channels of stem convolution (nasbench101)')
 parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of modules (nasbench101)')
@@ -93,7 +93,7 @@ print(f"Initialize the train loader...")
 print(f"dataset = {args.dataset}, data location = {args.data_loc}, validation = {args.valid}")
 train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.repeat, args)
 
-print(f"Initialize the nas bench...")
+print(f"Initialize the nas bench api...")
 args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
 print(f"dataset = {args.dataset}, validation = {args.valid}")
 searchspace = nasspace.get_search_space(args)
@@ -107,9 +107,10 @@ acc       = []
 topscores = []
 
 print(f"Now calculate means and standards.")
-#means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 
 # cifar10
+"""
 means = {}
 stds = {}
 means["ni"] = -0.08314655303955078
@@ -122,7 +123,7 @@ means["entropy"] = 721.064296875
 stds["entropy"] = 280.67810232781636
 means["ninaswot"] = 0
 stds["ninaswot"]  = np.sqrt(5)
-
+"""
 # cifar100
 """
 means = {}
