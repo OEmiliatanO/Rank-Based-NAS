@@ -62,7 +62,7 @@ class GA():
                 #(standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswpt"]), \
                 #-standardize(ntk_score(network, self.train_loader, self.device), self.means["ntk"], self.stds["ntk"]), \
                 #standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
-                self.population[i].fitness = self.DICT[self.population[i].gene] = self.ninaswot[self.populatopn[i].uid]
+                self.population[i].fitness = self.DICT[self.population[i].gene] = self.ninaswot[self.population[i].uid]
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]
             if self.population[i].fitness > self.best_chrom.fitness or self.best_chrom.gene == "":
