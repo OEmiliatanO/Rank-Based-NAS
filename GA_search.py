@@ -10,8 +10,8 @@ from tqdm import trange
 from statistics import mean, stdev
 import time
 from utils import add_dropout
-#from search.GA_based_on_rank import GA
-from search.GA import GA
+from search.GA_based_on_rank import GA
+#from search.GA import GA
 from score import *
 
 
@@ -159,8 +159,8 @@ for N in runs:
     acc.append(acc_)
 
     times.append(time.time()-start)
-    #runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f})  time:{mean(times):.2f}")
-    runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  uid: {uid}  topscores:{topscores[-1]:.3f}  time:{mean(times):.2f}")
+    runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f})  time:{mean(times):.2f}")
+    #runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  uid: {uid}  topscores:{topscores[-1]:.3f}  time:{mean(times):.2f}")
 
 print(f"Final mean accuracy: {np.mean(acc)}")
 
@@ -170,5 +170,5 @@ state = {'accs': acc,
          'topscores': topscores,
          }
 
-fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dateset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}_{args.valid}_{args.test}_{args.maxn_pop}_{args.maxn_iter}_{args.prob_cr}_{args.prob_mut}.t7"
+fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dataset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}_{args.valid}_{args.test}_{args.maxn_pop}_{args.maxn_iter}_{args.prob_cr}_{args.prob_mut}.t7"
 torch.save(state, fname)
