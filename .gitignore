@@ -10,8 +10,9 @@ nasbench/
 nds_data/
 __pycache__/
 nasbench/
-results/*.npy
-results/*.pickle
-results/*.pdf
+*.npy
+*.pickle
+*.pdf
+*.png
 .vscode/
 *.t7
