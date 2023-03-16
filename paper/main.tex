@@ -68,15 +68,12 @@
 
 \begin{abstract}
 
-    Most neural architecture searches (NASs) are time-consuming caused by 
-    the fact that, during the searching, a candidate architecture must be 
-    trained to evaluate how good of this architecture. This is why some of 
-    training-free NAS algorithms have been proposed in recent years.
-
+    % dont we
+    % To address
+    % To evaluate
     Although the training-free NASs are typically faster than training-based 
     NAS method, however, the correlation between score value and the result 
     of an architecture is not well enough in most cases.
-    
     To address this problem, we propose a genetic-based training-free NAS 
     algorithm with hybrid training-free score function, which combines three 
     highly heterogeneous training-free score functions to evaluate an architecture. 
@@ -85,13 +82,11 @@
     role to evaluate a new candidate architecture during the convergencr process 
     of GA. More precisely, the first score function is noise immunity for 
     neural architecture search without search (NINASWOT), as an evaluation of 
-    pattern recognition ability, second one is maximum-entropy detection (MAE-DET), 
-    as an evaluation of the entropy of an architecture and the third one is 
-    condition number of neural tangent kernel (NTK), as an evaluation of 
-    the speed of converge.
+    pattern recognition ability, second one is condition number of neural 
+    tangent kernel (NTK), as an evaluation of trainability.
     
-    To evaluate the performance of the proposed algorithm, we compared it 
-    with several NAS algorithms, including weight-sharing methods, 
+    To evaluate the performance of the proposed algorithm, this paper compared 
+    it with several NAS algorithms, including weight-sharing methods, 
     non-weight-sharing methods, and neural architecture search without training (NASWOT). 
     We expect develope a faster and more accurate training-free NAS algorithm.
 
@@ -107,7 +102,7 @@
     architecture. By leveraging machine learning algorithms \cite{https://doi.org/10.48550/arxiv.1611.01578}, 
     NAS algorithms can explore a search space, which is comprised of numerous 
     potential architectures, to find out a good architectures that outperform 
-    those designed by human experts. In recent years, the use of NAS is 
+    those designed by human experts. "In recent years", the use of NAS is 
     widespread, from object detection \cite{https://doi.org/10.48550/arxiv.2111.13336}, 
     image recognition \cite{https://doi.org/10.48550/arxiv.2006.04647} 
     and speech recognition \cite{https://doi.org/10.48550/arxiv.2011.05649} 
@@ -116,6 +111,7 @@
     \cite{https://doi.org/10.48550/arxiv.2006.07116} 
     \cite{https://doi.org/10.48550/arxiv.2005.14187}
 
+    % reduce 
     Despite the promising results of NAS, there are still many challenges 
     to conquer. One major problem is the extremely high computational 
     cost to search for an optimal architecture, which can make NAS impractical 
@@ -130,12 +126,7 @@
     For example, Mellor et al. \cite{https://doi.org/10.48550/arxiv.2006.04647} proposed the 
     measurement of the correlation between the binary activation paterns, 
     induced by the untrained network at two inputs, named as neural architecture 
-    search without training (NASWOT). The correlation is defined as the 
-    logarithmic determinant of the kernel matrix, as follows:
-    \begin{equation}
-        s=\log\lvert K_H\rvert
-    \end{equation}
-    where $K_H$ is the kernel matrix.
+    search without training (NASWOT). 
     Later, Wu et al. \cite{10.1145/3491396.3506510} found a high score 
     obtained by such a function may not correspond to a high-performence 
     model. Thus, they additionally applied noisy immunity method on NASWOT, 
@@ -144,7 +135,7 @@
     For another example, Chen et al. proposed to compute the condition 
     number of neural tangent kernel (NTK) \cite{https://doi.org/10.48550/arxiv.2102.11535} 
     \cite{https://doi.org/10.48550/arxiv.2203.09137} \cite{https://doi.org/10.48550/arxiv.2109.00817}, 
-    which is defined as 
+    which is defined as % delete math formula
     \begin{equation}
         \mathcal{K_N}=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}
     \end{equation}
@@ -197,7 +188,7 @@
     architecture as $f(x_i)$. The activated ReLU units in every layer of the architecture 
     form a binary code $c_i$ that define the linear region.
     The correlation between binary codes for the whole mini-batch can be examined 
-    by computing the kernel matrix
+    by computing the kernel matrix % add figure
     \begin{equation}
         K_H=\begin{pmatrix}N_A-d_H(c_1,c_2)&\cdots&N_A-d_H(c_1,c_N)\\\vdots&\ddots&\vdots\\N_A-d_H(c_N,c_1)&\cdots&N_A-d_H(c_N,c_1)\end{pmatrix}
     \end{equation}
@@ -213,6 +204,14 @@
     when inputs are well separated.
 	
     % ninaswot
+    \begin{figure*}[htb]
+        \vspace{-\baselineskip}
+        \resizebox{1.0\textwidth}{!}{\includegraphics{asset/ni.pdf}}
+        \caption{A simple example to illustrate the procedure of noise immunity.}
+        \label{fig:ni}
+        \centering
+        \vspace{-\baselineskip}
+    \end{figure*}
     Based on the work of Mellor et al., Wu et al. \cite{10.1145/3491396.3506510} 
     found, in some case, an architecture with high score may put different 
     input data, which are originally in the same class, to different classes. 
@@ -235,7 +234,7 @@
     % ntk
     On the other hand, instead of using the correlation of binary activation 
     patterns as score. Chen et al. proposed using the condition number of NTK 
-    as an evaluation of the trainability, defined as
+    as an evaluation of the trainability, defined as % add figure
     \begin{equation}
         \mathcal{K_N}=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}
     \end{equation}
