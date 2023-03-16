@@ -58,13 +58,13 @@ args = parser.parse_args()
 
 
 if args.search_algo == "ori" or args.search_algo == "original" or args.search_algo == "origin" or args.search_algo == "base":
-    print(f"use search algorithm: GA origin ver.")
+    print(f"Use search algorithm: GA origin ver.")
     from search.GA import GA
 elif args.search_algo == "mm":
-    print(f"use search algorithm: GA multiple metric ver.")
+    print(f"Use search algorithm: GA multiple metric ver.")
     from search.GA_mm import GA
 elif args.search_algo == "rk" or args.search_algo == "based_on_rank":
-    print(f"use search algorithm: GA rank-based ver.")
+    print(f"Use search algorithm: GA rank-based ver.")
     from search.GA_based_on_rank import GA
 else:
     assert False, f"no such search algorithm: {args.GA}"
@@ -78,7 +78,9 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
+print(f"Use GPU {args.GPU}...")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(f"The current device used is {device}")
 
 def remap_dataset_names(dataset, valid, test, train):
     cifar10 = 'cifar10'
@@ -113,7 +115,7 @@ args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test
 print(f"dataset = {args.dataset}, validation = {args.valid}")
 searchspace = nasspace.get_search_space(args)
 
-print(f"Make sure {args.save_loc} exist.")
+print(f"Making sure {args.save_loc} exist.")
 os.makedirs(args.save_loc, exist_ok=True)
 
 times     = []
@@ -121,7 +123,7 @@ chosen    = []
 acc       = []
 topscores = []
 
-print(f"Now calculate means and standards.")
+print(f"Currently calculate means and standards.")
 #means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 
 if args.dataset == 'cifar10-valid':
@@ -155,14 +157,14 @@ else:
     means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 
 
-print(f"Calculation is done.")
+print(f"Calculation of means and stds is done.")
 print(f"means = {means}\nstds = {stds}")
 print(f"========================================")
 
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
 
 print(f"========================================")
-runs = trange(args.n_runs, desc='acc: nan topscores: nan')
+runs = trange(args.n_runs, desc='Unavailable')
 for N in runs:
     start = time.time()
 
