@@ -10,8 +10,6 @@ from tqdm import trange
 from statistics import mean, stdev
 import time
 from utils import add_dropout
-from search.GA_based_on_rank import GA
-#from search.GA import GA
 from score import *
 
 
@@ -22,7 +20,7 @@ parser.add_argument('--maxn_iter', default=30, type=int, help='number of iterati
 parser.add_argument('--prob_mut', default=0.07, type=float, help='probability of mutation')
 parser.add_argument('--prob_cr', default=0.8, type = float, help='probability of crossover')
 
-parser.add_argument('--data_loc', default='../cifardata/', type=str, help='dataset folder')
+parser.add_argument('--data_loc', default='./cifardata/', type=str, help='dataset folder')
 parser.add_argument('--api_loc', default='./NAS-Bench-201.pth',
                     type=str, help='path to API')
 parser.add_argument('--save_loc', default='results/ICML', type=str, help='folder to save results')
@@ -53,7 +51,20 @@ parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of module
 parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modules per stack (nasbench101)')
 parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
 
+parser.add_argument('--search_algo', default="", type=str)
+
+
 args = parser.parse_args()
+
+if args.search_algo == "":
+    from search.GA import GA
+elif args.search_algo == "mm":
+    from search.GA_mm import GA
+elif args.search_algo == "rk" or args.search_algo == "based_on_rank":
+    from search.GA_based_on_rank import GA
+else:
+    assert False, f"no such search algorithm: {args.GA}"
+
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
 
 # Reproducibility
