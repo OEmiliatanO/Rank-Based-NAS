@@ -23,7 +23,7 @@ parser.add_argument('--prob_mut', default=0.07, type=float, help='probability of
 parser.add_argument('--prob_cr', default=0.8, type = float, help='probability of crossover')
 
 parser.add_argument('--data_loc', default='../cifardata/', type=str, help='dataset folder')
-parser.add_argument('--api_loc', default='../NAS-Bench-201.pth',
+parser.add_argument('--api_loc', default='./NAS-Bench-201.pth',
                     type=str, help='path to API')
 parser.add_argument('--save_loc', default='results/ICML', type=str, help='folder to save results')
 parser.add_argument('--save_string', default='naswot', type=str, help='prefix of results file')
@@ -159,8 +159,10 @@ for N in runs:
     acc.append(acc_)
 
     times.append(time.time()-start)
-    runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f})  time:{mean(times):.2f}")
-    #runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  uid: {uid}  topscores:{topscores[-1]:.3f}  time:{mean(times):.2f}")
+    if isinstance(topscores[-1], tuple):
+        runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f})  time:{mean(times):.2f}")
+    else:
+        runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  uid: {uid}  topscores:{topscores[-1]:.3f}  time:{mean(times):.2f}")
 
 print(f"Final mean accuracy: {np.mean(acc)}")
 
