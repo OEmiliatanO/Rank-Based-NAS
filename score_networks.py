@@ -46,6 +46,8 @@ parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modul
 parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
 
 args = parser.parse_args()
+
+print(f"Use GPU {args.GPU}")
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
 
 # Reproducibility
@@ -56,9 +58,7 @@ np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(f"Current device is {device}")
-dataset = 'fake' if 'fake' in args.dataset else args.dataset
-args.dataset = args.dataset.replace('fake', '')
+print(f"Current device used is {device}")
 
 def remap_dataset_names(dataset, valid, test, train):
     cifar10 = 'cifar10'
@@ -83,10 +83,10 @@ def remap_dataset_names(dataset, valid, test, train):
         return ImageNet16_120, 'x-test'
     assert False, "Unknown dataset: {args.dataset}"
 
-print(f"Initialize the train loader.")
+print(f"Initialize the train loader...")
 train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.repeat, args)
 
-print(f"Initialize the nasspace.")
+print(f"Initialize the nasspace...")
 args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
 print(f"dataset = {args.dataset}, valid = {args.valid}, test = {args.test}")
 searchspace = nasspace.get_search_space(args)
@@ -96,16 +96,17 @@ os.makedirs(args.save_loc, exist_ok=True)
 filename_ninaswot = f'{args.save_loc}/ninaswot_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
 #filename_entropy  = f'{args.save_loc}/entropy_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
 filename_ntk      = f'{args.save_loc}/ntk_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
-filename_gradsign = f'{args.save_loc}/gradsign_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
+#filename_gradsign = f'{args.save_loc}/gradsign_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
+filename_synflow = f'{args.save_loc}/synflow_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
 filename_acc = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.valid}'
 
-filenames = {"ninaswot": filename_ninaswot, "ntk": filename_ntk, "acc": filename_acc}
-print(f"files to save: {filenames}")
+filenames = {"ninaswot": filename_ninaswot, "ntk": filename_ntk, "synflow": filename_synflow, "acc": filename_acc}
+print(f"Files to save: {filenames}")
 
-scores = dict(zip(["ninaswot", "ntk", "gradsign"],[np.zeros(len(searchspace)) for i in range(3)]))
-accs = np.zeros(len(searchspace))
+scores = dict(zip(["ninaswot", "ntk", "synflow"], [np.full(len(searchspace), np.nan) for i in range(3)]))
+accs = np.full(len(searchspace), np.nan)
 
-print(f"Start calculate means and stds in {args.n_samples} samples")
+print(f"Start calculating means and stds in {args.n_samples} samples...")
 means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 means["ninaswot"] = 0
 stds["ninaswot"]  = np.sqrt(5)
@@ -113,7 +114,7 @@ print(f"Done")
 print(f"means = {means}")
 print(f"stds  = {stds}")
 
-print(f"Now score the whole arches.")
+print(f"Start scoring the whole arches...")
 nruns = tqdm(total = len(searchspace))
 times = []
 for i, (uid, network) in enumerate(searchspace):
@@ -122,11 +123,10 @@ for i, (uid, network) in enumerate(searchspace):
         #standardize = lambda x, m, s: (x-m)/s
         
         # ninaswot
-        # ninaswot has mean 0, and std sqrt5 (naswot*2+ni)
-        scores['ninaswot'][uid] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
+        #scores['ninaswot'][uid] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
 
         # ntk
-        scores['ntk'][uid] = -standardize(ntk_score(network, train_loader, device), means["ntk"], stds["ntk"])
+        #scores['ntk'][uid] = -standardize(ntk_score(network, train_loader, device), means["ntk"], stds["ntk"])
 
         # entropy
         #network = init_net_gaussian(network, device)
@@ -135,29 +135,40 @@ for i, (uid, network) in enumerate(searchspace):
         # gradsign
         #scores['gradsign'][uid] = standardize(gradsign_score(network, train_loader, device), means["gradsign"], stds["gradsign"])
 
+        # synflow
+        scores['synflow'][uid] = standardize(synflow_score(network, train_loader, device), means["synflow"], stds["synflow"])
+
         accs[uid] = searchspace.get_final_accuracy(uid, acc_type, args.valid)
         if i % 1000 == 0:
             pass
-            np.save(filenames['ninaswot'], scores['ninaswot'])
-            np.save(filenames['ntk'], scores['ntk'])
+            #np.save(filenames['ninaswot'], scores['ninaswot'])
+            #np.save(filenames['ntk'], scores['ntk'])
             #np.save(filenames['entropy'], scores['entropy'])
             #np.save(filenames['gradsign'], scores['gradsign'])
+            np.save(filenames['synflow'], scores['synflow'])
             np.save(filenames['acc'], accs)
     except Exception as e:
         print(e)
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.valid)
         break
     times.append(time.time()-st)
+
+    masked_synflow = np.ma.masked_invalid(scores["synflow"]).mask
+    accs_synflow_ = accs[~masked_synflow]
+    score_synflow_ = scores["synflow"][~masked_synflow]
+
     ninaswot_tau, _ = kendalltau(accs[:uid+1], scores["ninaswot"][:uid+1])
     ntk_tau, _      = kendalltau(accs[:uid+1], scores["ntk"][:uid+1])
+    synflow_tau, _  = kendalltau(accs_synflow_, score_synflow_)
     maxacc_ninaswot = accs[np.argmax(scores["ninaswot"][:uid+1])]
     maxacc_ntk      = accs[np.argmax(scores["ntk"][:uid+1])]
-    #gradsign_tau, _ = kendalltau(accs[:uid+1], scores["gradsign"][:uid+1])
-    nruns.set_description(f"average elapse={mean(times):.2f}, ninaswot tau={ninaswot_tau:.3f}, ntk tau={ntk_tau:.3f}, maxacc(ninaswot)={maxacc_ninaswot}, maxacc(ntk)={maxacc_ntk}")
+    maxacc_synflow  = accs[np.argmax(scores["synflow"][:uid+1])]
+    nruns.set_description(f"average elapse={mean(times):.2f}, ninaswot tau={ninaswot_tau:.3f}, ntk tau={ntk_tau:.3f}, synflow tau={synflow_tau:.3f}, maxacc(ninaswot)={maxacc_ninaswot:.3f}, maxacc(ntk)={maxacc_ntk:.3f}, maxacc(synflow)={maxacc_synflow:.3f}")
     nruns.update(1)
 
-np.save(filenames['ninaswot'], scores['ninaswot'])
-np.save(filenames['ntk'], scores['ntk'])
+#np.save(filenames['ninaswot'], scores['ninaswot'])
+#np.save(filenames['ntk'], scores['ntk'])
 #np.save(filenames['entropy'], scores['entropy'])
 #np.save(filenames['gradsign'], scores['gradsign'])
+np.save(filenames['synflow'], scores['synflow'])
 np.save(filenames['acc'], accs)
