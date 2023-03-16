@@ -17,3 +17,5 @@ nasbench/
 .vscode/
 *.t7
 cifardata/
+log
+find_the_problem.py
