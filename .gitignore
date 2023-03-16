@@ -16,3 +16,4 @@ nasbench/
 *.png
 .vscode/
 *.t7
+cifardata/
