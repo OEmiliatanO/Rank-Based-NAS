@@ -1,5 +1,5 @@
-import pytorch
-import pytorch.nn as nn
+import torch
+import torch.nn as nn
 import numpy as np
 
 def synflow_score(network, train_loader, device):
@@ -8,19 +8,24 @@ def synflow_score(network, train_loader, device):
         signs = {}
         for name, param in network.state_dict().items():
             signs[name] = torch.sign(param)
-            params.abs_()
+            param.abs_()
         return signs
 
     @torch.no_grad()
     def nonlinearize(network, signs):
         for name, param in network.state_dict().items():
             param.mul_(signs[name])
+    
+    #?
+    network.eval()
+
+    network = network.to(device)
     signs = linearize(network)
 
     data, _ = next(iter(train_loader))
     input_dim = list(data[0,:].shape)
     input = torch.ones([1]+input_dim).to(device)
-    output = network(input)
+    output, logit = network(input)
     torch.sum(output).backward()
 
     grads_abs = []
@@ -45,4 +50,4 @@ def synflow_score(network, train_loader, device):
         score += torch.sum(grads_abs[i])
 
     nonlinearize(network, signs)
-    return score.cpu().numpy()
+    return score.detach().cpu().numpy()
