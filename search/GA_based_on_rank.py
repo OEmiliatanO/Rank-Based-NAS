@@ -5,7 +5,7 @@ import numpy as np
 
 class chromosome():
     def __init__(self, gene = "", fitness = (0,0,0), acc = 0, uid = 0):
-        """ fitness: (ninaswot, ntk, ...) """
+        """ fitness: (ninaswot, ntk, ..., tot) """
         self.gene = gene
         self.fitness = fitness
         self.acc = acc
@@ -21,12 +21,12 @@ class GA():
 
         self.ninaswot = np.load(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         self.ntk      = np.load(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
-        self.entropy  = np.load(f"{base_loc}/entropy_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.synflow  = np.load(f"{base_loc}/synflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         ####
 
         assert len(self.ninaswot) == 15625, "broken: ninaswot"
         assert len(self.ntk) == 15625, "broken: ntk"
-        assert len(self.entropy) == 15625, "broken: entropy"
+        assert len(self.synflow) == 15625, "broken: synflow"
         ####
         self.MAXN_POPULATION = args.maxn_pop
         self.MAXN_ITERATION = args.maxn_iter
@@ -158,7 +158,7 @@ class GA():
             
             #offsprings.sort(key = lambda this: this.fitness[2], reverse = True) # tot rank
             # ageing
-            offsprings = offsprings[-int(len(offsprings)*0.3):]
+            offsprings = offsprings[-int(len(offsprings)*0.7):]
         
         self.candiate["tot"].extend(list(self.candiate["ninaswot"]))
         self.candiate["tot"].extend(list(self.candiate["ntk"]))
