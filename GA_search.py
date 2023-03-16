@@ -51,16 +51,20 @@ parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of module
 parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modules per stack (nasbench101)')
 parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
 
-parser.add_argument('--search_algo', default="", type=str)
+parser.add_argument('--search_algo', default="ori", type=str)
 
 
 args = parser.parse_args()
 
-if args.search_algo == "":
+
+if args.search_algo == "ori" or args.search_algo == "original" or args.search_algo == "origin" or args.search_algo == "base":
+    print(f"use search algorithm: GA origin ver.")
     from search.GA import GA
 elif args.search_algo == "mm":
+    print(f"use search algorithm: GA multiple metric ver.")
     from search.GA_mm import GA
 elif args.search_algo == "rk" or args.search_algo == "based_on_rank":
+    print(f"use search algorithm: GA rank-based ver.")
     from search.GA_based_on_rank import GA
 else:
     assert False, f"no such search algorithm: {args.GA}"
