@@ -2,8 +2,9 @@ from utils import add_dropout, init_network
 
 from .ntk_score import ntk_score
 from .ninaswot_score import ninaswot_score, ni_score, naswot_score
-from .entropy_score import entropy_score, init_net_gaussian
-from .gradsign_score import gradsign_score
+#from .entropy_score import entropy_score, init_net_gaussian
+#from .gradsign_score import gradsign_score
+from .synflow_score import synflow_score
 
 import numpy as np
 from tqdm import tqdm
@@ -19,6 +20,7 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
     #scores_entropy  = []
     #scores_gradsign = []
     scores_ntk      = []
+    scores_synflow  = []
     arches = np.random.randint(0, len(searchspace), sample_n)
     nruns = tqdm(total = sample_n)
     times = []
@@ -30,7 +32,9 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
 
         scores_naswot.append(naswot_score(network, train_loader, device, args))
         scores_ni.append(ni_score(network, train_loader, device, args))
-        scores_ntk.append(ntk_score(network, train_loader, device))
+        #scores_ntk.append(ntk_score(network, train_loader, device))
+        scores_ntk.append(0)
+        scores_synflow.append(synflow_score(network, train_loader, device))
         #scores_gradsign.append(gradsign_score(network, train_loader, device))
         #network = init_net_gaussian(network, device)
         #scores_entropy.append(entropy_score(network, train_loader, device, args))
@@ -42,15 +46,16 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
     scores_naswot   = np.array(scores_naswot)
     scores_ni       = np.array(scores_ni)
     scores_ntk      = np.array(scores_ntk)
+    scores_synflow  = np.array(scores_synflow)
     #scores_entropy = np.array(scores_entropy)
     #scores_gradsign = np.array(scores_gradsign)
     
     calstd  = lambda x: np.ma.masked_invalid(x).std()
     calmean = lambda x: np.ma.masked_invalid(x).mean()
-    stds  = {"naswot": calstd(scores_naswot), "ni": calstd(scores_ni), "ntk": calstd(scores_ntk), "ninaswot": np.sqrt(5)}
-    means = {"naswot": calmean(scores_naswot), "ni": calmean(scores_ni), "ntk": calmean(scores_ntk), "ninaswot": 0}
+    stds  = {"naswot": calstd(scores_naswot), "ni": calstd(scores_ni), "ntk": calstd(scores_ntk), "ninaswot": np.sqrt(5), "synflow": calstd(scores_synflow)}
+    means = {"naswot": calmean(scores_naswot), "ni": calmean(scores_ni), "ntk": calmean(scores_ntk), "ninaswot": 0, "synflow": calmean(scores_synflow)}
     
-    del scores_naswot, scores_ni, scores_ntk, times
+    del scores_naswot, scores_ni, scores_ntk, scores_synflow, times
 
     return means, stds
 
