@@ -16,7 +16,7 @@ from scipy.stats import kendalltau
 from score import *
 
 parser = argparse.ArgumentParser(description='Genetic-Based NAS with Hybrid Score Functions')
-parser.add_argument('--data_loc', default='../cifardata/', type=str, help='dataset folder')
+parser.add_argument('--data_loc', default='./cifardata/', type=str, help='dataset folder')
 parser.add_argument('--api_loc', default='./NAS-Bench-201.pth',
                     type=str, help='path to API')
 parser.add_argument('--save_loc', default='results', type=str, help='folder to save results')
