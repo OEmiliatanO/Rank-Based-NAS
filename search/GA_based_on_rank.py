@@ -44,7 +44,7 @@ class GA():
         self.means = means
         self.acc_type = acc_type
         self.best_chrom = chromosome()
-        self.candiate = {"ninaswot":set(), "ntk":set()}
+        self.candiate = {"ninaswot":set(), "ntk":set(), "tot":[]}
         self.NAS_201_ops = ['none', 'skip_connect', 'nor_conv_1x1', 'nor_conv_3x3', 'avg_pool_3x3']
 
     def init_population(self):
@@ -146,20 +146,27 @@ class GA():
             
             self.population = offsprings
             self.evaluate()
-            
             offsprings.sort(key = lambda this: this.fitness[0], reverse = True) # ninaswot rank
             self.candiate["ninaswot"].add(offsprings[0].uid)
-            self.candiate["ntk"].add(offsprings[0].uid)
+            self.candiate["ninaswot"].add(offsprings[1].uid)
+            self.candiate["ninaswot"].add(offsprings[2].uid)
 
             offsprings.sort(key = lambda this: this.fitness[1], reverse = True) # ntk rank
-            self.candiate["ninaswot"].add(offsprings[0].uid)
             self.candiate["ntk"].add(offsprings[0].uid)
+            self.candiate["ntk"].add(offsprings[1].uid)
+            self.candiate["ntk"].add(offsprings[2].uid)
             
             #offsprings.sort(key = lambda this: this.fitness[2], reverse = True) # tot rank
+            # ageing
             offsprings = offsprings[:int(len(offsprings)*0.3)]
         
+        self.candiate["tot"].extend(list(self.candiate["ninaswot"]))
+        self.candiate["tot"].extend(list(self.candiate["ntk"]))
+        self.candiate["tot"].sort(key = lambda uid: self.DICT[uid][2], reverse = True)
+        best_uid = self.candiate["tot"][0]
+        network, uid, acc = uid2net(best_uid, self.searchspace, self.acc_type, self.args.valid)
         #offsprings.sort(key = lambda this: this.fitness[0], reverse = True)
-        #if random.randint(0,99) <= 49:
+        """ rank-based
         ninaswot_rk = sorted(list(self.candiate["ninaswot"]), key = lambda this: self.DICT[this][0], reverse = True)
         ntk_rk      = sorted(list(self.candiate["ntk"]), key = lambda this: self.DICT[this][1], reverse = True)
         rank = {}
@@ -174,6 +181,8 @@ class GA():
         
         #print(f"select best rank: {best_rank}")
         network, uid, acc = uid2net(best_uid, self.searchspace, self.acc_type, self.args.valid)
+        """
+
         #else:
         #    network, uid, acc = gene2net(offsprings[0].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
         return self.DICT[uid], acc, uid
