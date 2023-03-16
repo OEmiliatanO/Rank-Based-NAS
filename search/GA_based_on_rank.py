@@ -158,7 +158,7 @@ class GA():
             
             #offsprings.sort(key = lambda this: this.fitness[2], reverse = True) # tot rank
             # ageing
-            offsprings = offsprings[:int(len(offsprings)*0.3)]
+            offsprings = offsprings[-int(len(offsprings)*0.3):]
         
         self.candiate["tot"].extend(list(self.candiate["ninaswot"]))
         self.candiate["tot"].extend(list(self.candiate["ntk"]))

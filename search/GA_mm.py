@@ -135,8 +135,8 @@ class GA():
                 offsprings.append(offspring0)
                 offsprings.append(offspring1)
             
-            offsprings.sort(key = lambda this: this.fitness, reverse = True)
-            offsprings = offsprings[:int(0.3*len(offsprings))]
+            #offsprings.sort(key = lambda this: this.fitness)
+            offsprings = offsprings[-int(0.6*len(offsprings)):]
             
             self.population = offsprings
             self.evaluate()
