@@ -19,3 +19,4 @@ nasbench/
 cifardata/
 log
 find_the_problem.py
+*.swp
