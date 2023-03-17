@@ -21,7 +21,7 @@ class GA():
             base_loc  = f"/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}-test"
         self.ninaswot = np.load(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         self.ntk      = np.load(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
-        self.entropy  = np.load(f"{base_loc}/entropy_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.synflow  = np.load(f"{base_loc}/synflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         ####
         self.MAXN_POPULATION = args.maxn_pop
         self.MAXN_ITERATION = args.maxn_iter
