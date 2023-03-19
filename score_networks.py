@@ -98,12 +98,13 @@ filename_ninaswot = f'{args.save_loc}/ninaswot_{args.nasspace}_{args.dataset}_{a
 filename_ntk      = f'{args.save_loc}/ntk_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
 #filename_gradsign = f'{args.save_loc}/gradsign_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
 filename_synflow = f'{args.save_loc}/synflow_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
+filename_logsynflow = f'{args.save_loc}/logsynflow_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}'
 filename_acc = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.valid}'
 
-filenames = {"ninaswot": filename_ninaswot, "ntk": filename_ntk, "synflow": filename_synflow, "acc": filename_acc}
+filenames = {"ninaswot": filename_ninaswot, "ntk": filename_ntk, "synflow": filename_synflow, "logsynflow": filename_logsynflow, "acc": filename_acc}
 print(f"Files to save: {filenames}")
 
-scores = dict(zip(["ninaswot", "ntk", "synflow"], [np.full(len(searchspace), np.nan) for i in range(3)]))
+scores = dict(zip(["ninaswot", "ntk", "synflow", "logsynflow"], [np.full(len(searchspace), np.nan) for i in range(4)]))
 accs = np.full(len(searchspace), np.nan)
 
 print(f"Start calculating means and stds in {args.n_samples} samples...")
@@ -137,7 +138,10 @@ for i, (uid, network) in enumerate(searchspace):
 
         # synflow
         scores['synflow'][uid] = standardize(synflow_score(network, train_loader, device), means["synflow"], stds["synflow"])
-
+        
+        # logsynflow
+        scores['logsynflow'][uid] = standardize(logsynflow_score(network, train_loader, device), means["logsynflow"], stds["logsynflow"])
+        
         accs[uid] = searchspace.get_final_accuracy(uid, acc_type, args.valid)
         if i % 1000 == 0:
             pass
@@ -146,24 +150,29 @@ for i, (uid, network) in enumerate(searchspace):
             #np.save(filenames['entropy'], scores['entropy'])
             #np.save(filenames['gradsign'], scores['gradsign'])
             np.save(filenames['synflow'], scores['synflow'])
-            np.save(filenames['acc'], accs)
+            np.save(filenames['logsynflow'], scores['logsynflow'])
+            #np.save(filenames['acc'], accs)
     except Exception as e:
         print(e)
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.valid)
         break
     times.append(time.time()-st)
 
+    masked_logsynflow = np.ma.masked_invalid(scores["logsynflow"]).mask
+    accs_logsynflow_ = accs[~masked_logsynflow]
+    score_logsynflow_ = scores["logsynflow"][~masked_logsynflow]
+
     masked_synflow = np.ma.masked_invalid(scores["synflow"]).mask
     accs_synflow_ = accs[~masked_synflow]
     score_synflow_ = scores["synflow"][~masked_synflow]
-
-    ninaswot_tau, _ = kendalltau(accs[:uid+1], scores["ninaswot"][:uid+1])
-    ntk_tau, _      = kendalltau(accs[:uid+1], scores["ntk"][:uid+1])
+    
     synflow_tau, _  = kendalltau(accs_synflow_, score_synflow_)
-    maxacc_ninaswot = accs[np.argmax(scores["ninaswot"][:uid+1])]
-    maxacc_ntk      = accs[np.argmax(scores["ntk"][:uid+1])]
     maxacc_synflow  = accs[np.argmax(scores["synflow"][:uid+1])]
-    nruns.set_description(f"average elapse={mean(times):.2f}, ninaswot tau={ninaswot_tau:.3f}, ntk tau={ntk_tau:.3f}, synflow tau={synflow_tau:.3f}, maxacc(ninaswot)={maxacc_ninaswot:.3f}, maxacc(ntk)={maxacc_ntk:.3f}, maxacc(synflow)={maxacc_synflow:.3f}")
+    
+    logsynflow_tau, _  = kendalltau(accs_logsynflow_, score_logsynflow_)
+    maxacc_logsynflow  = accs[np.argmax(scores["logsynflow"][:uid+1])]
+    
+    nruns.set_description(f"average elapse={mean(times):.2f}, logsynflow tau={logsynflow_tau:.3f}, maxacc(logsynflow)={maxacc_logsynflow:.3f}, synflow tau={synflow_tau:.3f}, maxacc(synflow)={maxacc_synflow:.3f}")
     nruns.update(1)
 
 #np.save(filenames['ninaswot'], scores['ninaswot'])
@@ -171,4 +180,5 @@ for i, (uid, network) in enumerate(searchspace):
 #np.save(filenames['entropy'], scores['entropy'])
 #np.save(filenames['gradsign'], scores['gradsign'])
 np.save(filenames['synflow'], scores['synflow'])
-np.save(filenames['acc'], accs)
+np.save(filenames['logsynflow'], scores['logsynflow'])
+#np.save(filenames['acc'], accs)
