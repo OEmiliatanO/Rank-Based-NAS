@@ -63,16 +63,16 @@ args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test
 
 filename_ninaswot = f'{args.save_loc}/ninaswot_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
 filename_ntk = f'{args.save_loc}/ntk_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
-filename_entropy = f'{args.save_loc}/entropy_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
+filename_logsynflow = f'{args.save_loc}/logsynflow_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
 filename_acc = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.valid}.npy'
 filename_result = f'{args.save_loc}/{args.oper}_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
 
-filenames = {"acc": filename_acc, "ninaswot":filename_ninaswot, "ntk":filename_ntk, "entropy": filename_entropy, "result": filename_result}
+filenames = {"acc": filename_acc, "ninaswot":filename_ninaswot, "ntk":filename_ntk, "logsynflow": filename_logsynflow, "result": filename_result}
 
 for (k, v) in filenames.items():
     print(f"{k}:{v}")
 
-scores = {"ninaswot": np.load(filenames["ninaswot"]), "ntk": np.load(filenames["ntk"]), "entropy": np.load(filenames["entropy"])}
+scores = {"ninaswot": np.load(filenames["ninaswot"]), "ntk": np.load(filenames["ntk"]), "logsynflow": np.load(filenames["logsynflow"])}
 accs = np.load(filenames["acc"])
 
 """
@@ -91,10 +91,11 @@ oper = oper.replace("_div_", "/")
 oper = oper.replace("_minus_", "-")
 oper = oper.replace("ninaswot", "scores['ninaswot']")
 oper = oper.replace("ntk", "scores['ntk']")
-oper = oper.replace("entropy", "scores['entropy']")
+oper = oper.replace("logsynflow", "scores['logsynflow']")
 
 print("result = "+oper)
 
 result = eval(oper)
 
+assert len(result) == 15625, "broken"
 np.save(filenames["result"], result)
