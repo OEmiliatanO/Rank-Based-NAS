@@ -4,8 +4,8 @@ import random
 import numpy as np
 
 class chromosome():
-    def __init__(self, gene = "", fitness = (0,0,0), acc = 0, uid = 0):
-        """ fitness: (ninaswot, ntk, ..., tot) """
+    def __init__(self, gene = None, fitness = None, acc = None, uid = None):
+        """ fitness: (ninaswot, ntk, logsynflow, tot) """
         self.gene = gene
         self.fitness = fitness
         self.acc = acc
@@ -22,6 +22,7 @@ class GA():
         self.ninaswot = np.load(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         self.ntk      = np.load(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         self.synflow  = np.load(f"{base_loc}/synflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.logsynflow  = np.load(f"{base_loc}/logsynflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         ####
 
         assert len(self.ninaswot) == 15625, "broken: ninaswot"
@@ -44,7 +45,7 @@ class GA():
         self.means = means
         self.acc_type = acc_type
         self.best_chrom = chromosome()
-        self.candiate = {"ninaswot":set(), "ntk":set(), "tot":[]}
+        self.candiate = {"ninaswot":set(), "ntk":set(), "logsynflow":set(), "tot":[]}
         self.NAS_201_ops = ['none', 'skip_connect', 'nor_conv_1x1', 'nor_conv_3x3', 'avg_pool_3x3']
 
     def init_population(self):
@@ -61,14 +62,21 @@ class GA():
     def evaluate(self):
         for i in range(len(self.population)):
             network, uid, acc = gene2net(self.population[i].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
+            del network
             self.population[i].acc = acc
             self.population[i].uid = uid
-            if self.population[i].gene not in self.DICT:
+            if self.population[i].uid not in self.DICT:
+                uid = self.population[i].uid
                 #self.population[i].fitness = self.DICT[self.population[i].gene] = \
                 #(standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswot"]), \
                 #-standardize(ntk_score(network, self.train_loader, self.device), self.means["ntk"], self.stds["ntk"]), \
                 #standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
-                self.population[i].fitness = self.DICT[self.population[i].uid] = (self.ninaswot[self.population[i].uid], self.ntk[self.population[i].uid], self.ninaswot[self.population[i].uid]+self.ntk[self.population[i].uid])
+                x = [self.ninaswot[uid], self.ntk[uid], self.logsynflow[uid], 0]
+                for j in range(len(x)):
+                    x[j] = x[j] if np.isfinite(x[j]) else -np.inf
+                x[3] = x[0]+x[1]+x[2]
+                
+                self.population[i].fitness = self.DICT[uid] = tuple(x)
             else:
                 self.population[i].fitness = self.DICT[self.population[i].uid]
 
@@ -80,9 +88,9 @@ class GA():
                 self.best_chrom.uid = self.population[i].uid
                 self.best_chrom.gene = copy.deepcopy(self.population[i].gene)
             """
-            del network
 
     def mutation(self, chrom):
+        if chrom == None: return None
         p = random.randint(0, self.MAXN_CONNECTION-1)
         gene_sect_len = self.MAXN_OPERATION
         gene = chrom.gene
@@ -97,10 +105,10 @@ class GA():
         cand = random.sample(self.population, N)
         maxi = smaxi = cand[0]
         for chrom in cand:
-            if sum(maxi.fitness) < sum(chrom.fitness):
+            if maxi.fitness[3] < chrom.fitness[3]:
                 smaxi = maxi
                 maxi = chrom
-            elif sum(smaxi.fitness) < sum(chrom.fitness):
+            elif smaxi.fitness[3] < chrom.fitness[3]:
                 smaxi = chrom
         return maxi, smaxi
 
@@ -129,40 +137,51 @@ class GA():
         self.evaluate()
         for i in range(self.MAXN_ITERATION):
             offsprings = []
-            while len(offsprings) < self.MAXN_POPULATION:
+            elder = []
+            while len(offsprings) + len(elder) < self.MAXN_POPULATION:
                 p = self.select_2chrom_fromN()
                 
                 if random.randint(0,99) < self.PROB_CROSS*100:
                     offspring0, offspring1 = self.crossover(p[0], p[1])
                 else:
-                    offspring0, offspring1 = p[0], p[1]
+                    elder.append(p[0])
+                    elder.append(p[1])
+                    offspring0, offspring1 = None, None
  
                 if random.randint(0,99) < self.PROB_MUTATION*100:
                     offspring0 = self.mutation(offspring0)
                     offspring1 = self.mutation(offspring1)
                 
-                offsprings.append(offspring0)
-                offsprings.append(offspring1)
+                if offspring0 and offspring1:
+                    offsprings.append(offspring0)
+                    offsprings.append(offspring1)
             
             self.population = offsprings
             self.evaluate()
-            offsprings.sort(key = lambda this: this.fitness[0], reverse = True) # ninaswot rank
-            self.candiate["ninaswot"].add(offsprings[0].uid)
-            self.candiate["ninaswot"].add(offsprings[1].uid)
-            self.candiate["ninaswot"].add(offsprings[2].uid)
+            offsprings = self.population
+            self.population = elder + offsprings
 
-            offsprings.sort(key = lambda this: this.fitness[1], reverse = True) # ntk rank
-            self.candiate["ntk"].add(offsprings[0].uid)
-            self.candiate["ntk"].add(offsprings[1].uid)
-            self.candiate["ntk"].add(offsprings[2].uid)
+            self.population.sort(key = lambda this: this.fitness[0], reverse = True) # ninaswot rank
+            self.candiate["ninaswot"].add(self.population[0].uid)
+            self.candiate["ninaswot"].add(self.population[1].uid)
+            self.candiate["ninaswot"].add(self.population[2].uid)
+
+            self.population.sort(key = lambda this: this.fitness[1], reverse = True) # ntk rank
+            self.candiate["ntk"].add(self.population[0].uid)
+            self.candiate["ntk"].add(self.population[1].uid)
+            self.candiate["ntk"].add(self.population[2].uid)
             
-            #offsprings.sort(key = lambda this: this.fitness[2], reverse = True) # tot rank
-            # ageing
-            offsprings = offsprings[-int(len(offsprings)*0.7):]
+            self.population.sort(key = lambda this: this.fitness[2], reverse = True) # logsynflow rank
+            self.candiate["logsynflow"].add(self.population[0].uid)
+            self.candiate["logsynflow"].add(self.population[1].uid)
+            self.candiate["logsynflow"].add(self.population[2].uid)
+
+            self.population = elder + offsprings
         
         self.candiate["tot"].extend(list(self.candiate["ninaswot"]))
         self.candiate["tot"].extend(list(self.candiate["ntk"]))
-        self.candiate["tot"].sort(key = lambda uid: self.DICT[uid][2], reverse = True)
+        self.candiate["tot"].extend(list(self.candiate["logsynflow"]))
+        self.candiate["tot"].sort(key = lambda uid: self.DICT[uid][3], reverse = True)
         best_uid = self.candiate["tot"][0]
         network, uid, acc = uid2net(best_uid, self.searchspace, self.acc_type, self.args.valid)
         #offsprings.sort(key = lambda this: this.fitness[0], reverse = True)
