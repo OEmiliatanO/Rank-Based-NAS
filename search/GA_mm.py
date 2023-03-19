@@ -6,11 +6,11 @@ from tqdm import tqdm
 import time
 
 class chromosome():
-    def __init__(self, gene = "", fitness = 0, acc = 0, uid = 0):
+    def __init__(self, gene = "", fitness = None, acc = None, uid = None):
         self.gene = gene
         self.fitness = fitness
-        self.acc = 0
-        self.uid = 0
+        self.acc = acc
+        self.uid = uid
 
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
@@ -22,6 +22,7 @@ class GA():
         self.ninaswot = np.load(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         self.ntk      = np.load(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         self.synflow  = np.load(f"{base_loc}/synflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.logsynflow  = np.load(f"{base_loc}/logsynflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
         ####
         self.MAXN_POPULATION = args.maxn_pop
         self.MAXN_ITERATION = args.maxn_iter
@@ -61,17 +62,20 @@ class GA():
                 #self.population[i].fitness = self.DICT[self.population[i].gene] = \
                 #(standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswpt"]), \
                 #-standardize(ntk_score(network, self.train_loader, self.device), self.means["ntk"], self.stds["ntk"])
-                self.population[i].fitness = self.DICT[self.population[i].gene] = self.ninaswot[self.population[i].uid] + self.ntk[self.population[i].uid]
+                x = self.ninaswot[self.population[i].uid] + self.ntk[self.population[i].uid] + self.logsynflow[self.population[i].uid]
+                self.population[i].fitness = self.DICT[self.population[i].gene] = x if np.isfinite(x) else -np.inf
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]
-            if self.population[i].fitness > self.best_chrom.fitness or self.best_chrom.gene == "":
+            if self.best_chrom.gene == "" or self.population[i].fitness > self.best_chrom.fitness:
                 self.best_chrom.fitness = self.population[i].fitness
                 self.best_chrom.acc = self.population[i].acc
                 self.best_chrom.uid = self.population[i].uid
+                assert self.population[i].gene != "", "population.gene is None"
                 self.best_chrom.gene = copy.deepcopy(self.population[i].gene)
             del network
 
     def mutation(self, chrom):
+        if chrom == None: return None
         p = random.randint(0, self.MAXN_CONNECTION-1)
         gene_sect_len = self.MAXN_OPERATION
         gene = chrom.gene
@@ -97,7 +101,6 @@ class GA():
         gene_sect_len = self.MAXN_OPERATION
         genelist0 = [p0.gene[i:i+gene_sect_len] for i in range(0, len(p0.gene), gene_sect_len)]
         genelist1 = [p1.gene[i:i+gene_sect_len] for i in range(0, len(p1.gene), gene_sect_len)]
-        
         l0 = random.randint(1, self.MAXN_CONNECTION)
         r0 = random.choice([i for i in range(l0)] + [i for i in range(l0 + 1, self.MAXN_CONNECTION)])
         if l0>r0: l0,r0 = r0, l0
@@ -118,28 +121,33 @@ class GA():
         self.evaluate()
         for _ in range(self.MAXN_ITERATION):
             offsprings = []
-            while len(offsprings) < self.MAXN_POPULATION:
+            elder = []
+            while len(offsprings) + len(elder) < self.MAXN_POPULATION:
                 p = self.select_2chrom_fromN()
                 
                 if random.randint(0,99) < self.PROB_CROSS*100:
                 #if random.uniform(0,1) < self.PROB_CROSS:
                     offspring0, offspring1 = self.crossover(p[0], p[1])
                 else:
-                    offspring0, offspring1 = p[0], p[1]
+                    elder.append(p[0])
+                    elder.append(p[1])
+                    offspring0, offspring1 = None, None
  
                 if random.randint(0,99) < self.PROB_MUTATION*100:
                 #if random.uniform(0,1) < self.PROB_MUTATION:
                     offspring0 = self.mutation(offspring0)
                     offspring1 = self.mutation(offspring1)
                 
-                offsprings.append(offspring0)
-                offsprings.append(offspring1)
+                if offspring0 and offspring1:
+                    offsprings.append(offspring0)
+                    offsprings.append(offspring1)
             
             #offsprings.sort(key = lambda this: this.fitness)
-            offsprings = offsprings[-int(0.6*len(offsprings)):]
+            #offsprings = offsprings[-int(0.6*len(offsprings)):]
             
             self.population = offsprings
             self.evaluate()
+            self.population = elder + self.population
         network, uid, acc = gene2net(self.best_chrom.gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
         return self.best_chrom.fitness, acc, uid
 
