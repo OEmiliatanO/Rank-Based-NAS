@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-def synflow_score(network, train_loader, device):
+def logsynflow_score(network, train_loader, device):
     @torch.no_grad()
     def linearize(network):
         signs = {}
