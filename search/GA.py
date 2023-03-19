@@ -6,11 +6,11 @@ from tqdm import tqdm
 import time
 
 class chromosome():
-    def __init__(self, gene = "", fitness = 0, acc = 0, uid = 0):
+    def __init__(self, gene = "", fitness = None, acc = None, uid = None):
         self.gene = gene
         self.fitness = fitness
-        self.acc = 0
-        self.uid = 0
+        self.acc = acc
+        self.uid = uid
 
 class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
@@ -65,7 +65,7 @@ class GA():
                 self.population[i].fitness = self.DICT[self.population[i].gene] = self.ninaswot[self.population[i].uid]
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]
-            if self.population[i].fitness > self.best_chrom.fitness or self.best_chrom.gene == "":
+            if self.best_chrom.gene == "" or self.population[i].fitness > self.best_chrom.fitness:
                 self.best_chrom.fitness = self.population[i].fitness
                 self.best_chrom.acc = self.population[i].acc
                 self.best_chrom.uid = self.population[i].uid
