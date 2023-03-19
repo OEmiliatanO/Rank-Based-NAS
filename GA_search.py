@@ -136,6 +136,8 @@ if args.dataset == 'cifar10-valid':
     stds["naswot"]    =    76.14891987423042
     means["ntk"]      = 10149.060118942261
     stds["ntk"]       = 28253.425318545123
+    means["synflow"]  = 3.981683792494527e+34
+    stds["synflow"]   = 2.3508708829106306e+35
     means["ninaswot"] = 0
     stds["ninaswot"]  = np.sqrt(5)
 elif args.dataset == 'cifar100':
