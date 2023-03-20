@@ -32,22 +32,22 @@ def logsynflow_score(network, train_loader, device):
     
     def synflow(layer):
         if layer.weight.grad is not None:
-            return torch.abs(torch.log(layer.weight.grad) * layer.weight)
+            res = torch.abs(torch.log(layer.weight.grad)) * layer.weight
+            res = res[res.isfinite()]
+            return res
         else:
             return torch.zeros_like(layer.weight)
 
+    score = 0
     for layer in network.modules():
         if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
-            grads_abs.append(synflow(layer))
+            score += torch.sum(synflow(layer))
 
     """
     for p in parameters():
         scores[id(p)] = torch.clone(np.log(p.grad) * p).detach().abs_().cpu().numpy()
         p.grad.data.zero_()
     """
-    score = 0
-    for i in range(len(grads_abs)):
-        score += torch.sum(grads_abs[i])
 
     nonlinearize(network, signs)
     return score.detach().cpu().numpy()
