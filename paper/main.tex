@@ -148,7 +148,7 @@
     
 % method
     To address the problem, we propose cooperating three heterogeneous score 
-    functions with genetic-based search method, we shall evaulate an architecture 
+    functions with genetic-based search method, which evaulate an architecture 
     from different aspects. More specifically, the first score function is 
     NINASWOT \cite{10.1145/3491396.3506510} as an indicator of the ability 
     to distinguish two images. The second one is the condition number of NTK 
@@ -170,6 +170,14 @@
     Section 5.
 
     \section{Related Works}
+    \begin{figure*}[htb]
+        \vspace{-\baselineskip}
+        \resizebox{1.0\textwidth}{!}{\includegraphics{asset/naswot.pdf}}
+        \caption{A simple example to illustrate the procedure of NASWOT.}
+        \label{fig:naswot}
+        \centering
+        \vspace{-\baselineskip}
+    \end{figure*}
     In these days, the studies of training-free neural architecture search (NAS) 
     go viral, since the ability to accelerate the procedure for designing a neural 
     network architecture used on specific application, while additionally, 
@@ -179,12 +187,13 @@
     % naswot
     In \cite{https://doi.org/10.48550/arxiv.2006.04647}, Mellor et al. proposed a 
     score function without the requirement for training. Here we call it neural 
-    architecture search without training (NASWOT) score function. 
+    architecture search without training (NASWOT) score function. \xfig{fig:naswot} 
+	gives a simple example to illustrate the procedure of NASWOT score function. 
     Consider a mini-batch of data $X=\{x_i\}^N_{i=1}$ passing through a neural network 
     architecture as $f(x_i)$. The activated ReLU units in every layer of the architecture 
     form a binary code $c_i$ that define the linear region.
     The correlation between binary codes for the whole mini-batch can be examined 
-    by computing the kernel matrix % add figure
+    by computing the kernel matrix 
     \begin{equation}
         K_H=\begin{pmatrix}N_A-d_H(c_1,c_2)&\cdots&N_A-d_H(c_1,c_N)\\\vdots&\ddots&\vdots\\N_A-d_H(c_N,c_1)&\cdots&N_A-d_H(c_N,c_1)\end{pmatrix}
     \end{equation}
@@ -212,13 +221,15 @@
     found, in some case, an architecture with high score may put different 
     input data, which are originally in the same class, to different classes. 
     To fix this defect, Wu et al. proposed using noise immunity to additionally 
-    evaluate an architecture. The score function picks a mini-batch of data, 
-    denoted $X$, and then applies Gaussion noise on it, denoted $X'$ and defined 
-    by $X'=X+z$ where $z$ is the Gaussion noise. By passing $X$ and $X'$ through 
-    the untrained architecture, the sum of the square differences between outputs 
+    evaluate an architecture. \xfig{fig:ni} gives an example to illustrate how 
+    noise immunity score evaluate an architecture. The score function picks a 
+    mini-batch of data, denoted $X$, and then applies Gaussion noise on it, 
+    denoted $X'$ and defined by $X'=X+z$ where $z$ is the Gaussion noise. 
+    By passing $X$ and $X'$ through the untrained architecture, the sum of the 
+    square differences between outputs 
     $O=\begin{matrix}o_1,o_2,\cdots,o_C\end{matrix}$ and 
     $O'=\begin{matrix}o_1',o_2',\cdots,o_C'\end{matrix}$ can be calculated as 
-    follows:
+    follows: 
     \begin{equation}
         n=-\sum^C_{n=1}(o_i-o_i')^2
     \end{equation}
@@ -252,23 +263,9 @@
     Then it can be concluded that if $K_N$ is lower, the corresponding architecture is 
     more trainable.
 
-	% search algorithm
-    Another important component of training-free NAS is search algorithm. There're 
-    various search algorithms that applied on training-free NAS. The search algorithm 
-    that gained much attention in recent years is evolutionary algorithms (EAs) \cite{Liu_2023}.
-    In \cite{10.1145/3491396.3506510}, Wu et al. used genetic algorithm (GA), a popular 
-    evolutionary algorithm which has great potential to search a vast search space. 
-    The NINASWOT score is used as fitness of a chromosome in genetic algorithm. And 
-    the tournament selection is used to select an architecture with good NINASWOT score.
-    Cavagnero et al. \cite{https://doi.org/10.48550/arxiv.2207.05135} used a custom 
-	tournament selection with ageing (REA). Instead of discarding less fitting 
-	individuals, REA discards the elder individuals, and thus explore more search 
-	space. 
+	% synflow?
 	
-    Though the search algorithm is very powerful to search a vast space, the key to the holy 
-    grail of training-free NAS is still the training-free score functions. Our work studies 
-    the right way to combining the score functions which complements each others, and explore 
-    the potential of rank-based GA.
+    % conclusion
 
     \section{the proposed algorithm}
     In our work, however, we use rank-based GA. Rather than use single fitness to select, 
