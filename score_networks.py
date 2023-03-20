@@ -149,7 +149,7 @@ for i, (uid, network) in enumerate(searchspace):
             #np.save(filenames['ntk'], scores['ntk'])
             #np.save(filenames['entropy'], scores['entropy'])
             #np.save(filenames['gradsign'], scores['gradsign'])
-            np.save(filenames['synflow'], scores['synflow'])
+            #np.save(filenames['synflow'], scores['synflow'])
             np.save(filenames['logsynflow'], scores['logsynflow'])
             #np.save(filenames['acc'], accs)
     except Exception as e:
@@ -179,6 +179,6 @@ for i, (uid, network) in enumerate(searchspace):
 #np.save(filenames['ntk'], scores['ntk'])
 #np.save(filenames['entropy'], scores['entropy'])
 #np.save(filenames['gradsign'], scores['gradsign'])
-np.save(filenames['synflow'], scores['synflow'])
+#np.save(filenames['synflow'], scores['synflow'])
 np.save(filenames['logsynflow'], scores['logsynflow'])
 #np.save(filenames['acc'], accs)
