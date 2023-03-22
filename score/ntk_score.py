@@ -33,7 +33,7 @@ def ntk_score(network, train_loader, device, recalbn=0, train_mode=True, num_bat
     grads = torch.stack(grads, 0)
     ntk = torch.einsum('nc,mc->nm', [grads, grads])
     conds = []
-    eigenvalues, _ = torch.symeig(ntk)  # ascending
+    eigenvalues = torch.linalg.eigvalsh(ntk, UPLO='U')  # ascending
     score = np.nan_to_num((eigenvalues[-1] / eigenvalues[0]).item(), copy=True, nan=100000.0)
     del network
     torch.cuda.empty_cache()
