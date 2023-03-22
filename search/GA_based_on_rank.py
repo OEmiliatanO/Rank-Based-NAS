@@ -1,6 +1,7 @@
 from score import *
 import copy
 import random
+import os
 import numpy as np
 
 class chromosome():
@@ -15,14 +16,14 @@ class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
         #### cheat
         if args.valid:
-            base_loc  = f"/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}"
+            base_loc  = f"~/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}"
         elif args.test:
-            base_loc  = f"/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}-test"
+            base_loc  = f"~/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}-test"
 
-        self.ninaswot = np.load(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
-        self.ntk      = np.load(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.ninaswot = np.load(os.path.expanduser(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy"))
+        self.ntk      = np.load(os.path.expanduser(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy"))
         #self.synflow  = np.load(f"{base_loc}/synflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
-        #self.logsynflow  = np.load(f"{base_loc}/logsynflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.logsynflow  = np.load(os.path.expanduser(f"{base_loc}/logsynflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy"))
         ####
 
         assert len(self.ninaswot) == 15625, "broken: ninaswot"
@@ -45,7 +46,7 @@ class GA():
         self.means = means
         self.acc_type = acc_type
         self.best_chrom = chromosome()
-        self.candiate = {"ninaswot":set(), "ntk":set(), "tot":[]}
+        self.candiate = {"ninaswot":set(), "ntk":set(), "logsynflow":set(), "tot":[]}
         self.NAS_201_ops = ['none', 'skip_connect', 'nor_conv_1x1', 'nor_conv_3x3', 'avg_pool_3x3']
 
     def init_population(self):
@@ -71,10 +72,10 @@ class GA():
                 #(standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswot"]), \
                 #-standardize(ntk_score(network, self.train_loader, self.device), self.means["ntk"], self.stds["ntk"]), \
                 #standardize(entropy_score(network, self.train_loader, self.device, self.args), self.means["entropy"], self.stds["entropy"]))
-                x = [self.ninaswot[uid], self.ntk[uid], 0]
+                x = [self.ninaswot[uid], self.ntk[uid], 0.1*self.logsynflow[uid], 0]
                 for j in range(len(x)):
                     x[j] = x[j] if np.isfinite(x[j]) else -np.inf
-                x[-1] = x[0]+x[1]
+                x[-1] = sum(x)
                 
                 self.population[i].fitness = self.DICT[uid] = tuple(x)
             else:
@@ -171,10 +172,16 @@ class GA():
             self.candiate["ntk"].add(self.population[1].uid)
             self.candiate["ntk"].add(self.population[2].uid)
             
+            self.population.sort(key = lambda this: this.fitness[2], reverse = True) # logsynflow rank
+            self.candiate["logsynflow"].add(self.population[0].uid)
+            self.candiate["logsynflow"].add(self.population[1].uid)
+            self.candiate["logsynflow"].add(self.population[2].uid)
+            
             self.population = elder + offsprings
         
         self.candiate["tot"].extend(list(self.candiate["ninaswot"]))
         self.candiate["tot"].extend(list(self.candiate["ntk"]))
+        self.candiate["tot"].extend(list(self.candiate["logsynflow"]))
         self.candiate["tot"].sort(key = lambda uid: self.DICT[uid][-1], reverse = True)
         best_uid = self.candiate["tot"][0]
         network, uid, acc = uid2net(best_uid, self.searchspace, self.acc_type, self.args.valid)

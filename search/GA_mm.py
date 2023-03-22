@@ -2,6 +2,7 @@ from score import *
 import copy
 import random
 import numpy as np
+import os
 from tqdm import tqdm
 import time
 
@@ -16,13 +17,13 @@ class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
         #### cheat
         if args.valid:
-            base_loc  = f"/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}"
+            base_loc  = f"~/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}"
         elif args.test:
-            base_loc  = f"/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}-test"
-        self.ninaswot = np.load(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
-        self.ntk      = np.load(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+            base_loc  = f"~/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}-test"
+        self.ninaswot = np.load(os.path.expanduser(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy"))
+        self.ntk      = np.load(os.path.expanduser(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy"))
         #self.synflow  = np.load(f"{base_loc}/synflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
-        #self.logsynflow  = np.load(f"{base_loc}/logsynflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+        self.logsynflow  = np.load(os.path.expanduser(f"{base_loc}/logsynflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy"))
         ####
         self.MAXN_POPULATION = args.maxn_pop
         self.MAXN_ITERATION = args.maxn_iter
@@ -62,7 +63,7 @@ class GA():
                 #self.population[i].fitness = self.DICT[self.population[i].gene] = \
                 #(standardize(ninaswot_score(network, self.train_loader, self.device, self.stds, self.means, self.args), self.means["ninaswot"], self.stds["ninaswpt"]), \
                 #-standardize(ntk_score(network, self.train_loader, self.device), self.means["ntk"], self.stds["ntk"])
-                x = self.ninaswot[self.population[i].uid] + self.ntk[self.population[i].uid]
+                x = self.ninaswot[self.population[i].uid] + self.ntk[self.population[i].uid] + 0.1*self.logsynflow[self.population[i].uid]
                 self.population[i].fitness = self.DICT[self.population[i].gene] = x if np.isfinite(x) else -np.inf
             else:
                 self.population[i].fitness = self.DICT[self.population[i].gene]

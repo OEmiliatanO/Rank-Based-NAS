@@ -70,6 +70,7 @@ else:
     assert False, f"no such search algorithm: {args.GA}"
 
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 # Reproducibility
 torch.backends.cudnn.deterministic = True
@@ -179,7 +180,7 @@ for N in runs:
 
     times.append(time.time()-start)
     if isinstance(topscores[-1], tuple):
-        runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f})  time:{mean(times):.2f}")
+        runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f},{topscores[-1][3]:.3f})  time:{mean(times):.2f}")
     else:
         runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  uid: {uid}  topscores:{topscores[-1]:.3f}  time:{mean(times):.2f}")
 

@@ -1,6 +1,7 @@
 from score import *
 import copy
 import random
+import os
 import numpy as np
 from tqdm import tqdm
 import time
@@ -16,12 +17,12 @@ class GA():
     def __init__(self, MAXN_CONNECTION, MAXN_OPERATION, searchspace, train_loader, device, stds, means, acc_type, args):
         #### cheat
         if args.valid:
-            base_loc  = f"/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}"
+            base_loc  = f"~/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}"
         elif args.test:
-            base_loc  = f"/home/jasonzzz/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}-test"
-        self.ninaswot = np.load(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
-        self.ntk      = np.load(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
-        self.synflow  = np.load(f"{base_loc}/synflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy")
+            base_loc  = f"~/Genetic-Based-Neural-Architecture-Search-with-Hybrid-Score-Functions/results/score/{args.dataset}-test"
+        self.ninaswot = np.load(os.path.expanduser(f"{base_loc}/ninaswot_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy"))
+        self.ntk      = np.load(os.path.expanduser(f"{base_loc}/ntk_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy"))
+        self.synflow  = np.load(os.path.expanduser(f"{base_loc}/synflow_nasbench201_{args.dataset}_none_0.05_1_{args.valid}_128_1_1.npy"))
         ####
         self.MAXN_POPULATION = args.maxn_pop
         self.MAXN_ITERATION = args.maxn_iter
