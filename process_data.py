@@ -33,6 +33,8 @@ parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modul
 parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
 
 parser.add_argument('--oper', default='ninaswot_add_ntk_add_entropy',type=str)
+parser.add_argument('--find_the_problem', action='store_true')
+parser.add_argument('--plot', action='store_true')
 
 args = parser.parse_args()
 
@@ -99,3 +101,33 @@ result = eval(oper)
 
 assert len(result) == 15625, "broken"
 np.save(filenames["result"], result)
+
+####
+if args.find_the_problem:
+    mask = np.full(result.shape, False)
+    max_score = np.argmax(accs)
+    mask = result > result[max_score]
+    the_problems = []
+    for i in range(len(mask)):
+        if mask[i] == True:
+            the_problems.append(i)
+    the_problems = np.array(the_problems)
+    wheres_the_problems = f'{args.save_loc}/acc-{args.oper}_the_problems_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
+    np.save(wheres_the_problems, the_problems)
+    print(f"save the problems: {the_problems}")
+####
+
+
+mask = np.isinf(result).astype(bool) |\
+np.isnan(result).astype(bool) |\
+(result > 10).astype(bool)#|\
+#(result < 0).astype(bool)
+
+accs = accs[~mask]
+result = result[~mask]
+
+mask = np.full(result.shape, False)
+print(f"the maximum found acc according to score is {accs[np.argmax(result)]}")
+print(f"and the maximum acc is {np.max(accs)}")
+max_score = np.argmax(result)
+
