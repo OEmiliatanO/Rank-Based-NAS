@@ -34,8 +34,8 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
 
         scores_naswot.append(naswot_score(network, train_loader, device, args))
         scores_ni.append(ni_score(network, train_loader, device, args))
-        #scores_ntk.append(ntk_score(network, train_loader, device))
-        scores_ntk.append(0)
+        scores_ntk.append(ntk_score(network, train_loader, device))
+        #scores_ntk.append(0)
         scores_synflow.append(synflow_score(network, train_loader, device))
         scores_logsynflow.append(logsynflow_score(network, train_loader, device))
         
