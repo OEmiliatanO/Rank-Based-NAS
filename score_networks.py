@@ -124,10 +124,10 @@ for i, (uid, network) in enumerate(searchspace):
         #standardize = lambda x, m, s: (x-m)/s
         
         # ninaswot
-        #scores['ninaswot'][uid] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
+        scores['ninaswot'][uid] = standardize(ninaswot_score(network, train_loader, device, stds, means, args), means["ninaswot"], stds["ninaswot"])
 
         # ntk
-        #scores['ntk'][uid] = -standardize(ntk_score(network, train_loader, device), means["ntk"], stds["ntk"])
+        scores['ntk'][uid] = -standardize(ntk_score(network, train_loader, device), means["ntk"], stds["ntk"])
 
         # entropy
         #network = init_net_gaussian(network, device)
@@ -137,7 +137,7 @@ for i, (uid, network) in enumerate(searchspace):
         #scores['gradsign'][uid] = standardize(gradsign_score(network, train_loader, device), means["gradsign"], stds["gradsign"])
 
         # synflow
-        scores['synflow'][uid] = standardize(synflow_score(network, train_loader, device), means["synflow"], stds["synflow"])
+        #scores['synflow'][uid] = standardize(synflow_score(network, train_loader, device), means["synflow"], stds["synflow"])
         
         # logsynflow
         scores['logsynflow'][uid] = standardize(logsynflow_score(network, train_loader, device), means["logsynflow"], stds["logsynflow"])
@@ -145,40 +145,30 @@ for i, (uid, network) in enumerate(searchspace):
         accs[uid] = searchspace.get_final_accuracy(uid, acc_type, args.valid)
         if i % 1000 == 0:
             pass
-            #np.save(filenames['ninaswot'], scores['ninaswot'])
-            #np.save(filenames['ntk'], scores['ntk'])
+            np.save(filenames['ninaswot'], scores['ninaswot'])
+            np.save(filenames['ntk'], scores['ntk'])
             #np.save(filenames['entropy'], scores['entropy'])
             #np.save(filenames['gradsign'], scores['gradsign'])
             #np.save(filenames['synflow'], scores['synflow'])
             #np.save(filenames['logsynflow'], scores['logsynflow'])
-            #np.save(filenames['acc'], accs)
+            np.save(filenames['acc'], accs)
     except Exception as e:
         print(e)
         accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.valid)
         break
     times.append(time.time()-st)
 
-    masked_logsynflow = np.ma.masked_invalid(scores["logsynflow"]).mask
-    accs_logsynflow_ = accs[~masked_logsynflow]
-    score_logsynflow_ = scores["logsynflow"][~masked_logsynflow]
-
-    masked_synflow = np.ma.masked_invalid(scores["synflow"]).mask
-    accs_synflow_ = accs[~masked_synflow]
-    score_synflow_ = scores["synflow"][~masked_synflow]
-    
-    synflow_tau, _  = kendalltau(accs_synflow_, score_synflow_)
-    maxacc_synflow  = accs[np.argmax(scores["synflow"][:uid+1])]
-    
-    logsynflow_tau, _  = kendalltau(accs_logsynflow_, score_logsynflow_)
+    maxacc_ninaswot    = accs[np.argmax(scores["ninaswot"][:uid+1])]
+    maxacc_ntk         = accs[np.argmax(scores["ntk"][:uid+1])]
     maxacc_logsynflow  = accs[np.argmax(scores["logsynflow"][:uid+1])]
     
-    nruns.set_description(f"average elapse={mean(times):.2f}, logsynflow tau={logsynflow_tau:.3f}, maxacc(logsynflow)={maxacc_logsynflow:.3f}, synflow tau={synflow_tau:.3f}, maxacc(synflow)={maxacc_synflow:.3f}")
+    nruns.set_description(f"maxacc(ninaswot)={maxacc_ninaswot:.3f}, maxacc(ntk)={maxacc_ntk:.3f}, maxacc(logsynflow)={maxacc_logsynflow:.3f}")
     nruns.update(1)
 
-#np.save(filenames['ninaswot'], scores['ninaswot'])
-#np.save(filenames['ntk'], scores['ntk'])
+np.save(filenames['ninaswot'], scores['ninaswot'])
+np.save(filenames['ntk'], scores['ntk'])
 #np.save(filenames['entropy'], scores['entropy'])
 #np.save(filenames['gradsign'], scores['gradsign'])
 #np.save(filenames['synflow'], scores['synflow'])
 #np.save(filenames['logsynflow'], scores['logsynflow'])
-#np.save(filenames['acc'], accs)
+np.save(filenames['acc'], accs)
