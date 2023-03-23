@@ -48,6 +48,7 @@ parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbenc
 args = parser.parse_args()
 
 print(f"Use GPU {args.GPU}")
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
 
 # Reproducibility
