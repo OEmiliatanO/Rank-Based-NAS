@@ -35,10 +35,14 @@ def naswot_score(network, train_loader, device, args):
 
     forward_handler  = []
     backward_handler = []
-    for name, module in network.named_modules():    
+    for name, module in network.named_modules():
         if 'ReLU' in str(type(module)):
-            forward_handler.append(module.register_forward_hook(counting_forward_hook))
-            backward_handler.append(module.register_backward_hook(counting_backward_hook))
+            if hasattr(module, 'register_full_forward_hook'):
+                forward_handler.append(module.register_full_forward_hook(counting_forward_hook))
+                backward_handler.append(module.register_full_backward_hook(counting_backward_hook))
+            else:
+                forward_handler.append(module.register_forward_hook(counting_forward_hook))
+                backward_handler.append(module.register_backward_hook(counting_backward_hook))
 
     network = network.to(device)    
     s = []
