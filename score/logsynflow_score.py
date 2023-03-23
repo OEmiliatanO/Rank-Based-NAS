@@ -16,7 +16,7 @@ def logsynflow_score(network, train_loader, device):
         for name, param in network.state_dict().items():
             param.mul_(signs[name])
     
-    #?
+    # disable BN layer and dropout
     network.eval()
 
     network = network.to(device)
