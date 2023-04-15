@@ -52,6 +52,7 @@ parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modul
 parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
 
 parser.add_argument('--search_algo', default="ori", type=str)
+parser.add_argument('--verbose', action='store_true')
 
 
 args = parser.parse_args()
@@ -123,41 +124,14 @@ times     = []
 chosen    = []
 acc       = []
 topscores = []
+naswot_acc = []
+ni_acc = []
+logsynflow_acc = []
+ninaswot_acc = []
 
 print(f"Currently calculate means and standards.")
-#means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 
-if args.dataset == 'cifar10-valid':
-    # cifar10-valid
-    means = {}
-    stds = {}
-    means["ni"]       =    -0.08287504196166992
-    stds["ni"]        =     0.1338795386377707
-    means["naswot"]   =  1595.1744876295015
-    stds["naswot"]    =    76.14891987423042
-    means["ntk"]      = 10149.060118942261
-    stds["ntk"]       = 28253.425318545123
-    means["synflow"]  = 3.981683792494527e+34
-    stds["synflow"]   = 2.3508708829106306e+35
-    means["ninaswot"] = 0
-    stds["ninaswot"]  = np.sqrt(5)
-elif args.dataset == 'cifar100':
-    # cifar100
-    means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
-    """
-    means = {}
-    stds = {}
-    means["ni"] = -0.07765040397644044
-    stds["ni"]  =  0.12295018402244674
-    means["naswot"] = 1592.1985007236365
-    stds["naswot"] = 77.2502068400697
-    means["ntk"] = 9979.810939865112
-    stds["ntk"] = 23336.402907292802
-    means["ninaswot"] = 0
-    stds["ninaswot"]  = np.sqrt(5)
-    """
-else:
-    means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 
 
 print(f"Calculation of means and stds is done.")
@@ -173,16 +147,31 @@ for N in runs:
 
     # nas-bench-201 spec
     sol = GA(6, 5, searchspace, train_loader, device, stds, means, acc_type, args)
-    score, acc_, uid = sol.find_best()
+    if args.search_algo == "rk":
+        if args.verbose:
+            score, acc_, uid, rk, naswotacc, niacc, logsynflowacc, ninaswotacc = sol.find_best()
+        else:
+            score, acc_, uid, rk = sol.find_best()
+    else:
+        score, acc_, uid = sol.find_best()
     chosen.append(uid)
     topscores.append(score)
     acc.append(acc_)
 
+    naswot_acc.append(naswotacc)
+    ni_acc.append(niacc)
+    logsynflow_acc.append(logsynflowacc)
+    ninaswot_acc.append(ninaswotacc)
+
     times.append(time.time()-start)
     if isinstance(topscores[-1], tuple):
-        runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  topscores:({topscores[-1][0]:.3f},{topscores[-1][1]:.3f},{topscores[-1][2]:.3f},{topscores[-1][3]:.3f})  time:{mean(times):.2f}")
+        if args.verbose:
+            runs.set_description(f"rk-acc: {mean(acc):.3f}%({(stdev(acc) if len(acc) > 1 else 0):.3f}), naswot-acc: {mean(naswot_acc):.3f}%({(stdev(naswot_acc) if len(naswot_acc) > 1 else 0):.3f}), ni-acc: {mean(ni_acc):.3f}%({(stdev(ni_acc) if len(ni_acc) > 1 else 0):.3f}), logsyn-acc: {mean(logsynflow_acc):.3f}%({(stdev(logsynflow_acc) if len(logsynflow_acc) > 1 else 0):.3f}), ninaswot-acc: {mean(ninaswot_acc):.3f}%({(stdev(ninaswot_acc) if len(ninaswot_acc) > 1 else 0):.3f}), time:{mean(times):.2f}")
+        else:
+            runs.set_description(f"rk-acc: {mean(acc):.3f}%({(stdev(acc) if len(acc) > 1 else 0):.3f}) time:{mean(times):.2f}")
+
     else:
-        runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f}  uid: {uid}  topscores:{topscores[-1]:.3f}  time:{mean(times):.2f}")
+        runs.set_description(f"acc: {mean(acc):.3f}%  acc std: {(stdev(acc) if len(acc) > 1 else 0):.3f} time:{mean(times):.2f}")
 
 print(f"Final mean accuracy: {np.mean(acc)}")
 
