@@ -95,9 +95,16 @@ oper = oper.replace("ninaswot", "scores['ninaswot']")
 oper = oper.replace("ntk", "scores['ntk']")
 oper = oper.replace("logsynflow", "scores['logsynflow']")
 
+means = {'ntk': 8294.156311645507, 'ninaswot': 0, 'logsynflow': 429725.84}
+stds = {'ntk': 21499.301880380423, 'ninaswot': 2.23606797749979, 'logsynflow': 353190.9219404517}
+
 print("result = "+oper)
 
-result = eval(oper)
+#result = eval(oper)
+sumofstds = 1/stds['ntk']+1/stds['ninaswot']+1/stds['logsynflow']
+#w = [1/stds['ninaswot']/sumofstds, 1/stds['ntk']/sumofstds, 1/stds['logsynflow']/sumofstds]
+w = [1, 1, 0.1]
+result = w[0] * scores['ninaswot'] + w[1] * scores['ntk'] + w[2] * scores['logsynflow']
 
 assert len(result) == 15625, "broken"
 np.save(filenames["result"], result)
@@ -114,14 +121,14 @@ if args.find_the_problem:
     the_problems = np.array(the_problems)
     wheres_the_problems = f'{args.save_loc}/acc-{args.oper}_the_problems_{args.nasspace}_{args.dataset}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.maxofn}_{args.seed}.npy'
     np.save(wheres_the_problems, the_problems)
-    print(f"save the problems: {the_problems}")
+    print(f"save the problems: {the_problems} as {wheres_the_problems}")
 ####
 
 
 mask = np.isinf(result).astype(bool) |\
 np.isnan(result).astype(bool) |\
-(result > 10).astype(bool)#|\
-#(result < 0).astype(bool)
+(result > 10).astype(bool) |\
+(result < 0).astype(bool)
 
 accs = accs[~mask]
 result = result[~mask]
