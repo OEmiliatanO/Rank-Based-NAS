@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import copy
 
 def logsynflow_score(network, train_loader, device):
     @torch.no_grad()
@@ -16,6 +17,7 @@ def logsynflow_score(network, train_loader, device):
         for name, param in network.state_dict().items():
             param.mul_(signs[name])
     
+    network = copy.deepcopy(network)
     # disable BN layer and dropout
     network.eval()
 
