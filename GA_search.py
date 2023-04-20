@@ -129,14 +129,13 @@ ni_acc = []
 logsynflow_acc = []
 ninaswot_acc = []
 
-print(f"Currently calculate means and standards.")
 
-means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
-
-
-print(f"Calculation of means and stds is done.")
-print(f"means = {means}\nstds = {stds}")
-print(f"========================================")
+if args.search_algo != 'rk':
+    print(f"Currently calculate means and standards.")
+    means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
+    print(f"Calculation of means and stds is done.")
+    print(f"means = {means}\nstds = {stds}")
+    print(f"========================================")
 
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
 
@@ -150,6 +149,10 @@ for N in runs:
     if args.search_algo == "rk":
         if args.verbose:
             score, acc_, uid, rk, naswotacc, niacc, logsynflowacc, ninaswotacc = sol.find_best()
+            naswot_acc.append(naswotacc)
+            ni_acc.append(niacc)
+            logsynflow_acc.append(logsynflowacc)
+            ninaswot_acc.append(ninaswotacc)
         else:
             score, acc_, uid, rk = sol.find_best()
     else:
@@ -157,11 +160,6 @@ for N in runs:
     chosen.append(uid)
     topscores.append(score)
     acc.append(acc_)
-
-    naswot_acc.append(naswotacc)
-    ni_acc.append(niacc)
-    logsynflow_acc.append(logsynflowacc)
-    ninaswot_acc.append(ninaswotacc)
 
     times.append(time.time()-start)
     if isinstance(topscores[-1], tuple):
