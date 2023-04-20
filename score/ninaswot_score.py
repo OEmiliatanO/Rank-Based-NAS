@@ -185,7 +185,7 @@ def ni_score(network, train_loader, device, args):
     del(n2)
     return na
 
-@torch.no_grad
+@torch.no_grad()
 def old_ni_score(network, train_loader, device, args):
     network = network.to(device)
     data_iter = iter(train_loader)
@@ -207,11 +207,7 @@ def old_ni_score(network, train_loader, device, args):
 def ninaswot_score(network, train_loader, device, stds, means, args):
     scoreNASWOT = naswot_score(network, train_loader, device, args)
     scoreNI     = ni_score(network, train_loader, device, args)
-    std_of_nas  = stds["naswot"]
-    mean_of_nas = means["naswot"]
-    stand_score_naswot = (scoreNASWOT - mean_of_nas) / std_of_nas
-    std_of_ni  = stds["ni"]
-    mean_of_ni = means["ni"]
-    stand_score_ni  = (scoreNI - mean_of_ni) / std_of_ni
+    stand_score_naswot = (scoreNASWOT - means["naswot"]) / stds["naswot"]
+    stand_score_ni  = (scoreNI - means["ni"]) / stds["ni"]
     return stand_score_naswot*2+stand_score_ni
 
