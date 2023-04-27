@@ -29,12 +29,27 @@ class RepeatSampler(torch.utils.data.sampler.Sampler):
         return self.repeat*len(self.samp)
 
 
-def get_data(dataset, data_loc, valid, batch_size, repeat, args, pin_memory=True):
+def get_data(dataset, data_loc, trainval, batch_size, augtype, repeat, args, pin_memory=True):
     train_data, valid_data, xshape, class_num = get_datasets(dataset, data_loc, cutout=0)
-    train_data.transform.transforms = train_data.transform.transforms[2:]
-   
-    if valid and 'cifar10' in dataset:
-        cifar_split = load_config('config_utils/cifar-split.txt', None, None)
+    if augtype == 'gaussnoise':
+        train_data.transform.transforms = train_data.transform.transforms[2:]
+        train_data.transform.transforms.append(AddGaussianNoise(std=args.sigma))
+    elif augtype == 'cutout':
+        train_data.transform.transforms = train_data.transform.transforms[2:]
+        train_data.transform.transforms.append(torchvision.transforms.RandomErasing(p=0.9, scale=(0.02, 0.04)))
+    elif augtype == 'none':
+        train_data.transform.transforms = train_data.transform.transforms[2:]
+    
+    if dataset == 'cifar10':
+        acc_type = 'ori-test'
+        val_acc_type = 'x-valid'
+    
+    else:
+        acc_type = 'x-test'
+        val_acc_type = 'x-valid'
+    
+    if trainval and 'cifar10' in dataset:
+        cifar_split = load_config('searchspace/config_utils/cifar-split.txt', None, None)
         train_split, valid_split = cifar_split.train, cifar_split.valid
         if repeat > 0:
             train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size,
