@@ -104,27 +104,15 @@ def ni_extract(network, x, target, device, args):
     def counting_backward_hook_conv(module, inp, out):
         module.visited_backwards_conv = True
 
-    forward_handler  = []
-    backward_handler = []
     for name, module in network.named_modules():
-        hookon = False
         if 'Pool' in str(type(module)):
-            fhook = counting_forward_hook
-            bhook = counting_backward_hook
-            hookon = True
+            module.register_forward_hook(counting_forward_hook)
+            module.register_backward_hook(counting_backward_hook)
+        
         if 'Conv' in str(type(module)):
-            fhook = counting_forward_hook_conv
-            bhook = counting_backward_hook_conv
-            hookon = True
-
-        if hookon:
-            if hasattr(module, 'register_full_forward_hook'):
-                forward_handler.append(module.register_full_forward_hook(fhook))
-                backward_handler.append(module.register_full_backward_hook(bhook))
-            else:
-                forward_handler.append(module.register_forward_hook(fhook))
-                backward_handler.append(module.register_backward_hook(bhook))
-
+            module.register_forward_hook(counting_forward_hook_conv)
+            module.register_backward_hook(counting_backward_hook_conv)
+ 
     x2 = torch.clone(x)
     x2 = x2.to(device)
     x, target = x.to(device), target.to(device)
@@ -136,28 +124,26 @@ def ni_extract(network, x, target, device, args):
     metric = network.K
     channel = network.channel
 
-    for i in range(len(forward_handler)):
-        forward_handler[i].remove()
-        backward_handler[i].remove()
-
     return metric, n_conv, channel
 
-def ni_score(network, train_loader, device, args):
+def ni_score(network, train_loader, device, args, debug_no=0, debug_code=""):
+    network = network.cuda()
     data_iter = iter(train_loader)
     x, target = next(data_iter)
-    x, target = x.to(device), target.to(device)
+    x, target = x.to(device), target.float().to(device)
     noise = x.new(x.size()).normal_(0, args.sigma).to(device)
     x2 = x + noise
 
-    noise_layers = 0
     data_layers = 0
     n1 = copy.deepcopy(network)
     n1 = n1.to(device)
+    target1 = copy.copy(target)
+    data_layers, _, _ = ni_extract(n1, x, target1, device, args)
+
+    noise_layers = 0
     n2 = copy.deepcopy(network)
     n2 = n2.to(device)
-    target1 = copy.copy(target)
     target2 = copy.copy(target)
-    data_layers, _, _ = ni_extract(n1, x, target1, device, args)
     noise_layers, n_conv, channel = ni_extract(n2, x2, target2, device, args)
 
     errs = []
@@ -166,16 +152,13 @@ def ni_score(network, train_loader, device, args):
         errs.append(np.sum(np.square(error)) / error.size)
     try:
         epsilon = 1e-10
-
-        na = (channel / np.log(epsilon + np.sum(errs))) * (n_conv / len(errs))
-
-        if na > 0:
-            na = np.log(na)
+        eta = np.log(epsilon + np.sum(errs))
+        if eta > 0:
+            na = np.log(((channel / eta) * (n_conv / len(errs))))
         else:
             na = 0
-        
+
     except Exception as e:
-        print(e)
         na = 0
 
     del(noise_layers)
