@@ -12,7 +12,7 @@ from numpy import std
 import time
 from utils import add_dropout
 from score import *
-
+from encoder import encoder
 
 parser = argparse.ArgumentParser(description='NAS Without Training')
 parser.add_argument('--data_loc', default='../cifardata/', type=str, help='dataset folder')
@@ -86,7 +86,7 @@ def remap_dataset_names(dataset, valid, test, train):
 
 print(f"Initialize the train loader...")
 print(f"dataset = {args.dataset}, data location = {args.data_loc}, validation = {args.valid}")
-train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.repeat, args)
+train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.augtype, args.repeat, args)
 
 print(f"Initialize the nas bench api...")
 args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
@@ -96,79 +96,62 @@ searchspace = nasspace.get_search_space(args)
 print(f"Making sure {args.save_loc} exist.")
 os.makedirs(args.save_loc, exist_ok=True)
 
+"""
 print(f"Currently calculate means and standards.")
-
-means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
-
-
+means, stds = get_mean_std(searchspace, 100, train_loader, device, args)
 print(f"Calculation of means and stds is done.")
 print(f"means = {means}\nstds = {stds}")
+"""
 print(f"========================================")
 
-times     = []
-accs = {"ni": [], "naswot": [], "logsynflow": [], "ninaswot": [], "rank-based": []}
-best_arch = {"ni": (0,0), "naswot": (0,0), "logsynflow": (0,0)}
+times = []
+accs = {"ni": [], "naswot": [], "logsynflow": [], "rank-based": []}
+
+Encoder = encoder.get_encoder(args.nasspace)
 
 runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
     start = time.time()
-    indices = np.random.randint(0,len(searchspace),args.n_samples)
+    #indices = np.random.randint(0,len(searchspace),args.n_samples)
+    codebase = Encoder.get_nrand_code(args.n_samples)
+    indices = np.array([searchspace.get_index_by_code(Encoder.parse_code(c)) for c in codebase])
 
-    scores = {"ni": [], "naswot": [], "logsynflow": [], "ninaswot": []}
-    npstate = np.random.get_state()
-    ranstate = random.getstate()
-    torchstate = torch.random.get_rng_state()
-    for arch in indices:
-        network = searchspace.get_network(arch)
+    scores = {"ni": [], "naswot": [], "logsynflow": []}
+    
+    for uid in indices:
+        network = searchspace.get_network(uid)
         network = network.to(device)
         scores["ni"].append(ni_score(network, train_loader, device, args))
         scores["naswot"].append(naswot_score(network, train_loader, device, args))
         scores["logsynflow"].append(logsynflow_score(network, train_loader, device))
-        scores["ninaswot"].append(ninaswot_score(network, train_loader, device, stds, means, args))
         del network
 
-    uid = indices[np.nanargmax(scores["ni"])]
-    accs["ni"].append(searchspace.get_final_accuracy(uid, acc_type, args.valid))
+    totrk = dict(zip([uid for uid in indices], [0 for i in range(args.n_samples)]))
     
-    totrk = {}
     rk_ni = indices[np.argsort(scores["ni"])]
     for rk, id in enumerate(rk_ni):
-        if not id in totrk:
-            totrk[id] = len(rk_ni) - rk
-        else:
-            totrk[id] += len(rk_ni) - rk
-    
-    uid = indices[np.nanargmax(scores["naswot"])]
-    accs["naswot"].append(searchspace.get_final_accuracy(uid, acc_type, args.valid))
+        totrk[id] += args.n_samples - rk
     
     rk_naswot = indices[np.argsort(scores["naswot"])]
     for rk, id in enumerate(rk_naswot):
-        if not id in totrk:
-            totrk[id] = len(rk_naswot) - rk
-        else:
-            totrk[id] += len(rk_naswot) - rk
+        totrk[id] += args.n_samples - rk
 
-    uid = indices[np.nanargmax(scores["logsynflow"])]
-    accs["logsynflow"].append(searchspace.get_final_accuracy(uid, acc_type, args.valid))
-    
     rk_logsynflow = indices[np.argsort(scores["logsynflow"])]
-    bestrk = 1000000000000
+    bestrk = np.inf
     for rk, id in enumerate(rk_logsynflow):
-        if not id in totrk:
-            totrk[id] = len(rk_logsynflow) - rk
-        else:
-            totrk[id] += len(rk_logsynflow) - rk
+        totrk[id] += args.n_samples - rk
+
         if bestrk > totrk[id]:
             bestrk = totrk[id]
             bestrk_uid = id
 
+    accs["ni"].append(searchspace.get_final_accuracy(rk_ni[-1], acc_type, args.valid))
+    accs["naswot"].append(searchspace.get_final_accuracy(rk_naswot[-1], acc_type, args.valid))
+    accs["logsynflow"].append(searchspace.get_final_accuracy(rk_logsynflow[-1], acc_type, args.valid))
     accs["rank-based"].append(searchspace.get_final_accuracy(bestrk_uid, acc_type, args.valid))
 
-    uid = indices[np.nanargmax(scores["ninaswot"])]
-    accs["ninaswot"].append(searchspace.get_final_accuracy(uid, acc_type, args.valid))
-
     times.append(time.time()-start)
-    runs.set_description(f"acc_ni: {mean(accs['ni']):.2f}({std(accs['ni']):.3f}), acc_naswot: {mean(accs['naswot']):.2f}({std(accs['naswot']):.3f}), acc_logsyn: {mean(accs['logsynflow']):.2f}({std(accs['logsynflow']):.3f}), acc_ninaswot: {mean(accs['ninaswot']):.2f}({std(accs['ninaswot']):.3f}), rk-based: {mean(accs['rank-based']):.2f}({std(accs['rank-based']):.3f})")
+    runs.set_description(f"acc_ni: {mean(accs['ni']):.2f}({std(accs['ni']):.3f}), acc_naswot: {mean(accs['naswot']):.2f}({std(accs['naswot']):.3f}), acc_logsyn: {mean(accs['logsynflow']):.2f}({std(accs['logsynflow']):.3f}), rk-based: {mean(accs['rank-based']):.2f}({std(accs['rank-based']):.3f})")
 
 """
 state = {'accs': acc,
