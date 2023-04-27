@@ -3,6 +3,7 @@ from nas_201_api import NASBench201API as API
 from nasbench import api as nasbench101api
 from nas_101_api.model import Network
 from nas_101_api.model_spec import ModelSpec
+from nats_api import create as create_sss
 import itertools
 import random
 import numpy as np
@@ -19,10 +20,36 @@ class Nasbench201:
     def __init__(self, dataset, apiloc):
         self.dataset = dataset
         self.api = API(apiloc, verbose=False)
+        self.operations = ['none',
+                                            'skip_connect',
+                                            'nor_conv_1x1', 
+                                            'nor_conv_3x3', 
+                                            'avg_pool_3x3' ]
         self.epochs = '12'
+    
+    def get_index_by_code(self,code):
+        node_str = "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*[self.operations[c] for c in code[:6]])
+        """
+        base=-0
+        
+        for j in range(1,4):
+            node_str += '|'
+            for k in range(0,j):
+                node_str = node_str + self.operations[int(code[base])] + '~'+ str(k) +'|'
+                base+=1
+            node_str += '+'
+        node_str = node_str[0:-1]
+        """
+        index = self.api.query_index_by_arch(node_str)
+        return index
+
     def get_network(self, uid):
-        #config = self.api.get_net_config(uid, self.dataset)
-        config = self.api.get_net_config(uid, 'cifar10-valid')
+        if self.dataset == "cifar10":
+            dataset_name = 'cifar10-valid'
+        else:
+            dataset_name = self.dataset
+        config = self.api.get_net_config(uid, dataset_name)
+        #config = self.api.get_net_config(uid, 'cifar10-valid')
         config['num_classes'] = 1
         network = get_cell_based_tiny_net(config)
         return network
@@ -222,7 +249,53 @@ class Nasbench101:
                     pass
 
 
+class NatsbenchSSS:
+    def __init__(self, dataset, apiloc, args):
+        self.dataset = dataset
+        self.api = create_sss(apiloc, 'sss', fast_mode=True, verbose=False)
+        self.args=args
 
+    def __len__(self):
+        return 32768
+
+    def __iter__(self):
+        for uid in range(len(self)):
+            network = self.get_net(uid)
+            yield uid, network
+
+    def __getitem__(self, index):
+        return index
+
+    def get_net(self,index,args):
+        index = self.api.query_index_by_arch(index)
+        if args.dataset == "cifar10":
+            dataname = "cifar10-valid"
+        else:
+            dataname = args.dataset
+        config = self.api.get_net_config(index, dataname)
+        config['num_classes'] = 1
+        network = get_cell_based_tiny_net(config)
+        return network
+    
+    def get_acc(self, index, args,hp=90):
+        index = self.api.query_index_by_arch(index)
+        info = self.api.get_more_info(index, args.dataset, hp= hp)
+        validation_accuracy, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset=args.dataset, hp=hp)
+        return info['test-accuracy'],validation_accuracy
+
+    def get_acc_all(self, index, args):
+        info_cifar10 = self.api.get_more_info(index, 'cifar10', hp=90)
+        info_cifar100 = self.api.get_more_info(index, 'cifar100', hp=90)
+        info_imagenet = self.api.get_more_info(index, 'ImageNet16-120', hp=90)
+
+        validation_accuracy_cifar10, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='cifar10', hp=90)
+        validation_accuracy_cifar100, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='cifar100', hp=90)
+        validation_accuracy_imagenet, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='ImageNet16-120', hp=90)        
+        return info_cifar10['test-accuracy'],validation_accuracy_cifar10,info_cifar100['test-accuracy'],validation_accuracy_cifar100,info_imagenet['test-accuracy'],validation_accuracy_imagenet
+
+    def get_training_time(self,index,args,hp):
+        validation_accuracy, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset=args.dataset, hp=hp)
+        return time_cost
 
 class ReturnFeatureLayer(torch.nn.Module):
     def __init__(self, mod):
@@ -315,6 +388,8 @@ def get_search_space(args):
         return Nasbench201(args.dataset, args.api_loc)
     elif args.nasspace == 'nasbench101':
         return Nasbench101(args.dataset, args.api_loc, args)
+    elif args.nasspace == 'natsbenchSSS':
+        return NatsbenchSSS(args.dataset, args.api_loc, args)
     elif args.nasspace == 'nds_resnet':
         return NDS('ResNet')
     elif args.nasspace == 'nds_amoeba':
