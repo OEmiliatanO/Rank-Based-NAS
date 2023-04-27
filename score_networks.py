@@ -6,9 +6,11 @@ import numpy as np
 import torch
 import os
 import time
+import sys
 from tqdm import tqdm, trange
 from torch import nn
 from scipy import stats
+from encoder import encoder
 from pycls.models.nas.nas import Cell
 from utils import add_dropout, init_network
 from statistics import mean
@@ -16,7 +18,7 @@ from scipy.stats import kendalltau
 from score import *
 
 parser = argparse.ArgumentParser(description='Genetic-Based NAS with Hybrid Score Functions')
-parser.add_argument('--data_loc', default='./cifardata/', type=str, help='dataset folder')
+parser.add_argument('--data_loc', default='../cifardata/', type=str, help='dataset folder')
 parser.add_argument('--api_loc', default='./NAS-Bench-201.pth',
                     type=str, help='path to API')
 parser.add_argument('--save_loc', default='results', type=str, help='folder to save results')
@@ -85,7 +87,7 @@ def remap_dataset_names(dataset, valid, test, train):
     assert False, "Unknown dataset: {args.dataset}"
 
 print(f"Initialize the train loader...")
-train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.repeat, args)
+train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.augtype, args.repeat, args)
 
 print(f"Initialize the nasspace...")
 args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
@@ -106,20 +108,50 @@ print(f"Files to save: {filenames}")
 scores = dict(zip(["ninaswot", "ni", "ntk", "synflow", "logsynflow"], [np.full(len(searchspace), np.nan) for i in range(5)]))
 accs = np.full(len(searchspace), np.nan)
 
-print(f"Start calculating means and stds in {args.n_samples} samples...")
+#print(f"Start calculating means and stds in {args.n_samples} samples...")
 #means, stds = get_mean_std(searchspace, args.n_samples, train_loader, device, args)
 #means["ninaswot"] = 0
 #stds["ninaswot"]  = np.sqrt(5)
-print(f"Done")
+#print(f"Done")
 #print(f"means = {means}")
 #print(f"stds  = {stds}")
 
-print(f"Start scoring the whole arches...")
-nruns = tqdm(total = len(searchspace))
+#print(f"Start scoring the whole arches...")
+
+if args.nasspace == 'nasbench201':
+    Encoder = encoder.nasbench201_encoder()
+elif args.nasspace == 'natsbenchSSS':
+    Encoder = encoder.natsbenchSSS_encoder()
+else:
+    assert False, f"no such searchspace:{args.nasspace}"
+
+"""
+random.seed(args.seed)
+np.random.seed(args.seed)
+torch.manual_seed(args.seed)
+broken_code = np.array([2,1,4,1,4,2,2,2,4,2])
+uid = searchspace.get_index_by_code(Encoder.parse_code(broken_code))
+network = searchspace.get_network(uid)
+#print(network)
+print("uid = ", uid)
+print("code = ", broken_code)
+print("after parse code = ", Encoder.parse_code(broken_code))
+print("score = ", ni_score(network, train_loader, device, args, uid, broken_code))
+sys.exit(0)
+"""
+
+codebase = Encoder.get_nrand_code(args.n_samples)
+arches = np.array([searchspace.get_index_by_code(Encoder.parse_code(c)) for c in codebase])
+
+#nruns = tqdm(total = len(searchspace))
+nruns = tqdm(total = len(arches))
 times = []
-for i, (uid, network) in enumerate(searchspace):
+#for i, (uid, network) in enumerate(searchspace):
+for i, uid in enumerate(arches):
     st = time.time()
     try:
+        network = searchspace.get_network(uid)
+        network = network.to(device)
         #standardize = lambda x, m, s: (x-m)/s
         
         # ninaswot
@@ -129,7 +161,8 @@ for i, (uid, network) in enumerate(searchspace):
         #scores['ntk'][uid] = -standardize(ntk_score(network, train_loader, device), means["ntk"], stds["ntk"])
         
         # ni
-        scores['ni'][uid] = ni_score(network, train_loader, device, args)
+        #scores['ni'][uid] = ni_score(network, train_loader, device, args)
+        scores['ni'][i] = ni_score(network, train_loader, device, args, uid, codebase[i])
 
         # entropy
         #network = init_net_gaussian(network, device)
@@ -144,7 +177,8 @@ for i, (uid, network) in enumerate(searchspace):
         # logsynflow
         #scores['logsynflow'][uid] = standardize(logsynflow_score(network, train_loader, device), means["logsynflow"], stds["logsynflow"])
         
-        accs[uid] = searchspace.get_final_accuracy(uid, acc_type, args.valid)
+        #accs[uid] = searchspace.get_final_accuracy(uid, acc_type, args.valid)
+        accs[i] = searchspace.get_final_accuracy(uid, acc_type, args.valid)
         if i % 1000 == 0:
             pass
             #np.save(filenames['ninaswot'], scores['ninaswot'])
@@ -161,14 +195,17 @@ for i, (uid, network) in enumerate(searchspace):
     #maxacc_ninaswot    = accs[np.argmax(scores["ninaswot"][:uid+1])]
     #maxacc_ntk         = accs[np.argmax(scores["ntk"][:uid+1])]
     #maxacc_logsynflow  = accs[np.argmax(scores["logsynflow"][:uid+1])]
-    maxacc_ni           = accs[np.argmax(scores["ni"][:uid+1])]
-    tau, p = kendalltau(scores["ni"][:uid+1], accs[:uid+1])
+    #maxacc_ni           = accs[np.argmax(scores["ni"][:uid+1])]
+    #tau, p = kendalltau(scores["ni"][:uid+1], accs[:uid+1])
+    mask = np.ma.masked_invalid(scores["ni"][:i+1]).mask.astype(bool)
+    maxacc_ni           = accs[np.argmax(scores["ni"][:i+1])]
+    tau, p = kendalltau(scores["ni"][:i+1][~mask], accs[:i+1][~mask])
     
     #nruns.set_description(f"maxacc(ninaswot)={maxacc_ninaswot:.3f}, maxacc(ntk)={maxacc_ntk:.3f}, maxacc(logsynflow)={maxacc_logsynflow:.3f}")
-    nruns.set_description(f"maxacc(ni)={maxacc_ni:.3f}, last score={scores['ni'][uid]}, tau={tau}")
+    nruns.set_description(f"maxacc(ni)={maxacc_ni:.3f}, last score={scores['ni'][i]}, tau={tau}")
     nruns.update(1)
 
 #np.save(filenames['ninaswot'], scores['ninaswot'])
-np.save(filenames['ni'], scores['ni'])
+np.save(filenames['ni'], scores['ni'][args.n_samples])
 #np.save(filenames['logsynflow'], scores['logsynflow'])
 #np.save(filenames['acc'], accs)
