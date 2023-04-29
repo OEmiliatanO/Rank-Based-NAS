@@ -35,16 +35,14 @@ def naswot_score(network, train_loader, device, args):
     def counting_backward_hook(module, inp, out):    
         module.visited_backwards = True
 
-    forward_handler  = []
-    backward_handler = []
     for name, module in network.named_modules():
         if 'ReLU' in str(type(module)):
             if hasattr(module, 'register_full_forward_hook'):
-                forward_handler.append(module.register_full_forward_hook(counting_forward_hook))
-                backward_handler.append(module.register_full_backward_hook(counting_backward_hook))
+                module.register_full_forward_hook(counting_forward_hook)
+                module.register_full_backward_hook(counting_backward_hook)
             else:
-                forward_handler.append(module.register_forward_hook(counting_forward_hook))
-                backward_handler.append(module.register_backward_hook(counting_backward_hook))
+                module.register_forward_hook(counting_forward_hook)
+                module.register_backward_hook(counting_backward_hook)
 
     network = network.to(device)    
     s = []
@@ -58,10 +56,6 @@ def naswot_score(network, train_loader, device, args):
 
     network(x2.to(device))
     s.append(hooklogdet(network.K, target))
-    
-    for i in range(len(forward_handler)):
-        forward_handler[i].remove()
-        backward_handler[i].remove()
 
     del network
     torch.cuda.empty_cache()
@@ -69,7 +63,6 @@ def naswot_score(network, train_loader, device, args):
 
 def ni_extract(network, x, target, device, args):
     network.K = []
-    network.rn = 0
     network.n_conv=0
     network.channel = 0
     def counting_forward_hook(module, inp, out):
@@ -80,8 +73,6 @@ def ni_extract(network, x, target, device, args):
                 inp = inp[0]
             arr = inp.detach().cpu().numpy()
             network.K.append(arr)
-            
-            network.rn += 1
             network.channel += arr.shape[1]
         except:
             pass
@@ -98,7 +89,7 @@ def ni_extract(network, x, target, device, args):
             arr = inp.detach().cpu().numpy()               
             network.n_conv += 1
             network.channel += arr.shape[1]
-        except Exception as e:
+        except:
             pass
 
     def counting_backward_hook_conv(module, inp, out):
@@ -119,7 +110,6 @@ def ni_extract(network, x, target, device, args):
     jacobs, labels, y, out = get_batch_jacobian(network, x, target, device, args)
             
     network(x2)
-    rn = network.rn
     n_conv = network.n_conv
     metric = network.K
     channel = network.channel
@@ -158,14 +148,15 @@ def ni_score(network, train_loader, device, args, debug_no=0, debug_code=""):
         else:
             na = 0
 
-    except Exception as e:
+    except:
         na = 0
 
     del(noise_layers)
     del(data_layers)
-        
     del(n1)
     del(n2)
+
+    torch.cuda.empty_cache()
     return na
 
 @torch.no_grad()
@@ -186,11 +177,4 @@ def old_ni_score(network, train_loader, device, args):
     torch.cuda.empty_cache()
 
     return -np.sum(np.square(o-o_))
-
-def ninaswot_score(network, train_loader, device, stds, means, args):
-    scoreNASWOT = naswot_score(network, train_loader, device, args)
-    scoreNI     = ni_score(network, train_loader, device, args)
-    stand_score_naswot = (scoreNASWOT - means["naswot"]) / stds["naswot"]
-    stand_score_ni  = (scoreNI - means["ni"]) / stds["ni"]
-    return stand_score_naswot*2+stand_score_ni
 
