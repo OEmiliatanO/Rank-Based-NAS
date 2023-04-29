@@ -7,10 +7,13 @@ class nasbench201_encoder:
         pass
 
     def get_rand_code(self):
-        return np.concatenate((np.random.randint(5,size=6),np.random.randint(4,size=1),np.random.randint(1,5,size=3)))
+        return tuple(np.concatenate((np.random.randint(5,size=6),np.random.randint(4,size=1),np.random.randint(1,5,size=3))))
     
     def get_nrand_code(self, n):
-        return [self.get_rand_code() for i in range(n)]
+        s = set()
+        while len(s) < n:
+            s.add(self.get_rand_code())
+        return [list(c) for c in s]
 
     def get_rand_backbone_branch(self):
         pass
