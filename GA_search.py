@@ -11,52 +11,9 @@ from statistics import mean, stdev
 import time
 from utils import add_dropout
 from score import *
+from Parser import parser
 
-
-parser = argparse.ArgumentParser(description='Genetic-Based NAS algorithm with Hybrid Score Functions')
-
-parser.add_argument('--maxn_pop', default=25, type=int, help='number of population')
-parser.add_argument('--maxn_iter', default=30, type=int, help='number of iteration')
-parser.add_argument('--prob_mut', default=0.07, type=float, help='probability of mutation')
-parser.add_argument('--prob_cr', default=0.8, type = float, help='probability of crossover')
-
-parser.add_argument('--data_loc', default='./cifardata/', type=str, help='dataset folder')
-parser.add_argument('--api_loc', default='./NAS-Bench-201.pth',
-                    type=str, help='path to API')
-parser.add_argument('--save_loc', default='results/ICML', type=str, help='folder to save results')
-parser.add_argument('--save_string', default='naswot', type=str, help='prefix of results file')
-parser.add_argument('--score', default='hook_logdet', type=str, help='the score to evaluate')
-parser.add_argument('--nasspace', default='nasbench201', type=str, help='the nas search space to use')
-parser.add_argument('--batch_size', default=128, type=int)
-parser.add_argument('--kernel', action='store_true')
-parser.add_argument('--dropout', action='store_true')
-parser.add_argument('--repeat', default=1, type=int, help='how often to repeat a single image with a batch')
-parser.add_argument('--augtype', default='none', type=str, help='which perturbations to use')
-parser.add_argument('--sigma', default=0.05, type=float, help='noise level if augtype is "gaussnoise"')
-parser.add_argument('--GPU', default='0', type=str)
-parser.add_argument('--seed', default=1, type=int)
-parser.add_argument('--init', default='', type=str)
-
-parser.add_argument('--valid', action='store_true')
-parser.add_argument('--test', action='store_true')
-parser.add_argument('--train', action='store_true')
-
-parser.add_argument('--activations', action='store_true')
-parser.add_argument('--cosine', action='store_true')
-parser.add_argument('--dataset', default='cifar10', type=str)
-parser.add_argument('--n_samples', default=50, type=int)
-parser.add_argument('--n_runs', default=500, type=int)
-parser.add_argument('--stem_out_channels', default=16, type=int, help='output channels of stem convolution (nasbench101)')
-parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of modules (nasbench101)')
-parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modules per stack (nasbench101)')
-parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
-
-parser.add_argument('--search_algo', default="ori", type=str)
-parser.add_argument('--verbose', action='store_true')
-
-
-args = parser.parse_args()
-
+args = parser.GAsearch_argsparser()
 
 if args.search_algo == "ori" or args.search_algo == "original" or args.search_algo == "origin" or args.search_algo == "base":
     print(f"Use search algorithm: GA origin ver.")
@@ -110,7 +67,7 @@ def remap_dataset_names(dataset, valid, test, train):
 
 print(f"Initialize the train loader...")
 print(f"dataset = {args.dataset}, data location = {args.data_loc}, validation = {args.valid}")
-train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.repeat, args)
+train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.augtype, args.repeat, args)
 
 print(f"Initialize the nas bench api...")
 args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
@@ -136,6 +93,8 @@ if args.search_algo != 'rk':
     print(f"Calculation of means and stds is done.")
     print(f"means = {means}\nstds = {stds}")
     print(f"========================================")
+
+means, stds = {}, {}
 
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
 
