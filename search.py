@@ -13,40 +13,10 @@ import time
 from utils import add_dropout
 from score import *
 from encoder import encoder
+from scipy.stats import kendalltau
+from Parser import parser
 
-parser = argparse.ArgumentParser(description='NAS Without Training')
-parser.add_argument('--data_loc', default='../cifardata/', type=str, help='dataset folder')
-parser.add_argument('--api_loc', default='./NAS-Bench-201.pth',
-                    type=str, help='path to API')
-parser.add_argument('--save_loc', default='results/ICML', type=str, help='folder to save results')
-parser.add_argument('--save_string', default='naswot', type=str, help='prefix of results file')
-parser.add_argument('--score', default='hook_logdet', type=str, help='the score to evaluate')
-parser.add_argument('--nasspace', default='nasbench201', type=str, help='the nas search space to use')
-parser.add_argument('--batch_size', default=128, type=int)
-parser.add_argument('--kernel', action='store_true')
-parser.add_argument('--dropout', action='store_true')
-parser.add_argument('--repeat', default=1, type=int, help='how often to repeat a single image with a batch')
-parser.add_argument('--augtype', default='none', type=str, help='which perturbations to use')
-parser.add_argument('--sigma', default=0.05, type=float, help='noise level if augtype is "gaussnoise"')
-parser.add_argument('--GPU', default='0', type=str)
-parser.add_argument('--seed', default=1, type=int)
-parser.add_argument('--init', default='', type=str)
-
-parser.add_argument('--valid', action='store_true')
-parser.add_argument('--test', action='store_true')
-parser.add_argument('--train', action='store_true')
-
-parser.add_argument('--activations', action='store_true')
-parser.add_argument('--cosine', action='store_true')
-parser.add_argument('--dataset', default='cifar10', type=str)
-parser.add_argument('--n_samples', default=100, type=int)
-parser.add_argument('--n_runs', default=500, type=int)
-parser.add_argument('--stem_out_channels', default=16, type=int, help='output channels of stem convolution (nasbench101)')
-parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of modules (nasbench101)')
-parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modules per stack (nasbench101)')
-parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
-
-args = parser.parse_args()
+args = parser.search_argsparser()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -109,13 +79,7 @@ accs = {"ni": [], "naswot": [], "logsynflow": [], "rank-based": []}
 
 Encoder = encoder.get_encoder(args.nasspace)
 
-runs = trange(args.n_runs, desc='acc: ')
-for N in runs:
-    start = time.time()
-    #indices = np.random.randint(0,len(searchspace),args.n_samples)
-    codebase = Encoder.get_nrand_code(args.n_samples)
-    indices = np.array([searchspace.get_index_by_code(Encoder.parse_code(c)) for c in codebase])
-
+def ranking(indices, weight, cnt):
     scores = {"ni": [], "naswot": [], "logsynflow": []}
     
     for uid in indices:
@@ -128,30 +92,62 @@ for N in runs:
 
     totrk = dict(zip([uid for uid in indices], [0 for i in range(args.n_samples)]))
     
-    rk_ni = indices[np.argsort(scores["ni"])]
+    m_ni = np.argsort(scores["ni"])
+    rk_ni = indices[m_ni]
     for rk, id in enumerate(rk_ni):
-        totrk[id] += args.n_samples - rk
+        totrk[id] += (args.n_samples - rk) * weight[0]
     
-    rk_naswot = indices[np.argsort(scores["naswot"])]
+    m_naswot = np.argsort(scores["naswot"])
+    rk_naswot = indices[m_naswot]
     for rk, id in enumerate(rk_naswot):
-        totrk[id] += args.n_samples - rk
+        totrk[id] += (args.n_samples - rk) * weight[1]
 
-    rk_logsynflow = indices[np.argsort(scores["logsynflow"])]
+    m_logsyn = np.argsort(scores["logsynflow"])
+    rk_logsynflow = indices[m_logsyn]
     bestrk = np.inf
     for rk, id in enumerate(rk_logsynflow):
-        totrk[id] += args.n_samples - rk
+        totrk[id] += (args.n_samples - rk) * weight[2]
 
         if bestrk > totrk[id]:
             bestrk = totrk[id]
             bestrk_uid = id
+    
+    accs = [searchspace.get_final_accuracy(uid, acc_type, args.valid) for uid in indices]
+    ind_rk = [totrk[uid] for uid in indices]
+    rk_tau, p = kendalltau(ind_rk, accs)
+    ni_tau, p = kendalltau(scores["ni"], accs)
+    naswot_tau, p = kendalltau(scores["naswot"], accs)
+    logsyn_tau, p = kendalltau(scores["logsynflow"], accs)
+    if args.save:
+        filename_rk = f'{args.save_loc}/rk_{args.nasspace}_{args.dataset}_{args.n_runs}_{args.n_samples}_{args.augtype}_{args.sigma}_{args.repeat}_{args.valid}_{args.batch_size}_{args.seed}_{cnt}'
+        filename_acc = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.valid}_{cnt}'
+        np.save(filename_rk, ind_rk)
+        np.save(filename_acc, accs)
+    return rk_ni[-1], rk_naswot[-1], rk_logsynflow[-1], bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau
 
-    accs["ni"].append(searchspace.get_final_accuracy(rk_ni[-1], acc_type, args.valid))
-    accs["naswot"].append(searchspace.get_final_accuracy(rk_naswot[-1], acc_type, args.valid))
-    accs["logsynflow"].append(searchspace.get_final_accuracy(rk_logsynflow[-1], acc_type, args.valid))
+taus = {"rk":[], "ni": [], "naswot": [], "logsynflow": []}
+cnt = 0
+runs = trange(args.n_runs, desc='acc: ')
+for N in runs:
+    start = time.time()
+    #indices = np.random.randint(0,len(searchspace),args.n_samples)
+    codebase = Encoder.get_nrand_code(args.n_samples)
+    indices = np.array([searchspace.get_index_by_code(Encoder.parse_code(c)) for c in codebase])
+    
+    niuid, naswotuid, logsynuid, bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau = ranking(indices, [1,1,1], cnt)
+    cnt += 1
+    taus['rk'].append(rk_tau)
+    taus['ni'].append(ni_tau)
+    taus['naswot'].append(naswot_tau)
+    taus['logsynflow'].append(logsyn_tau)
+
+    accs["ni"].append(searchspace.get_final_accuracy(niuid, acc_type, args.valid))
+    accs["naswot"].append(searchspace.get_final_accuracy(naswotuid, acc_type, args.valid))
+    accs["logsynflow"].append(searchspace.get_final_accuracy(logsynuid, acc_type, args.valid))
     accs["rank-based"].append(searchspace.get_final_accuracy(bestrk_uid, acc_type, args.valid))
 
     times.append(time.time()-start)
-    runs.set_description(f"acc_ni: {mean(accs['ni']):.2f}({std(accs['ni']):.3f}), acc_naswot: {mean(accs['naswot']):.2f}({std(accs['naswot']):.3f}), acc_logsyn: {mean(accs['logsynflow']):.2f}({std(accs['logsynflow']):.3f}), rk-based: {mean(accs['rank-based']):.2f}({std(accs['rank-based']):.3f})")
+    runs.set_description(f"acc_ni: {mean(accs['ni']):.2f}({std(accs['ni']):.3f}),{mean(taus['ni']):.3f}({std(taus['ni']):.3f}), acc_naswot: {mean(accs['naswot']):.2f}({std(accs['naswot']):.3f}),{mean(taus['naswot']):.3f}({std(taus['naswot']):.3f}), acc_logsyn: {mean(accs['logsynflow']):.2f}({std(accs['logsynflow']):.3f}),{mean(taus['logsynflow']):.3f}({std(taus['logsynflow']):.3f}), rk-based: {mean(accs['rank-based']):.2f}({std(accs['rank-based']):.3f}),{mean(taus['rk']):.3f}({std(taus['rk']):.3f})")
 
 """
 state = {'accs': acc,
