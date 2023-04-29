@@ -44,13 +44,11 @@ class GA():
             self.population[i].uid = uid
             if self.population[i].uid not in self.DICT:
                 uid = self.population[i].uid
-                """ fitness: (naswot, ni, ntk, logsynflow, ninaswot) """
+                """ fitness: (naswot, ni, ntk, logsynflow) """
                 x = [naswot_score(network, self.train_loader, self.device, self.args), \
                 ni_score(network, self.train_loader, self.device, self.args), \
                 0, \
                 logsynflow_score(network, self.train_loader, self.device)]
-                x.append(standardize(x[0], self.means["naswot"], self.stds["naswot"])*2+standardize(x[1], self.means["ni"], self.stds["ni"]))
-                #-standardize(ntk_score(network, self.train_loader, self.device), self.means["ntk"], self.stds["ntk"]), \
 
                 self.population[i].fitness = self.DICT[uid] = tuple(x)
             else:
@@ -74,11 +72,6 @@ class GA():
                     self.best_chrom["logsynflow"].acc = self.population[i].acc
                     self.best_chrom["logsynflow"].uid = self.population[i].uid
                     self.best_chrom["logsynflow"].gene = copy.deepcopy(self.population[i].gene)
-                if self.best_chrom["ninaswot"].gene == None or self.population[i].fitness[4] > self.best_chrom["ninaswot"].fitness[4]:
-                    self.best_chrom["ninaswot"].fitness = self.population[i].fitness
-                    self.best_chrom["ninaswot"].acc = self.population[i].acc
-                    self.best_chrom["ninaswot"].uid = self.population[i].uid
-                    self.best_chrom["ninaswot"].gene = copy.deepcopy(self.population[i].gene)
 
     def mutation(self, chrom):
         if chrom == None: return None
@@ -165,45 +158,33 @@ class GA():
 
             self.population = elder + offsprings
         
-        naswot_rk     = sorted(list(self.candiate["naswot"]), key = lambda this: self.DICT[this][0], reverse = True)
-        ni_rk         = sorted(list(self.candiate["ni"]), key = lambda this: self.DICT[this][1], reverse = True)
-        #ntk_rk        = sorted(list(self.candiate["ntk"]), key = lambda this: self.DICT[this][2], reverse = True)
-        logsynflow_rk = sorted(list(self.candiate["logsynflow"]), key = lambda this: self.DICT[this][3], reverse = True)
-        rank = {}
-        best_rank = None
-        for rk, uid in enumerate(naswot_rk):
-            rank[uid] = rk+1
-        for rk, uid in enumerate(ni_rk):
-            if uid in rank:
-                rank[uid] += rk+1
-            else:
-                rank[uid] = rk+1
-        """
-        for rk, uid in enumerate(ntk_rk):
-            if uid in rank:
-                rank[uid] += rk+1
-            else:
-                rank[uid] = rk+1
-        """
-        maxacc = -1
-        for rk, uid in enumerate(logsynflow_rk):
-            if uid in rank:
-                rank[uid] += rk+1
-            else:
-                rank[uid] = rk+1
-            maxacc = max(maxacc, self.searchspace.get_final_accuracy(uid, self.acc_type, self.args.valid))
-            if best_rank == None or best_rank > rank[uid]:
-                best_rank = rank[uid]
-                best_uid = uid
+        rk_naswot     = sorted(list(self.candiate["naswot"]), key = lambda this: self.DICT[this][0], reverse = True)
+        rk_ni         = sorted(list(self.candiate["ni"]), key = lambda this: self.DICT[this][1], reverse = True)
+        #rk_ntk        = sorted(list(self.candiate["ntk"]), key = lambda this: self.DICT[this][2], reverse = True)
+        rk_logsynflow = sorted(list(self.candiate["logsynflow"]), key = lambda this: self.DICT[this][3], reverse = True)
+
+        totrk = dict(zip([uid for uid in self.candiate["naswot"]], [0 for i in range(len(rk_naswot))]))
+    
+        for rk, id in enumerate(rk_ni):
+            totrk[id] += rk
         
-        network, uid, acc = uid2net(best_uid, self.searchspace, self.acc_type, self.args.valid)
+        for rk, id in enumerate(rk_naswot):
+            totrk[id] += rk
+
+        bestrk = np.inf
+        for rk, id in enumerate(rk_logsynflow):
+            totrk[id] += rk
+
+            if bestrk > totrk[id]:
+                bestrk = totrk[id]
+                bestrk_uid = id
+               
+        network, uid, acc = uid2net(bestrk_uid, self.searchspace, self.acc_type, self.args.valid)
         
-        #else:
-        #    network, uid, acc = gene2net(offsprings[0].gene, self.NAS_201_ops, self.searchspace, self.acc_type, self.args.valid)
         if self.args.verbose:
             return self.DICT[uid], acc, uid, best_rank, self.best_chrom["naswot"].acc, self.best_chrom["ni"].acc, self.best_chrom["logsynflow"].acc, self.best_chrom["ninaswot"].acc
         else:
-            return self.DICT[uid], acc, uid, best_rank
+            return self.DICT[uid], acc, uid, bestrk
 
 def gene2sect(gene, ops):
     gene_sect_len = len(ops)
