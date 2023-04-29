@@ -20,4 +20,4 @@ cifardata/
 log
 find_the_problem.py
 *.swp
-result/ICML/
+results/
