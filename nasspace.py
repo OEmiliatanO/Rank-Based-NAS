@@ -43,6 +43,10 @@ class Nasbench201:
         index = self.api.query_index_by_arch(node_str)
         return index
 
+    def get_arch_str_by_code(self,code):
+        node_str = "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*[self.operations[c] for c in code[:6]])
+        return node_str
+
     def get_network(self, uid):
         if self.dataset == "cifar10":
             dataset_name = 'cifar10-valid'
