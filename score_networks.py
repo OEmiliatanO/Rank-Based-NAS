@@ -17,37 +17,7 @@ from statistics import mean
 from scipy.stats import kendalltau
 from score import *
 
-parser = argparse.ArgumentParser(description='Genetic-Based NAS with Hybrid Score Functions')
-parser.add_argument('--data_loc', default='../cifardata/', type=str, help='dataset folder')
-parser.add_argument('--api_loc', default='./NAS-Bench-201.pth',
-                    type=str, help='path to API')
-parser.add_argument('--save_loc', default='results', type=str, help='folder to save results')
-parser.add_argument('--save_string', default='naswot', type=str, help='prefix of results file')
-parser.add_argument('--score', default='hook_logdet', type=str, help='the score to evaluate')
-parser.add_argument('--nasspace', default='nasbench201', type=str, help='the nas search space to use')
-parser.add_argument('--batch_size', default=128, type=int)
-parser.add_argument('--repeat', default=1, type=int, help='how often to repeat a single image with a batch')
-parser.add_argument('--augtype', default='none', type=str, help='which perturbations to use')
-parser.add_argument('--sigma', default=0.05, type=float, help='noise level if augtype is "gaussnoise"')
-parser.add_argument('--GPU', default='0', type=str)
-parser.add_argument('--seed', default=1, type=int)
-parser.add_argument('--init', default='', type=str)
-
-parser.add_argument('--valid', action='store_true')
-parser.add_argument('--test', action='store_true')
-parser.add_argument('--train', action='store_true')
-
-parser.add_argument('--dropout', action='store_true')
-parser.add_argument('--dataset', default='cifar10', type=str)
-parser.add_argument('--maxofn', default=1, type=int, help='score is the max of this many evaluations of the network')
-parser.add_argument('--n_samples', default=50, type=int)
-parser.add_argument('--n_runs', default=500, type=int)
-parser.add_argument('--stem_out_channels', default=16, type=int, help='output channels of stem convolution (nasbench101)')
-parser.add_argument('--num_stacks', default=3, type=int, help='#stacks of modules (nasbench101)')
-parser.add_argument('--num_modules_per_stack', default=3, type=int, help='#modules per stack (nasbench101)')
-parser.add_argument('--num_labels', default=1, type=int, help='#classes (nasbench101)')
-
-args = parser.parse_args()
+args = parser.score_argsparser()
 
 print(f"Use GPU {args.GPU}")
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
