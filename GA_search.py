@@ -11,6 +11,7 @@ from statistics import mean, stdev
 import time
 from utils import add_dropout
 from score import *
+import sys
 from Parser import parser
 
 args = parser.GAsearch_argsparser()
@@ -69,8 +70,11 @@ print(f"Initialize the train loader...")
 print(f"dataset = {args.dataset}, data location = {args.data_loc}, validation = {args.valid}")
 train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.augtype, args.repeat, args)
 
-print(f"Initialize the nas bench api...")
-args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
+print(f"Initialize the nas bench api {args.nasspace} ...")
+if args.nasspace != "natsbenchSSS":
+    args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
+else:
+    acc_type = None
 print(f"dataset = {args.dataset}, validation = {args.valid}")
 searchspace = nasspace.get_search_space(args)
 
