@@ -51,7 +51,13 @@ class natsbenchSSS_encoder:
     def __len__(self):
         return 5
     def get_rand_code(self):
-        return np.array(random.sample(range(0,self.num_choices),k=5))
+        return tuple(random.sample(range(0,self.num_choices),k=5))
+    
+    def get_nrand_code(self, n):
+        s = set()
+        while len(s) < n:
+            s.add(self.get_rand_code())
+        return [list(c) for c in s]
 
     def parse_code(self,code):
         if type(code)==np.int64 or type(code)==int:
