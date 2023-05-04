@@ -144,7 +144,7 @@ def ni_score(network, train_loader, device, args, debug_no=0, debug_code=""):
         epsilon = 1e-10
         eta = np.log(epsilon + np.sum(errs))
         if eta > 0:
-            na = np.log(((channel / eta) * (n_conv / len(errs))))
+            na = np.log((channel * (n_conv / len(errs)) / eta))
         else:
             na = 0
 
