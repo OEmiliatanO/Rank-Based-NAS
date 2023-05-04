@@ -25,7 +25,7 @@ def get_mean_std(searchspace, sample_n, train_loader, device, args):
         st = time.time()
 
         uid = searchspace[arch]
-        network = searchspace.get_network(uid)
+        network = searchspace.get_network(int(uid), args)
 
         scores_naswot.append(naswot_score(network, train_loader, device, args))
         scores_ni.append(ni_score(network, train_loader, device, args))
