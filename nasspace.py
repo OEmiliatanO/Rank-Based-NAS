@@ -47,7 +47,7 @@ class Nasbench201:
         node_str = "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*[self.operations[c] for c in code[:6]])
         return node_str
 
-    def get_network(self, uid):
+    def get_network(self, uid, args):
         if self.dataset == "cifar10":
             dataset_name = 'cifar10-valid'
         else:
@@ -204,7 +204,7 @@ class Nasbench101:
                     maxacc = newacc
                     maxtime = statmap['final_training_time']
         return maxtime
-    def get_network(self, unique_hash):
+    def get_network(self, unique_hash, args):
         spec = self.get_spec(unique_hash)
         network = Network(spec, self.args)
         return network
@@ -270,7 +270,10 @@ class NatsbenchSSS:
     def __getitem__(self, index):
         return index
 
-    def get_net(self,index,args):
+    def query_index_by_arch(self, arch):
+        return self.api.query_index_by_arch(arch)
+
+    def get_network(self,index,args):
         index = self.api.query_index_by_arch(index)
         if args.dataset == "cifar10":
             dataname = "cifar10-valid"
@@ -300,6 +303,12 @@ class NatsbenchSSS:
     def get_training_time(self,index,args,hp):
         validation_accuracy, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset=args.dataset, hp=hp)
         return time_cost
+
+    def get_final_accuracy(self, index, acc_type, trainval):
+        if trainval:
+            acc, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset=self.dataset, hp=90)
+            return acc
+        return self.api.get_more_info(index, self.dataset, hp=90)['test-accuracy']
 
 class ReturnFeatureLayer(torch.nn.Module):
     def __init__(self, mod):
