@@ -4,7 +4,9 @@ import datasets
 import random
 import numpy as np
 import torch
+from torch import nn
 import os
+import sys
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import trange
 from statistics import mean
@@ -15,6 +17,7 @@ from score import *
 from encoder import encoder
 from scipy.stats import kendalltau
 from Parser import parser
+from weight_giver import Weight_giver
 
 args = parser.search_argsparser()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
@@ -58,8 +61,11 @@ print(f"Initialize the train loader...")
 print(f"dataset = {args.dataset}, data location = {args.data_loc}, validation = {args.valid}")
 train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.augtype, args.repeat, args)
 
-print(f"Initialize the nas bench api...")
-args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
+print(f"Initialize the nas bench api {args.nasspace} ...")
+if args.nasspace != "natsbenchSSS":
+    args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
+else:
+    acc_type = None
 print(f"dataset = {args.dataset}, validation = {args.valid}")
 searchspace = nasspace.get_search_space(args)
 
@@ -71,8 +77,8 @@ print(f"Currently calculate means and standards.")
 means, stds = get_mean_std(searchspace, 100, train_loader, device, args)
 print(f"Calculation of means and stds is done.")
 print(f"means = {means}\nstds = {stds}")
-"""
 print(f"========================================")
+"""
 
 times = []
 accs = {"ni": [], "naswot": [], "logsynflow": [], "rank-based": []}
@@ -83,7 +89,9 @@ def ranking(indices, weight, cnt):
     scores = {"ni": [], "naswot": [], "logsynflow": []}
     
     for uid in indices:
-        network = searchspace.get_network(uid)
+        uid = int(uid)
+        network = searchspace.get_network(uid, args)
+        #print(uid)
         network = network.to(device)
         scores["ni"].append(ni_score(network, train_loader, device, args))
         scores["naswot"].append(naswot_score(network, train_loader, device, args))
@@ -112,7 +120,10 @@ def ranking(indices, weight, cnt):
             bestrk = totrk[id]
             bestrk_uid = id
     
-    accs = [searchspace.get_final_accuracy(uid, acc_type, args.valid) for uid in indices]
+    accs = [searchspace.get_final_accuracy(int(uid), acc_type, args.valid) for uid in indices]
+    maxacc = np.max(accs)
+    rk_maxacc = searchspace.get_final_accuracy(int(bestrk_uid), acc_type, args.valid)
+    
     ind_rk = [totrk[uid] for uid in indices]
     rk_tau, p = kendalltau(ind_rk, accs)
     ni_tau, p = kendalltau(scores["ni"], accs)
@@ -123,7 +134,48 @@ def ranking(indices, weight, cnt):
         filename_acc = f'{args.save_loc}/{args.save_string}_accs_{args.nasspace}_{args.dataset}_{args.valid}_{cnt}'
         np.save(filename_rk, ind_rk)
         np.save(filename_acc, accs)
-    return rk_ni[-1], rk_naswot[-1], rk_logsynflow[-1], bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau
+    return rk_ni[-1], rk_naswot[-1], rk_logsynflow[-1], bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau, maxacc, rk_maxacc
+
+##
+"""
+weight_giver = Weight_giver(args.n_samples, 6, 3, 1)
+weight_giver.to(device)
+
+for _ in range(50):
+    codebase = Encoder.get_nrand_code(args.n_samples)
+    indices = np.array([searchspace.get_index_by_code(Encoder.parse_code(c)) for c in codebase])
+    arch_str = [Encoder.parse_code(c) for c in codebase]
+    weight_giver.train(arch_str, indices, ranking, nn.CrossEntropyLoss(), weight_giver.optimizer, device)
+"""
+##
+"""
+codebase = Encoder.get_nrand_code(args.n_samples)
+code = codebase[5]
+indices = np.array([Encoder.parse_code(c) for c in codebase])
+np.save("debug-idsss.npy", indices)
+accs = [searchspace.get_final_accuracy(int(uid), acc_type, args.valid) for uid in indices]
+np.save("debug-accsss.npy", accs)
+ni_scores = []
+nruns = tqdm(total = len(indices))
+for uid in indices:
+    network = searchspace.get_network(int(uid), args)
+    ni_scores.append(ni_score(network, train_loader, device, args))
+    nruns.update(1)
+
+np.save("debug-nisss.npy", ni_scores)
+tau, p = kendalltau(ni_scores, accs)
+print(f"tau = {tau}")
+"""
+"""
+print("code = ", code)
+id = Encoder.parse_code(code)
+network = searchspace.get_network(id, args)
+print(f"after parse: {id}")
+network = network.to(device)
+print(f"score = {ni_score(network, train_loader, device, args)}")
+print(f"acc = {searchspace.get_final_accuracy(id, acc_type, args.valid)}")
+"""
+#sys.exit(0)
 
 taus = {"rk":[], "ni": [], "naswot": [], "logsynflow": []}
 cnt = 0
@@ -132,19 +184,26 @@ for N in runs:
     start = time.time()
     #indices = np.random.randint(0,len(searchspace),args.n_samples)
     codebase = Encoder.get_nrand_code(args.n_samples)
-    indices = np.array([searchspace.get_index_by_code(Encoder.parse_code(c)) for c in codebase])
-    
-    niuid, naswotuid, logsynuid, bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau = ranking(indices, [1,1,1], cnt)
+    if args.nasspace == "nasbench201":
+        indices = np.array([searchspace.get_index_by_code(Encoder.parse_code(c)) for c in codebase])
+        archstrs = [searchspace.get_arch_str_by_code(c) for c in codebase]
+    elif args.nasspace == "natsbenchSSS":
+        indices = np.array([Encoder.parse_code(c) for c in codebase])
+    elif args.nasspace == "nasbench101":
+        pass
+
+    #w = weight_giver(archstrs)
+    niuid, naswotuid, logsynuid, bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau, _, __= ranking(indices, [1,1,1], cnt)
     cnt += 1
     taus['rk'].append(rk_tau)
     taus['ni'].append(ni_tau)
     taus['naswot'].append(naswot_tau)
     taus['logsynflow'].append(logsyn_tau)
 
-    accs["ni"].append(searchspace.get_final_accuracy(niuid, acc_type, args.valid))
-    accs["naswot"].append(searchspace.get_final_accuracy(naswotuid, acc_type, args.valid))
-    accs["logsynflow"].append(searchspace.get_final_accuracy(logsynuid, acc_type, args.valid))
-    accs["rank-based"].append(searchspace.get_final_accuracy(bestrk_uid, acc_type, args.valid))
+    accs["ni"].append(searchspace.get_final_accuracy(int(niuid), acc_type, args.valid))
+    accs["naswot"].append(searchspace.get_final_accuracy(int(naswotuid), acc_type, args.valid))
+    accs["logsynflow"].append(searchspace.get_final_accuracy(int(logsynuid), acc_type, args.valid))
+    accs["rank-based"].append(searchspace.get_final_accuracy(int(bestrk_uid), acc_type, args.valid))
 
     times.append(time.time()-start)
     runs.set_description(f"acc_ni: {mean(accs['ni']):.2f}({std(accs['ni']):.3f}),{mean(taus['ni']):.3f}({std(taus['ni']):.3f}), acc_naswot: {mean(accs['naswot']):.2f}({std(accs['naswot']):.3f}),{mean(taus['naswot']):.3f}({std(taus['naswot']):.3f}), acc_logsyn: {mean(accs['logsynflow']):.2f}({std(accs['logsynflow']):.3f}),{mean(taus['logsynflow']):.3f}({std(taus['logsynflow']):.3f}), rk-based: {mean(accs['rank-based']):.2f}({std(accs['rank-based']):.3f}),{mean(taus['rk']):.3f}({std(taus['rk']):.3f})")
