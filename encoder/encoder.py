@@ -85,8 +85,8 @@ class natsbenchSSS_encoder:
 def get_encoder(nasspace):
     if nasspace == 'nasbench201':
         return nasbench201_encoder()
-    elif nasspace == 'natsbenchSSS':
+    elif nasspace == 'natsbenchsss':
         return natsbenchSSS_encoder()
     else:
-        assert False, f"no such searchspace:{args.nasspace}"
+        assert False, f"no such searchspace:{nasspace}"
 

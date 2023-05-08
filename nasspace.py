@@ -3,7 +3,7 @@ from nas_201_api import NASBench201API as API
 from nasbench import api as nasbench101api
 from nas_101_api.model import Network
 from nas_101_api.model_spec import ModelSpec
-from nats_api import create as create_sss
+from nats_api import create
 import itertools
 import random
 import numpy as np
@@ -29,17 +29,6 @@ class Nasbench201:
     
     def get_index_by_code(self,code):
         node_str = "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*[self.operations[c] for c in code[:6]])
-        """
-        base=-0
-        
-        for j in range(1,4):
-            node_str += '|'
-            for k in range(0,j):
-                node_str = node_str + self.operations[int(code[base])] + '~'+ str(k) +'|'
-                base+=1
-            node_str += '+'
-        node_str = node_str[0:-1]
-        """
         index = self.api.query_index_by_arch(node_str)
         return index
 
@@ -256,7 +245,7 @@ class Nasbench101:
 class NatsbenchSSS:
     def __init__(self, dataset, apiloc, args):
         self.dataset = dataset
-        self.api = create_sss(apiloc, 'sss', fast_mode=True, verbose=False)
+        self.api = create(apiloc, 'sss', fast_mode=True, verbose=False)
         self.args=args
 
     def __len__(self):
@@ -309,6 +298,52 @@ class NatsbenchSSS:
             acc, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset=self.dataset, hp=90)
             return acc
         return self.api.get_more_info(index, self.dataset, hp=90)['test-accuracy']
+
+class NatsbenchTSS:
+    def __init__(self, dataset, apiloc, args):
+        self.dataset = dataset
+        self.api = create(apiloc, 'tss', fast_mode=True, verbose=False)
+        self.args=args
+
+    def __len__(self):
+        return 15625
+
+    def __iter__(self):
+        for uid in range(len(self)):
+            network = self.get_net(uid)
+            yield uid, network
+
+    def __getitem__(self, index):
+        return index
+
+    def query_index_by_arch(self, arch):
+        return self.api.query_index_by_arch(arch)
+
+    def get_network(self,index,args):
+        index = self.api.query_index_by_arch(index)
+        if args.dataset == "cifar10":
+            dataname = "cifar10-valid"
+        else:
+            dataname = args.dataset
+        config = self.api.get_net_config(index, dataname)
+        config['num_classes'] = 1
+        network = get_cell_based_tiny_net(config)
+        return network
+    
+    def get_training_time(self,index,args,hp):
+        validation_accuracy, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset=args.dataset, hp=hp)
+        return time_cost
+
+    def get_final_accuracy(self, index, acc_type, trainval):
+        if self.dataset == 'cifar10' and trainval:
+            info = self.api.query_meta_info_by_index(uid, hp='200').get_metrics('cifar10-valid', 'x-valid')
+            #info = self.api.query_by_index(uid, 'cifar10-valid', hp='200')
+            #info = self.api.get_more_info(uid, 'cifar10-valid', iepoch=None, hp='200', is_random=True)
+        else:
+            info = self.api.query_meta_info_by_index(uid, hp='200').get_metrics(self.dataset, acc_type)
+            #info = self.api.query_by_index(uid, self.dataset, hp='200')
+            #info = self.api.get_more_info(uid, self.dataset, iepoch=None, hp='200', is_random=True)
+        return info['accuracy']
 
 class ReturnFeatureLayer(torch.nn.Module):
     def __init__(self, mod):
@@ -401,8 +436,10 @@ def get_search_space(args):
         return Nasbench201(args.dataset, args.api_loc)
     elif args.nasspace == 'nasbench101':
         return Nasbench101(args.dataset, args.api_loc, args)
-    elif args.nasspace == 'natsbenchSSS':
+    elif args.nasspace == 'natsbenchsss':
         return NatsbenchSSS(args.dataset, args.api_loc, args)
+    elif args.nasspace == 'natsbenchtss':
+        return NatsbenchTSS(args.dataset, args.api_loc, args)
     elif args.nasspace == 'nds_resnet':
         return NDS('ResNet')
     elif args.nasspace == 'nds_amoeba':
@@ -447,4 +484,5 @@ def get_search_space(args):
         return NDS('Vanilla_lr-wd')
     elif args.nasspace == 'nds_vanilla_lr-wd_in':
         return NDS('Vanilla_lr-wd_in')
-
+    else:
+        assert False, f"no such search space: {args.nasspace}"

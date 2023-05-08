@@ -98,3 +98,26 @@ def init_network(network, init):
         network.apply(norm_init)
     elif init == 'identity':
         network.apply(eye_init)
+
+def remap_dataset_names(dataset, valid, test, train):
+    cifar10 = 'cifar10'
+    if dataset == cifar10 and valid:
+        return cifar10 + '-valid', 'x-valid'
+    if dataset == cifar10 and test:
+        return cifar10, 'ori-test'
+    if dataset == cifar10 and train:
+        return cifar10, 'train'
+
+    assert not train, "no train label"
+    cifar100 = 'cifar100'
+    if dataset == cifar100 and valid:
+        return cifar100, 'x-valid'
+    if dataset == cifar100 and test:
+        return cifar100, 'x-test'
+
+    ImageNet16_120 = 'ImageNet16-120'
+    if dataset == ImageNet16_120 and valid:
+        return ImageNet16_120, 'x-valid'
+    if dataset == ImageNet16_120 and test:
+        return ImageNet16_120, 'x-test'
+    assert False, "Unknown dataset {args.dataset}"
