@@ -11,20 +11,51 @@
 #python RD_search.py --save_string RD --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 1000 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test
 
 # natsbenchsss
-#python GA_search.py --maxn_pop 100 --maxn_iter 40 --prob_mut 0.08 --prob_cr 0.7 --save_string GA --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata/ --dataset cifar10 --test
-#python GA_search.py --maxn_pop 100 --maxn_iter 40 --prob_mut 0.08 --prob_cr 0.7 --save_string GA --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test
+# GA
+# cifar10
+#python GA_search.py --maxn_pop 100 --maxn_iter 10 --prob_mut 0.08 --prob_cr 0.7 --save_string GA --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata/ --dataset cifar10 --test
+# cifar100
+python GA_search.py --maxn_pop 100 --maxn_iter 10 --prob_mut 0.08 --prob_cr 0.7 --save_string GA --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata/ --dataset cifar100 --test
+# ImageNet16-120
+#python GA_search.py --maxn_pop 100 --maxn_iter 10 --prob_mut 0.08 --prob_cr 0.7 --save_string GA --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test
 
+# RD
+# cifar10
+#python RD_search.py --save_string RD --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 1000 --n_runs 50 --data_loc ./cifardata/ --dataset cifar10 --test
+# cifar100
 #python RD_search.py --save_string RD --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 1000 --n_runs 50 --data_loc ./cifardata/ --dataset cifar100 --test
+# ImageNet16-120
 #python RD_search.py --save_string RD --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 1000 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test
 
-python SA_search.py --end_T 1e-3 --maxn_iter 4 --Rt 0.6 --init_T 1 --maxN 10 --save_string SA --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata/ --dataset cifar10 --test
+# SA
+# cifar10
+#python SA_search.py --end_T 1e-3 --maxn_iter 4 --Rt 0.6 --init_T 1 --maxN 10 --save_string SA --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata/ --dataset cifar10 --test
+# cifar100
 #python SA_search.py --end_T 1e-3 --maxn_iter 4 --Rt 0.6 --init_T 1 --maxN 10 --save_string SA --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata/ --dataset cifar100 --test
+# ImageNet16-120
 #python SA_search.py --end_T 1e-3 --maxn_iter 4 --Rt 0.6 --init_T 1 --maxN 10 --save_string SA --augtype none --repeat 1 --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test
 
 # nasbench201
+# GA
+# cifar10
 #python GA_search.py --maxn_pop 100 --maxn_iter 40 --prob_mut 0.08 --prob_cr 0.7 --save_string GA --augtype none --repeat 1 --sigma 1 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata --dataset cifar10 --test
+# cifar100
+#python GA_search.py --maxn_pop 100 --maxn_iter 40 --prob_mut 0.08 --prob_cr 0.7 --save_string GA --augtype none --repeat 1 --sigma 1 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata --dataset cifar100 --test
+# ImageNet16-120
 #python GA_search.py --maxn_pop 100 --maxn_iter 40 --prob_mut 0.08 --prob_cr 0.7 --save_string GA --augtype none --repeat 1 --sigma 1 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test
 
+# RD
+# cifar10
+#python RD_search.py --save_string RD --augtype none --repeat 1 --sigma 1 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 1000 --n_runs 50 --data_loc ./cifardata/ --dataset cifar10 --test
+# cifar100
+#python RD_search.py --save_string RD --augtype none --repeat 1 --sigma 1 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 1000 --n_runs 50 --data_loc ./cifardata/ --dataset cifar100 --test
+# ImageNet16-120
+#python RD_search.py --save_string RD --augtype none --repeat 1 --sigma 1 --nasspace nasbench201 --batch_size 128 --GPU 0 --n_samples 1000 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test
+
+# SA
+# cifar10
 #python SA_search.py --end_T 1e-3 --maxn_iter 4 --Rt 0.6 --init_T 1 --maxN 10 --save_string SA --augtype none --repeat 1 --sigma 1 --nasspace nasbench201   --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata/ --dataset cifar10 --test
+# cifar100
 #python SA_search.py --end_T 1e-3 --maxn_iter 4 --Rt 0.6 --init_T 1 --maxN 10 --save_string SA --augtype none --repeat 1 --sigma 1 --nasspace nasbench201   --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ./cifardata/ --dataset cifar100 --test
-#python SA_search.py --end_T 1e-3 --maxn_iter 4 --Rt 0.6 --init_T 1 --maxN 10 --save_string SA --augtype none --repeat 1 --sigma 1 --nasspace nasbench201   --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test
+# ImageNet16-120
+python SA_search.py --end_T 1e-3 --maxn_iter 4 --Rt 0.6 --init_T 1 --maxN 10 --save_string SA --augtype none --repeat 1 --sigma 1 --nasspace nasbench201   --batch_size 128 --GPU 0 --n_samples 50 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test

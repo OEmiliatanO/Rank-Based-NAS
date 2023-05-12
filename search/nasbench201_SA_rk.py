@@ -23,4 +23,4 @@ class SA(abstract_SA):
         return [random.choice([*range(5)]) for i in range(6)]
 
     def list2arch(self, l):
-        return "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*map(lambda op: self.NATS_201_ops[op], l))
+        return "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*map(lambda op: self.NAS_201_ops[op], l))

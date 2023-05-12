@@ -80,5 +80,5 @@ state = {'accs': acc,
          'times': times,
          }
 
-fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dataset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}_{args.valid}_{args.test}_{args.end_T}_{args.maxIter}_{args.Rt}_{args.init_T}_{args.maxN}.t7"
+fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dataset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}_{args.valid}_{args.test}_{args.end_T}_{args.maxn_iter}_{args.Rt}_{args.init_T}_{args.maxN}.t7"
 torch.save(state, fname)
