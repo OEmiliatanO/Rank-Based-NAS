@@ -18,7 +18,6 @@ from score import *
 from encoder import encoder
 from scipy.stats import kendalltau
 from Parser import parser
-from weight_giver import Weight_giver
 
 args = parser.RD_search_argsparser()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
@@ -41,7 +40,7 @@ print(f"dataset = {args.dataset}, data location = {args.data_loc}, validation = 
 train_loader = datasets.get_data(args.dataset, args.data_loc, args.valid, args.batch_size, args.augtype, args.repeat, args)
 
 print(f"Initialize the nas bench api ({args.nasspace}) ...")
-if args.nasspace != "natsbenchsss":
+if args.nasspace == "nasbench201":
     args.dataset, acc_type = remap_dataset_names(args.dataset, args.valid, args.test, args.train)
 else:
     acc_type = None
