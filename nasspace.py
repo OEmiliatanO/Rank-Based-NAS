@@ -9,6 +9,7 @@ import random
 import numpy as np
 from models.cell_searchs.genotypes import Structure
 from copy import deepcopy
+import pycls.models
 from pycls.models.nas.nas import NetworkImageNet, NetworkCIFAR
 from pycls.models.anynet import AnyNet
 from pycls.models.nas.genotypes import GENOTYPES, Genotype
@@ -180,7 +181,10 @@ class Nasbench101:
                     maxacc = newacc
         return maxacc
     def get_final_accuracy(self, uid, acc_type, trainval):
-        return self.get_accuracy(uid, acc_type, trainval)
+        spec = self.get_spec(uid)
+        if trainval:
+            return self.api.query(spec)["validation_accuracy"]
+        return self.api.query(spec)["test_accuracy"]
     def get_training_time(self, unique_hash):
         spec = self.get_spec(unique_hash)
         _, stats = self.api.get_metrics_from_spec(spec)
@@ -197,14 +201,21 @@ class Nasbench101:
         spec = self.get_spec(unique_hash)
         network = Network(spec, self.args)
         return network
+    def get_network_by_matrix(self, m, ops):
+        spec = Modelspec(m, ops)
+        return Network(spec, self.args)
     def get_spec(self, unique_hash):
         matrix = self.api.fixed_statistics[unique_hash]['module_adjacency']
         operations = self.api.fixed_statistics[unique_hash]['module_operations']
         spec = ModelSpec(matrix, operations)
         return spec
+    def get_spec_by_arch(self, m, op):
+        return ModelSpec(m, op)
+    def query_index_by_arch(self, spec):
+        return self.api._hash_spec(spec)
     def __iter__(self):
         for unique_hash in self.api.hash_iterator():
-            network = self.get_network(unique_hash)
+            network = self.get_network(unique_hash, self.args)
             yield unique_hash, network
     def __getitem__(self, index):
         return next(itertools.islice(self.api.hash_iterator(), index, None))
