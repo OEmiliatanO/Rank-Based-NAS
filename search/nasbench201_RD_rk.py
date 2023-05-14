@@ -4,7 +4,6 @@ import torch
 import sys
 import time
 from score import *
-from weight_giver import Weight_giver
 from .RD_rk_abstract import abstract_RD
 
 class RD(abstract_RD):
@@ -16,6 +15,5 @@ class RD(abstract_RD):
         cnt = 0
         codebase = self.Encoder.get_nrand_code(self.args.n_samples)
         indices = np.array([self.searchspace.get_index_by_code(self.Encoder.parse_code(c)) for c in codebase])
-        archstrs = [self.searchspace.get_arch_str_by_code(c) for c in codebase]
 
         return self.ranking(indices, [1,1,1], cnt)

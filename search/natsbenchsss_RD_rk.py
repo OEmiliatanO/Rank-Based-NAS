@@ -4,7 +4,6 @@ import torch
 import sys
 import time
 from score import *
-from weight_giver import Weight_giver
 from .RD_rk_abstract import abstract_RD
 
 class RD(abstract_RD):
