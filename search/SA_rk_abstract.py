@@ -18,6 +18,7 @@ class abstract_SA():
         self.device = device
         self.acc_type = acc_type
         self.args = args
+        self.DICT = {}
 
     def neighbor(self, arch):
         #TODO
@@ -58,7 +59,7 @@ class abstract_SA():
                 best_sol_uid = bestrk_uid
 
             T *= self.Rt
-        return best_sol_uid, self.searchspace.get_final_accuracy(int(best_sol_uid), self.acc_type, self.args.valid)
+        return best_sol_uid, self.searchspace.get_final_accuracy(int(best_sol_uid) if type(best_sol_uid)!=str else best_sol_uid, self.acc_type, self.args.valid)
     
     def ranking(self, indices, weight):
         scores = {"ni": [], "naswot": [], "logsynflow": []}
@@ -67,9 +68,19 @@ class abstract_SA():
             uid = int(uid)
             network = self.searchspace.get_network(uid, self.args)
             network = network.to(self.device)
-            scores["ni"].append(ni_score(network, self.train_loader, self.device, self.args))
-            scores["naswot"].append(naswot_score(network, self.train_loader, self.device, self.args))
-            scores["logsynflow"].append(logsynflow_score(network, self.train_loader, self.device))
+            if uid not in self.DICT:
+                nisc = ni_score(network, self.train_loader, self.device, self.args)
+                naswotsc = naswot_score(network, self.train_loader, self.device, self.args)
+                logsynsc = logsynflow_score(network, self.train_loader, self.device)
+                scores["ni"].append(nisc)
+                scores["naswot"].append(naswotsc)
+                scores["logsynflow"].append(logsynsc)
+                self.DICT[uid] = (nisc, naswotsc, logsynsc)
+            else:
+                scores["ni"].append(self.DICT[uid][0])
+                scores["naswot"].append(self.DICT[uid][1])
+                scores["logsynflow"].append(self.DICT[uid][2])
+
             del network
 
         totrk = dict(zip([uid for uid in indices], [0 for i in range(self.args.n_samples)]))
