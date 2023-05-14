@@ -58,7 +58,7 @@ chosen    = []
 acc       = []
 
 print(f"parameter:\nendT = {args.end_T}\nmaxIter = {args.maxn_iter}\nRt = {args.Rt}\ninit_T = {args.init_T}\nmaxN = {args.maxN}")
-
+print("=====================================\n")
 runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
     start = time.time()
