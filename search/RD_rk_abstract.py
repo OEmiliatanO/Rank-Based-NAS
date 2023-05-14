@@ -5,7 +5,6 @@ import os
 import sys
 from score import *
 from scipy.stats import kendalltau
-from weight_giver import Weight_giver
 
 class abstract_RD():
     def __init__(self, searchspace, train_loader, acc_type, Encoder, device, args):
