@@ -10,6 +10,8 @@
 #python RD_search.py --save_string RD --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 1000 --n_runs 50 --data_loc ./cifardata/ --dataset cifar100 --test
 #python RD_search.py --save_string RD --sigma 1 --nasspace natsbenchsss --api_loc ../NATS-sss-v1_0-50262-simple/ --batch_size 128 --GPU 0 --n_samples 1000 --n_runs 50 --data_loc ../ImageNet16/ --dataset ImageNet16-120 --test
 
+# ==================================================================================
+
 # natsbenchsss
 # GA
 # cifar10
