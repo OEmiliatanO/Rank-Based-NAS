@@ -46,7 +46,7 @@
 
 \begin{document}
 
-\title{GA-based Training-Free NAS Algorithm with Hybrid Score Function}
+\title{Rank-based Training-Free NAS Algorithm}
 
 \author{Hsieh Cheng-Han}
 \email{emiliaistruelove@gmail.com}
@@ -79,17 +79,17 @@
     highly heterogeneous training-free score functions to evaluate an architecture. 
     In this method, the genetic algorithm plays a role to guide the searches 
     of NAS algorithm while the hybrid training-free score function plays the 
-    role to evaluate a new candidate architecture during the convergencr process 
-    of GA. More precisely, the first score function is noise immunity for 
-    neural architecture search without search (NINASWOT), as an evaluation of 
-    pattern recognition ability, second one is condition number of neural 
-    tangent kernel (NTK), as an evaluation of trainability. 
+    role to evaluate a new candidate architecture during the convergence process 
+    of GA. More precisely, the first score function is noise immunity (NI), as 
+    an evaluation of the ability to tolerate noise, second one is NASWOT score, as 
+    an measurement of the pattern recognition ability, finally, the last one is 
+    LogSynFlow score, as an evaluation of trainability. 
     
     To evaluate the performance of the proposed algorithm, this paper compared 
     it with several NAS algorithms, including weight-sharing methods, 
     non-weight-sharing methods, and several state-of-the-art training-free score 
     functions. 
-    The final result shows that in big search space, like nats-bench sss, the 
+    The final result shows that in relatively larger search space, like nats-bench sss, the 
     proposed algorithm outperforms most of NAS methods. 
 
 \end{abstract}
@@ -196,17 +196,11 @@
     description about the proposed method. \xsec{sec:results} begins with parameters setting and 
     provide the simulation results following is the experiment results in different search space. 
     The conclusion and further prospect are gived in \xsec{sec:conclusion}.
+    
+    
 
     \section{Related Works}
     \label{sec:related_work}
-    \begin{figure*}[htb]
-        \vspace{-\baselineskip}
-        \resizebox{1.0\textwidth}{!}{\includegraphics{asset/naswot.pdf}}
-        \caption{A simple example to illustrate the procedure of NASWOT.}
-        \label{fig:naswot}
-        \centering
-        \vspace{-\baselineskip}
-    \end{figure*}
     \subsection{Training-free Score Function}
     % naswot
     In \cite{https://doi.org/10.48550/arxiv.2006.04647}, Mellor et al. proposed a 
@@ -231,16 +225,17 @@
     The rationale behind is to see how dissimilar the linear region activated by 
     the ReLU units between two inputs. An architecture shall learn better 
     when inputs are well separated.
-	
-    % ni
-    \begin{figure*}[htb]
+
+    \begin{figure*}[!htb]
         \vspace{-\baselineskip}
-        \resizebox{1.0\textwidth}{!}{\includegraphics{asset/ni.pdf}}
-        \caption{A simple example to illustrate the procedure of noise immunity.}
-        \label{fig:ni}
+        \resizebox{1.0\textwidth}{!}{\includegraphics{asset/naswot.pdf}}
+        \caption{A simple example to illustrate the procedure of NASWOT.}
+        \label{fig:naswot}
         \centering
         \vspace{-\baselineskip}
     \end{figure*}
+	
+    % ni
     Wu et al. \cite{10092788} found, in some case, an architecture with high 
     NASWOT score may classify the same kind of input data into different classes. 
     To fix this defect, Wu et al. proposed using noise immunity (NI) to 
@@ -252,6 +247,15 @@
     the difference of square of each feature maps captured at all pooling layers, 
     denoted $\eta$. According to the fact that the input data are the same kind, 
     the small $\eta$ the better the noise immunity of the architecture is.
+
+    \begin{figure*}[!hb]
+        \vspace{-\baselineskip}
+        \resizebox{1.0\textwidth}{!}{\includegraphics{asset/ni.pdf}}
+        \caption{A simple example to illustrate the procedure of noise immunity.}
+        \label{fig:ni}
+        \centering
+        \vspace{-\baselineskip}
+    \end{figure*}
 
     % logsynflow
     Besides from these two model-dependent aspects, Tanaka et al. \cite{tanaka2020pruning} 
@@ -300,7 +304,6 @@
         S(\theta)=\theta\cdot\log(\frac{\partial \mathcal L}{\partial \theta}+1)
     \end{equation}
 
-    % conclusion
     \subsection{Search Algorithm}
     First assume that input data $D$ are separated into two subset, $D_r$ and $D_t$. Further more, 
     assume $\mathcal F_A$ is the accuracy function, $\mathcal F_S$ the score function, $A_s$ the 
@@ -323,15 +326,43 @@
     \end{equation}
     It can be seen that training-free NAS is comprised of two part, search algorithm $A_S$ and score 
     function $F_S$. 
-    There are several search algorithms applied on NAS, including random search, bayesian optimization, 
-    reinforcement learning, differentiable search algorithm, metaheuristic algorithm, and hybrid 
-    heuristic algorithm. 
+    There are several search algorithms applied on NAS, including random search, reinforcement learning, and
+    metaheuristic algorithm. 
+    
     In \cite{https://doi.org/10.48550/arxiv.2006.04647} \cite{Lopes_2021}, random search is applied on. 
     The advantage of random search is simple, easy to implement, and the result can be token as a 
-    baseline to more comprehensive search algorithm. 
+    baseline compared to more comprehensive search algorithm. Generally speaking, when applying random 
+    search on a samll search space, e.g., nasbench201 \cite{dong2020nasbench201}, the performance is 
+    similar to other search algorithms. But when it comes to a relatively larger search space, e.g., nasbench101 
+    \cite{ying2019nasbench101} and natsbenchsss \cite{Dong_2021}, random search can no longer standout 
+    in other search algorithms. 
 
-    In \cite{10092788}, search economic (SE) \cite{7379579} is applied on. 
-    
+    In \cite{zoph2017neural}, reinforcement learning is used to find the maximum accuracy of an architecture 
+    generated by a network architecture controller. The actions $a_{1:T}$ of the reinforcement learning is 
+    equivalent to updating the parameters $\theta_c$ for the controller. More specifically, the goal is to maximize 
+    its expected reward, defined by 
+    \begin{equation}
+        \label{equ:reinforcement_rw}
+        J(\theta_c)=E_{P(a_{1:T};\theta_c)}[R]
+    \end{equation}
+    and the gradient of $J(\theta_c)$ is defined by
+    \begin{equation}
+        \label{equ:reinforcement_grad}
+        \nabla_{\theta_c} J(\theta_c)=\sum^T_t=1 E_{P(a_{1:T};\theta_c)}[\nabla_{\theta_c}\log P(a_t\mid a_{(t-1):1};\theta_c)R]
+    \end{equation}
+
+    And in \cite{10.1145/3491396.3506510}, Wu et al. leveraged genetic algorithm (GA) as search strategy. 
+    By encoding the network architecture, the architecture can be viewed as gene. Therefore, GA can be 
+    easily applied on. 
+    Later in \cite{10092788}, Wu et al. used search economic (SE) \cite{7379579} as search strategy. The 
+    basic idea of SEs is to first divide the search space into a set of subspaces and investiagte those 
+    subspaces based on the expected value of each subspace. The expected value is comprised of 
+    \begin{itemize}
+        \item The number of times the subspace has been investiagted. 
+        \item The average objective value of the new candidate solutions in the subspace at current iteration. 
+        \item The best solution so far in this subspace. 
+    \end{itemize}
+
     \section{The Proposed Algorithm}
     \label{sec:proposed}
     In this work, 
@@ -341,6 +372,7 @@
     \label{sec:results} 
 
     \subsection*{natsbenchsss}
+    The result of natsbenchsss is shown in \xtab{table:overall_sss}.
     \begin{table*}[htb]
         %\normalsize
         %\centering
@@ -370,6 +402,7 @@
       \end{table*}
 
     \subsection*{nasbench201}
+    The result of nasbench201 is shown in \xtab{table:overall_201}.
     \begin{table*}[htb]
         %\normalsize
         %\centering
