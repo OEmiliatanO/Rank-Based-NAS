@@ -83,12 +83,14 @@
     of GA. More precisely, the first score function is noise immunity for 
     neural architecture search without search (NINASWOT), as an evaluation of 
     pattern recognition ability, second one is condition number of neural 
-    tangent kernel (NTK), as an evaluation of trainability.
+    tangent kernel (NTK), as an evaluation of trainability. 
     
     To evaluate the performance of the proposed algorithm, this paper compared 
     it with several NAS algorithms, including weight-sharing methods, 
-    non-weight-sharing methods, and neural architecture search without training (NASWOT). 
-    We expect develope a faster and more accurate training-free NAS algorithm.
+    non-weight-sharing methods, and several state-of-the-art training-free score 
+    functions. 
+    The final result shows that in big search space, like nats-bench sss, the 
+    proposed algorithm outperforms most of NAS methods. 
 
 \end{abstract}
 \maketitle
@@ -109,7 +111,7 @@
     \cite{mehrotra2021nasbenchasr} to natural language 
     processing. \cite{jiang-etal-2019-improved} 
     \cite{https://doi.org/10.48550/arxiv.2006.07116} 
-    \cite{https://doi.org/10.48550/arxiv.2005.14187}
+    \cite{https://doi.org/10.48550/arxiv.2005.14187} 
 
     % reduce 
     Despite the promising results of NAS, there are still many challenges 
@@ -118,58 +120,85 @@
     for real-world applications, particularly on resource-constrained 
     platforms like embedded system. The reason why NAS is costly is that 
     during the searching, a candidate architecture must be trained to 
-    evaluate how good of this architecture.
+    evaluate how good of this architecture. 
 
     To overcome this challenge, recent works developed and proposed lots 
     of method which is so called training-free NAS. 
-    % NINASWOT
+    % NASWOT
     For example, Mellor et al. \cite{https://doi.org/10.48550/arxiv.2006.04647} proposed the 
     measurement of the correlation between the binary activation paterns, 
     induced by the untrained network at two inputs, named as neural architecture 
     search without training (NASWOT). 
-    Later, Wu et al. \cite{10.1145/3491396.3506510} found a high score 
-    obtained by such a function may not correspond to a high-performence 
-    model. Thus, they additionally applied noisy immunity method on NASWOT, 
-    named as noisy immunity for NASWOT (NINASWOT).
+    % logsynflow
+    On the other hand, Lee et al. \cite{lee2019snip} proposed purning parameters based on a saliency matric, 
+    which then extended further by Wang et al. \cite{wang2020picking} and Tanaka et al. \cite{tanaka2020pruning}. 
+    In \cite{tanaka2020pruning}, Tanaka et al. proposed Iterative Synaptic Flow Pruning 
+    (SynFlow) algorithm which intends to deal with the layer collapse problem when purning a network. 
+    The score function used in the algorithm is so-called \it{synaptic saliency} \rm{score}. 
+    Later, Abdelfattah et al. \cite{abdelfattah2021zerocost} extended SynFlow to score 
+    a network architecture by summing synaptic saliency score over all parameters in the model. 
+    Cavagnero et al. \cite{Cavagnero_2023} found that SynFlow is likely to suffer from gradient explosion, then 
+    proposed the LogSynFlow score function which prevents the problem. 
     % NTK
     For another example, Chen et al. proposed to compute the condition 
     number of neural tangent kernel (NTK) \cite{https://doi.org/10.48550/arxiv.2102.11535} 
     \cite{https://doi.org/10.48550/arxiv.2203.09137} \cite{https://doi.org/10.48550/arxiv.2109.00817}, 
-    which is used as the score to estimate the trainability of an architecture.
-	% unknown
+    which is used as the score to estimate the trainability of an architecture. 
 
 % what is unknown?
-    However, most of score functions suffer from low correlation between 
-    score value and the result of an architecture, leading to a predicament 
+    However, \xtab{table:corr_score} shows most of score functions suffer from low correlation between 
+    score value and the final accuracy of an architecture, leading to a predicament 
     that no matter how good the search method is used, we can hardly find 
     an optimal architecture. 
     The major problem causes the low correlation is that a single score 
-    function can only evaluate one perspect/characteristic of an architecture.
+    function can only evaluate one perspect/characteristic of an architecture. 
+    \begin{table*}[htb]
+        \caption{\textsc{The Kendall and Spearman correlation between training-free score and test accuracy, evaluated on the three datasets of NATS-Bench \cite{Dong_2021}. 
+        Each metric has been computed three times with different initialisations and the average is taken as final score. The data is from \cite{Cavagnero_2023}.}}
+        \begin{tabular}{ccccccc}\toprule
+            Training-free score function & \multicolumn{2}{c}{CIFAR-10} & \multicolumn{2}{c}{CIFAR-100} & \multicolumn{2}{c}{ImageNet-16-120} \\ 
+            \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7} & Kendall & Spearman & Kendall & Spearman & Kendall & Spearman \\ \midrule
+            \bf{NTK} & -0.33 & -0.49 & -0.30 & -0.45 & -0.39 & -0.56 \\
+            \bf{Snip} & 0.45 & 0.61 & 0.47 & 0.62 & 0.41 & 0.55 \\
+            \bf{Fisher} & 0.39 & 0.54 & 0.40 & 0.55 & 0.36 & 0.48 \\
+            \bf{Grasp} & 0.28 & 0.41 & 0.35 & 0.50 & 0.35 & 0.49 \\
+            \bf{NASWOT} & 0.61 & 0.79 & 0.62 & 0.81 & 0.60 & 0.78 \\
+            \bf{SynFlow} & 0.57 & 0.77 & 0.56 & 0.76 & 0.56 & 0.75 \\
+            \bf{LogSynFlow} & 0.61 & 0.81 & 0.60 & 0.79 & 0.59 & 0.78 \\ \bottomrule
+            \label{table:corr_score}
+          \vspace{-\baselineskip}
+        \end{tabular}
+    \end{table*}
     
 % method
     To address the problem, we propose cooperating three heterogeneous score 
-    functions with genetic-based search method, which evaulate an architecture 
+    functions with rank-based search method, which evaulate an architecture 
     from different aspects. More specifically, the first score function is 
-    NINASWOT \cite{10.1145/3491396.3506510} as an indicator of the ability 
-    to distinguish two images. The second one is the condition number of NTK 
-    \cite{https://doi.org/10.48550/arxiv.2102.11535} as score to estimate the 
-    trainability of an architecture. The last one is (TBD).
+    NI \cite{10092788} as an indicator of the ability to distinguish two images. 
+    The second one is NASWOT as score to estimate the ability of expression 
+    of an architecture. The last one is logsynflow used as the measurement of 
+    trainability. 
+    By combining these three training-free score functions, this paper also 
+    compares the different search algorithms, e.g., random search, genetic 
+    algorithm (GA) \cite{mitchell1998introduction}, simulated annealing algorithm (SA)
+    \cite{kirkpatrick1983optimization}. 
 
-% conclusion
+    % conclusion
     The major contribution of this paper can be summarized as follow:
     \begin{itemize}
-        \item Develope a genetic-based neural architecture search method based on three hybrid score functions.
-        \item Cooperating three score functions to get a higher correlation between score and accuracy.
+        \item Cooperating three score functions to obtain better ability for searching top accuracy neural architectures. 
+        \item Develope a rank-based neural architecture search with several search algorithms. 
     \end{itemize}
     % expect what
 
-    The remainder of this paper is organized as follows: Section 2 provides the 
-    detail about the three heterogeneous score functions. Section 3 gives a detailed 
-    description about the proposed method. Section 4 provide the simulation results 
-    in different search space. The conclusion and further prospect are gived in 
-    Section 5.
+    The remainder of this paper is organized as follows: \xsec{sec:related_work} provides the 
+    detail about the three heterogeneous score functions. \xsec{sec:proposed} gives a detailed 
+    description about the proposed method. \xsec{sec:results} begins with parameters setting and 
+    provide the simulation results following is the experiment results in different search space. 
+    The conclusion and further prospect are gived in \xsec{sec:conclusion}.
 
     \section{Related Works}
+    \label{sec:related_work}
     \begin{figure*}[htb]
         \vspace{-\baselineskip}
         \resizebox{1.0\textwidth}{!}{\includegraphics{asset/naswot.pdf}}
@@ -178,16 +207,11 @@
         \centering
         \vspace{-\baselineskip}
     \end{figure*}
-    In these days, the studies of training-free neural architecture search (NAS) 
-    go viral, since the ability to accelerate the procedure for designing a neural 
-    network architecture used on specific application, while additionally, 
-    training-free NAS cleverly avoid the drawback of long-time training by using 
-    various training-free score functions. 
-
+    \subsection{Training-free Score Function}
     % naswot
     In \cite{https://doi.org/10.48550/arxiv.2006.04647}, Mellor et al. proposed a 
-    score function without the requirement for training. Here we call it neural 
-    architecture search without training (NASWOT) score function. \xfig{fig:naswot} 
+    score function without the requirement for training which is named neural 
+    architecture search without training (NASWOT). \xfig{fig:naswot} 
 	gives a simple example to illustrate the procedure of NASWOT score function. 
     Consider a mini-batch of data $X=\{x_i\}^N_{i=1}$ passing through a neural network 
     architecture as $f(x_i)$. The activated ReLU units in every layer of the architecture 
@@ -208,7 +232,7 @@
     the ReLU units between two inputs. An architecture shall learn better 
     when inputs are well separated.
 	
-    % ninaswot
+    % ni
     \begin{figure*}[htb]
         \vspace{-\baselineskip}
         \resizebox{1.0\textwidth}{!}{\includegraphics{asset/ni.pdf}}
@@ -217,60 +241,143 @@
         \centering
         \vspace{-\baselineskip}
     \end{figure*}
-    Based on the work of Mellor et al., Wu et al. \cite{10.1145/3491396.3506510} 
-    found, in some case, an architecture with high score may put different 
-    input data, which are originally in the same class, to different classes. 
-    To fix this defect, Wu et al. proposed using noise immunity to additionally 
+    Wu et al. \cite{10092788} found, in some case, an architecture with high 
+    NASWOT score may classify the same kind of input data into different classes. 
+    To fix this defect, Wu et al. proposed using noise immunity (NI) to 
     evaluate an architecture. \xfig{fig:ni} gives an example to illustrate how 
     noise immunity score evaluate an architecture. The score function picks a 
-    mini-batch of data, denoted $X$, and then applies Gaussion noise on it, 
-    denoted $X'$ and defined by $X'=X+z$ where $z$ is the Gaussion noise. 
-    By passing $X$ and $X'$ through the untrained architecture, the sum of the 
-    square differences between outputs 
-    $O=\begin{matrix}o_1,o_2,\cdots,o_C\end{matrix}$ and 
-    $O'=\begin{matrix}o_1',o_2',\cdots,o_C'\end{matrix}$ can be calculated as 
-    follows: 
-    \begin{equation}
-        n=-\sum^C_{n=1}(o_i-o_i')^2
-    \end{equation}
-    where $C$ is the number of classes determined by the input data.
-    According to the experiment outcome of Wu et al., noise immunity can separate 
-    those are unable to distinguish $X$ and $X'$ from architectures with high NASWOT 
-    score, which just complements the NASWOT score funcion.
-    
-    % ntk
-    On the other hand, instead of using the correlation of binary activation 
-    patterns as score. Chen et al. proposed using the condition number of NTK 
-    as an evaluation of the trainability, defined as % add figure
-    \begin{equation}
-        \mathcal{K_N}=\frac{\lambda_{\textrm{max}}(\hat\Theta)}{\lambda_{\textrm{min}}(\hat\Theta)}
-    \end{equation}
-    where $\lambda_{\textrm{max}}(\hat\Theta)$ and $\lambda_{\textrm{min}}(\hat\Theta)$ 
-    are the maximum and minimum eigenvalues of NTK ($\hat\Theta$) respectively.
-    The rationale is based on the work of Lee et al. \cite{Lee_2020} and 
-    Xiao et al. \cite{https://doi.org/10.48550/arxiv.1912.13053}, which concluded briefly here, 
-    the training dynamics of a wide neural network can be written in terms of the 
-    spectrum of the NTK:
-    \begin{equation}\label{eq:6}
-        \mu_t(\textbf{X}_{\textrm{train}})_i=(\textbf{I}-e^{-\eta\lambda_it})\textbf{Y}_{\textrm{train,}i}
-    \end{equation}
-    where $\lambda_i$ are the eigenvalues of $\hat\Theta_{\textrm{train}}$ 
-    and they're ordered as $\lambda_0\geq\cdots\geq\lambda_m$. 
-    According to the hypothesis proposed by Lee et al. \cite{Lee_2020}, the maximum 
-    feasible learning rate scale as $\eta\sim2/\lambda_0$. Plug this scaling for 
-    $\eta$ in Eq. \ref{eq:6}, we see that the $\lambda_m$ will converge exponentially 
-    at a rate given by $1/K_N$ where $K_N=\frac{\lambda_0}{\lambda_m}$.
-    Then it can be concluded that if $K_N$ is lower, the corresponding architecture is 
-    more trainable.
+    mini-batch of data, denoted $X$, and then applies Gaussion noise on it. 
+    The process can be defined by $X'=X+z$ where $z$ is the Gaussion noise. 
+    By passing $X$ and $X'$ through the untrained architecture, then computing 
+    the difference of square of each feature maps captured at all pooling layers, 
+    denoted $\eta$. According to the fact that the input data are the same kind, 
+    the small $\eta$ the better the noise immunity of the architecture is.
 
-	% synflow?
-	
+    % logsynflow
+    Besides from these two model-dependent aspects, Tanaka et al. \cite{tanaka2020pruning} 
+    generalized synaptic saliency scores, and proposed SynFlow algorithm to avoids layer 
+    collapse when performing purning. 
+    Inspired from \cite{tanaka2020pruning}, \cite{wang2020picking}, \cite{lee2019snip}, 
+    Abdelfattah et al. \cite{abdelfattah2021zerocost} proposed summing synaptic saliency scores 
+    over all parameters in the model as an accuracy estimator to a architecture.
+
+    Besides from these two model-dependent aspects, roots from The Lottery Ticket Hypothesis 
+    \cite{frankle2019lottery}, saliency matric is used on purning network parameters in 
+    \cite{lee2019snip}, which can be formula as 
+    \begin{equation}
+        \label{equ:snip}
+        S_p(\theta)=\lvert\frac{\partial \mathcal L}{\partial \theta}\odot\theta\rvert
+    \end{equation}
+    where $\mathcal L$ is the loss function of a neural network with parameters $\theta$ 
+    and $\theta$ is the Hadamard product. 
+    The saliency matric approximates the change in loss when purning a specific parameters.
+    Later, Wang et al. \cite{wang2020picking} approximates the change in gradient norm when 
+    purning the network, which defined as 
+    \begin{equation}
+        \label{equ:grap}
+        S_p(\theta)=-(H\frac{\partial \mathcal L}{\partial \theta})\odot\theta
+    \end{equation}
+    where $\mathcal L$ is the change in gradient norm instead of loss function and $H$ is 
+    the Hessian. 
+    In \cite{tanaka2020pruning}, Tanaka et al. generalized the synaptic saliency scores as 
+    \begin{equation}
+        \label{equ:synflow}
+        S_p(\theta)=\frac{\partial \mathcal L}{\partial \theta}\odot\theta
+    \end{equation}
+    which is named SynFlow. 
+    Abdelfattah et al. \cite{abdelfattah2021zerocost} extended the work, conclude that summing 
+    synaptic saliency score over all parameters in the model can be used to score a network 
+    architecture, which is formula as
+    \begin{equation}
+        \label{equ:zero_cost}
+        S_n=\sum^N_i S_p(\theta)_i
+    \end{equation}
+    Finally, Cavagnero et al. \cite{Cavagnero_2023} imporved SynFlow, which is likely to fall into 
+    gradient explosion problem, and proposed LogSynFlow score function, simply scaling down the gradient. 
+    The formula is defined by 
+    \begin{equation}
+        \label{equ:logsynflow}
+        S(\theta)=\theta\cdot\log(\frac{\partial \mathcal L}{\partial \theta}+1)
+    \end{equation}
+
     % conclusion
+    \subsection{Search Algorithm}
 
-    \section{the proposed algorithm}
-    In our work, however, we use rank-based GA. Rather than use single fitness to select, 
-    the method preserve the top 1 in NINASWOT score and also the top 1 in the condition 
-    number of NTK. After the evolution, 
+
+    \section{The Proposed Algorithm}
+    \label{sec:proposed}
+    In this work, 
+
+
+    \section{experiment result}
+    \label{sec:results} 
+
+    \subsection*{natsbenchsss}
+    \begin{table*}[htb]
+        %\normalsize
+        %\centering
+        \newcommand{\z}{\phantom{0}}
+        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms.}}
+          \vspace{-\baselineskip}
+        \begin{tabular}{@{}lccccccl@{}}\toprule
+        Method & Search (s) & \multicolumn{2}{c}{CIFAR-10} & \multicolumn{2}{c}{CIFAR-100} & \multicolumn{2}{c}{ImageNet-16-120} \\ \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+        & & validation & test & validation & test & validation & test \\ \midrule
+        &&&&\textbf{Non-weight sharing}&&&\\
+        AREA      & $12,000$ & $84.62 \pm \z{0.41}$                & $93.16 \pm 0.16$               & $59.24 \pm \z{1.11}$                 & $69.56 \pm \z{0.96}$                & $37.58 \pm 1.09$                 & $45.30 \pm \z{0.91}$                \\
+        REA       & $12,000$ & $90.26 \pm \z{0.22}$                & $93.17 \pm 0.21$               & $69.48 \pm \z{0.76}$                 & $69.49 \pm \z{0.94}$                & $44.84 \pm 0.72$                 & $45.47 \pm \z{0.91}$                \\
+        RS        & $12,000$ & $90.08 \pm \z{0.24}$                & $93.01 \pm 0.29$               & $69.14 \pm \z{0.94}$                 & $69.17 \pm \z{1.00}$                & $44.66 \pm 1.02$                 & $44.83 \pm \z{1.05}$                \\
+        RL        & $12,000$ & $90.17 \pm \z{0.23}$                & $93.08 \pm 0.21$               & $69.23 \pm \z{0.87}$                 & $69.29 \pm \z{1.08}$                & $44.68 \pm 0.91$                 & $45.05 \pm \z{0.93}$                \\
+        BOHB      & $12,000$ & $90.05 \pm \z{0.30}$                & $93.03 \pm 0.20$               & $69.04 \pm \z{0.76}$                 & $69.16 \pm \z{0.90}$                & $44.71 \pm 0.78$                 & $44.91 \pm \z{1.05}$                \\ \midrule
+        %&& Search (s) & test & Search(s) & test & Search(s) & test \\ \midrule
+        &&&&\textbf{Training-free}&&&\\
+        NI (N=1,000) & $X$ & $89.56\pm \z{0.147}$ & $92.55\pm 0.187$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        NASWOT (N=1,000) & $X$ & $89.25\pm \z{0.412}$ & $92.21\pm 0.298$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        logsynflow (N=1,000) & $X$ & $89.61\pm \z{0.101}$ & $92.60\pm 0.188$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        rk (N=1000) & $X$ & $89.59\pm \z{0.136}$ & $92.51\pm 0.171$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        GA-rk & $457.54$ & $90.29\pm \z{0.149}$ & $93.27\pm0.193$ & $69.88\pm \z{0.497}$ & $70.06\pm \z{0.481}$ & $45.57\pm 0.425$ & $46.19\pm \z{0.846}$ \\ 
+        SA-rk & $682.36$ & $90.37\pm \z{0.204}$ & $93.29\pm0.182$ & $70.11\pm \z{0.457}$ & $70.32\pm \z{0.458}$ & $45.38\pm 0.499$ & $46.45\pm \z{0.687}$ \\ \bottomrule
+        \end{tabular}
+        \label{table:overall_sss}
+          \vspace{-\baselineskip}
+      \end{table*}
+
+    \subsection*{nasbench201}
+    \begin{table*}[htb]
+        %\normalsize
+        %\centering
+        \newcommand{\z}{\phantom{0}}
+        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms.}}
+          \vspace{-\baselineskip}
+        \begin{tabular}{@{}lccccccl@{}}\toprule
+        Method & Search (s) & \multicolumn{2}{c}{CIFAR-10} & \multicolumn{2}{c}{CIFAR-100} & \multicolumn{2}{c}{ImageNet-16-120} \\ \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+        & & validation & test & validation & test & validation & test \\ \midrule
+        &&&&\textbf{Non-weight sharing}&&&\\
+        AREA      & $12,000$ & $91.18 \pm \z{0.43}$                & $93.95 \pm \z{0.39}$               & $71.84 \pm \z{1.21}$                 & $71.92 \pm \z{1.29}$                & $45.04 \pm 1.03$                 & $45.40 \pm \z{1.14}$                \\
+        REA       & $12,000$ & $91.08 \pm \z{0.54}$                & $93.89 \pm \z{0.50}$               & $71.69 \pm \z{1.34}$                 & $71.83 \pm \z{1.33}$                & $44.96 \pm 1.41$                 & $45.30 \pm \z{1.51}$                \\
+        RS        & $12,000$ & $90.91 \pm \z{0.33}$                & $93.67 \pm \z{0.33}$               & $70.91 \pm \z{1.04}$                 & $70.99 \pm \z{0.99}$                & $44.52 \pm 0.99$                 & $44.56 \pm \z{1.25}$                \\
+        RL        & $12,000$ & $90.87 \pm \z{0.41}$                & $93.63 \pm \z{0.36}$               & $70.62 \pm \z{1.08}$                 & $70.77 \pm \z{1.05}$                & $44.20 \pm 1.22$                 & $44.23 \pm \z{1.37}$                \\
+        BOHB      & $12,000$ & $88.47 \pm \z{1.19}$                & $91.79 \pm \z{1.11}$               & $67.18 \pm \z{2.05}$                 & $67.50 \pm \z{2.05}$                & $38.94 \pm 3.58$                 & $39.00 \pm \z{3.73}$                \\ \midrule
+        &&&&\textbf{Weight sharing}&&&\\
+        RSWS      & $\z{4,154}$  & $76.95 \pm 16.74$                & $82.60 \pm 12.10$               & $52.51 \pm 18.33$                & $52.93 \pm 18.32$                   & $29.76 \pm 9.50$                 & $29.16 \pm 9.61$               \\
+        DARTS-V1  & $\z{5,475}$  & $39.77 \pm \z{0.00}$                & $54.30 \pm \z{0.00}$               & $15.03 \pm \z{0.00}$                 & $15.61 \pm \z{0.00}$                & $16.43 \pm 0.00$                 & $16.32 \pm \z{0.00}$                \\
+        DARTS-V2  & $16,114$ & $39.77 \pm \z{0.00}$               & $54.30 \pm \z{0.00}$               & $15.03 \pm \z{0.00}$                & $15.61 \pm \z{0.00}$                   & $16.43 \pm 0.00$                 & $16.32 \pm \z{0.00}$                \\
+        GDAS      & $11,183$ & $90.05 \pm \z{0.23}$                & $93.46 \pm \z{0.13}$               & $71.02 \pm \z{0.31}$                 & $70.56 \pm \z{0.24}$                & $41.77 \pm 1.24$                 & $41.96 \pm \z{0.90}$                \\
+        SETN      & $16,787$ & $84.25 \pm \z{5.05}$                & $88.01 \pm \z{4.52}$               & $59.72 \pm \z{7.30}$                & $59.91 \pm \z{7.51}$                   & $33.93 \pm 3.85$                 & $33.48 \pm \z{4.22}$                \\
+        ENAS      & $\z{7,061}$  & $40.11 \pm \z{3.28}$                & $56.33 \pm \z{3.70}$               & $14.09 \pm \z{1.60}$                 & $14.77 \pm \z{1.45}$                & $16.20 \pm 0.48$                 & $15.93 \pm \z{0.67}$                \\ \midrule
+        &&&&\textbf{Training-free}&&&\\
+        NI (N=1,000) & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        NASWOT (N=1,000) & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        logsynflow (N=1,000) & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        rk (N=1000) & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        GA-rk & $747.25$ & $89.93\pm \z{0.196}$ & $93.41\pm0.083$ & $70.70\pm \z{0.417}$ & $70.76\pm \z{0.378}$ & $42.70\pm 1.315$ & $43.10\pm \z{1.428}$ \\ 
+        SA-rk & $X$ & $89.95\pm \z{0.194}$ & $93.37\pm0.114$ & $70.69\pm \z{0.391}$ & $70.75\pm \z{0.532}$ & $X\pm X$ & $43.10\pm \z{1.506}$ \\ \bottomrule
+        \end{tabular}
+        \label{table:overall_201}
+          \vspace{-\baselineskip}
+      \end{table*}
+    
+    \section{Conclusion}
+    \label{sec:conclusion}
 
     \bibliographystyle{IEEEtran}
     \bibliography{main}
