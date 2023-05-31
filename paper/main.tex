@@ -302,8 +302,36 @@
 
     % conclusion
     \subsection{Search Algorithm}
+    First assume that input data $D$ are separated into two subset, $D_r$ and $D_t$. Further more, 
+    assume $\mathcal F_A$ is the accuracy function, $\mathcal F_S$ the score function, $A_s$ the 
+    search algorithm of NAS, and $\mathcal A_L$ the learning algorithm. Then, NAS problem can be 
+    described as an optimization problem as follows: 
+    \begin{equation}
+        \label{equ:nas}
+        \mathbb N^*=\max_{\mathbb N^b\in\mathbb N}\mathcal F_A(\mathcal A_L(\mathbb N^b, D_r), D_t)
+    \end{equation}
+    where $\mathbb N$ is a set of neural architectures, namely, the search space of NAS. 
+    For non-training-free NAS 
+    \begin{equation}
+        \label{equ:non-training_free_nas}
+        \mathbb N^b=\mathcal A_S(\mathcal F_A(\mathcal A_L(\mathbb N^s, D_r), D_t), \mathbb N)
+    \end{equation}
+    and for training-free NAS 
+    \begin{equation}
+        \label{equ:training_free_nas}
+        \mathbb N^b=\mathcal A_S(\mathcal F_S(\mathbb N^s, D_r), \mathbb N)
+    \end{equation}
+    It can be seen that training-free NAS is comprised of two part, search algorithm $A_S$ and score 
+    function $F_S$. 
+    There are several search algorithms applied on NAS, including random search, bayesian optimization, 
+    reinforcement learning, differentiable search algorithm, metaheuristic algorithm, and hybrid 
+    heuristic algorithm. 
+    In \cite{https://doi.org/10.48550/arxiv.2006.04647} \cite{Lopes_2021}, random search is applied on. 
+    The advantage of random search is simple, easy to implement, and the result can be token as a 
+    baseline to more comprehensive search algorithm. 
 
-
+    In \cite{10092788}, search economic (SE) \cite{7379579} is applied on. 
+    
     \section{The Proposed Algorithm}
     \label{sec:proposed}
     In this work, 
