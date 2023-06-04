@@ -11,9 +11,13 @@ class RD(abstract_RD):
         super().__init__(**kwargs)
 
     def search(self):
+        overhead_st = time.time()
         taus = {"rk":[], "ni": [], "naswot": [], "logsynflow": []}
         cnt = 0
         codebase = self.Encoder.get_nrand_code(self.args.n_samples)
         indices = np.array([self.Encoder.parse_code(c) for c in codebase])
+        overhead = time.time() - overhead_st
 
-        return self.ranking(indices, [1,1,1], cnt)
+        niuid, naswotuid, logsynuid, bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau, maxacc, rk_maxacc, ni_time, naswot_time, logsynflow_time, rk_time = self.ranking(indices, [1,1,1], cnt)
+
+        return niuid, naswotuid, logsynuid, bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau, maxacc, rk_maxacc, ni_time + overhead, naswot_time + overhead, logsynflow_time + overhead, rk_time + overhead
