@@ -93,8 +93,8 @@ class nasbench101_encoder:
     
     def get_nrand_code(self, n):
         s = set()
-        while len(s) < self.MAXN_POPULATION:
-            bb, br, op = self.encoder.get_rand_code()
+        while len(s) < n:
+            bb, br, op = self.get_rand_code()
             bb, br, op = tuple(bb), tuple(br), tuple(op)
             s.add((bb,br,op))
         s = list(s)
