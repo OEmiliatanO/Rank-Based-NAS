@@ -62,6 +62,7 @@ if args.nasspace == "nasbench201":
     RD_kwargs["acc_type"] = acc_type
 
 taus = {"rk":[], "ni": [], "naswot": [], "logsynflow": []}
+times = {"rk":[], "ni":[], "naswot":[], "logsynflow":[], "tot":[]}
 cnt = 0
 runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
@@ -69,7 +70,7 @@ for N in runs:
 
     #w = weight_giver(archstrs)
     sol = RD(**RD_kwargs)
-    niuid, naswotuid, logsynuid, bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau, maxacc, rk_maxacc= sol.search()
+    niuid, naswotuid, logsynuid, bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau, maxacc, rk_maxacc, ni_time, naswot_time, logsynflow_time, rk_time = sol.search()
 
     taus['rk'].append(rk_tau)
     taus['ni'].append(ni_tau)
@@ -81,17 +82,24 @@ for N in runs:
     accs["logsynflow"].append(searchspace.get_final_accuracy(int(logsynuid), acc_type, args.valid))
     accs["rank-based"].append(searchspace.get_final_accuracy(int(bestrk_uid), acc_type, args.valid))
 
-    times.append(time.time()-start)
-    runs.set_description(f"acc_ni: {mean(accs['ni']):.2f}({std(accs['ni']):.3f}),{mean(taus['ni']):.3f}, acc_naswot: {mean(accs['naswot']):.2f}({std(accs['naswot']):.3f}),{mean(taus['naswot']):.3f}, acc_logsyn: {mean(accs['logsynflow']):.2f}({std(accs['logsynflow']):.3f}),{mean(taus['logsynflow']):.3f}, rk-based: {mean(accs['rank-based']):.2f}({std(accs['rank-based']):.3f}),{mean(taus['rk']):.3f}")
+    times["ni"].append(ni_time)
+    times["naswot"].append(naswot_time)
+    times["logsynflow"].append(logsynflow_time)
+    times["rk"].append(rk_time)
+    times["tot"].append(time.time()-start)
+
+    runs.set_description(f"acc_ni: {mean(accs['ni']):.3f}({std(accs['ni']):.3f}),t:{mean(times['ni']):.3f} , acc_naswot: {mean(accs['naswot']):.3f}({std(accs['naswot']):.3f}),t:{mean(times['naswot']):.3f} , acc_logsyn: {mean(accs['logsynflow']):.3f}({std(accs['logsynflow']):.3f}),t:{mean(times['logsynflow']):.3f} , rk-based: {mean(accs['rank-based']):.3f}({std(accs['rank-based']):.3f}), t:{mean(times['rk']):.3f}")
 
 state = {'ni-accs': accs["ni"],
          'naswot': accs["naswot"],
          'logsynflow': accs["logsynflow"],
          'rank-based': accs["rank-based"],
-         'chosen': chosen,
-         'times': times,
-         'topscores': topscores,
+         'tot-times': times["tot"],
+         'ni-times': times["ni"],
+         'naswot-times': times["naswot"],
+         'logsynflow-times': times["logsynflow"],
+         'rk-times': times["rk"],
          }
 
-fname = f"{args.save_loc}/{args.save_string}_{args.score}_{args.nasspace}_{args.dataset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}.t7"
+fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dataset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}.t7"
 torch.save(state, fname)
