@@ -49,7 +49,7 @@ def get_data(dataset, data_loc, trainval, batch_size, augtype, repeat, args, pin
         val_acc_type = 'x-valid'
     
     if trainval and 'cifar10' in dataset:
-        cifar_split = load_config('searchspace/config_utils/cifar-split.txt', None, None)
+        cifar_split = load_config('config_utils/cifar-split.txt', None, None)
         train_split, valid_split = cifar_split.train, cifar_split.valid
         if repeat > 0:
             train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size,
