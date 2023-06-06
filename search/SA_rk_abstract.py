@@ -46,7 +46,7 @@ class abstract_SA():
                 indices = [self.searchspace.query_index_by_arch(self.list2arch(arch)) for arch in neighbors]
                 
                 # E
-                rk_ni, rk_naswot, rk_logsynflow, bestrk_uid, maxacc, rk_maxacc, ind_rk = self.ranking(np.array(indices), [1,1,1])
+                rk_ni, rk_naswot, rk_synflow, bestrk_uid, maxacc, rk_maxacc, ind_rk = self.ranking(np.array(indices), [1,1,1])
 
                 # trans
                 dt = ind_rk[indices.index(bestrk_uid)] - ind_rk[indices.index(now_uid)]
@@ -62,7 +62,7 @@ class abstract_SA():
         return best_sol_uid, self.searchspace.get_final_accuracy(int(best_sol_uid) if type(best_sol_uid)!=str else best_sol_uid, self.acc_type, self.args.valid)
     
     def ranking(self, indices, weight):
-        scores = {"ni": [], "naswot": [], "logsynflow": []}
+        scores = {"ni": [], "naswot": [], "synflow": [], "logsynflow": []}
         
         for uid in indices:
             uid = int(uid)
@@ -71,15 +71,16 @@ class abstract_SA():
             if uid not in self.DICT:
                 nisc = ni_score(network, self.train_loader, self.device, self.args)
                 naswotsc = naswot_score(network, self.train_loader, self.device, self.args)
-                logsynsc = logsynflow_score(network, self.train_loader, self.device)
+                #logsynsc = logsynflow_score(network, self.train_loader, self.device)
+                synflowsc = synflow_score(network, self.train_loader, self.device)
                 scores["ni"].append(nisc)
                 scores["naswot"].append(naswotsc)
-                scores["logsynflow"].append(logsynsc)
-                self.DICT[uid] = (nisc, naswotsc, logsynsc)
+                scores["synflow"].append(synflowsc)
+                self.DICT[uid] = (nisc, naswotsc, synflowsc)
             else:
                 scores["ni"].append(self.DICT[uid][0])
                 scores["naswot"].append(self.DICT[uid][1])
-                scores["logsynflow"].append(self.DICT[uid][2])
+                scores["synflow"].append(self.DICT[uid][2])
 
             del network
 
@@ -95,20 +96,34 @@ class abstract_SA():
         for rk, id in enumerate(rk_naswot):
             totrk[id] += (self.args.n_samples - rk) * weight[1]
 
-        m_logsyn = np.argsort(scores["logsynflow"])
-        rk_logsynflow = indices[m_logsyn]
+        m_synflow = np.argsort(scores["synflow"])
+        rk_synflow = indices[m_synflow]
         bestrk = np.inf
-        for rk, id in enumerate(rk_logsynflow):
+        for rk, id in enumerate(rk_synflow):
             totrk[id] += (self.args.n_samples - rk) * weight[2]
-
             if bestrk > totrk[id]:
                 bestrk = totrk[id]
                 bestrk_uid = id
-        
-        accs = [self.searchspace.get_final_accuracy(int(uid), self.acc_type, self.args.valid) for uid in indices]
+ 
+        #m_logsyn = np.argsort(scores["logsynflow"])
+        #rk_logsynflow = indices[m_logsyn]
+        #bestrk = np.inf
+        #for rk, id in enumerate(rk_logsynflow):
+        #    totrk[id] += (self.args.n_samples - rk) * weight[2]
+        #    if bestrk > totrk[id]:
+        #        bestrk = totrk[id]
+        #        bestrk_uid = id
+        try:
+            accs = [self.searchspace.get_final_accuracy(int(uid), self.acc_type, self.args.valid) for uid in indices]
+        except:
+            accs = [self.searchspace.get_final_accuracy(uid, self.acc_type, self.args.valid) for uid in indices]
+
         maxacc = np.max(accs)
-        rk_maxacc = self.searchspace.get_final_accuracy(int(bestrk_uid), self.acc_type, self.args.valid)
+        try:
+            rk_maxacc = self.searchspace.get_final_accuracy(int(bestrk_uid), self.acc_type, self.args.valid)
+        except:
+            rk_maxacc = self.searchspace.get_final_accuracy(bestrk_uid, self.acc_type, self.args.valid)
         
         ind_rk = [totrk[uid] for uid in indices]
 
-        return rk_ni[-1], rk_naswot[-1], rk_logsynflow[-1], bestrk_uid, maxacc, rk_maxacc, ind_rk
+        return rk_ni[-1], rk_naswot[-1], rk_synflow[-1], bestrk_uid, maxacc, rk_maxacc, ind_rk

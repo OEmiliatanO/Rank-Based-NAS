@@ -12,12 +12,12 @@ class RD(abstract_RD):
 
     def search(self):
         overhead_st = time.time()
-        taus = {"rk":[], "ni": [], "naswot": [], "logsynflow": []}
         cnt = 0
         codebase = self.Encoder.get_nrand_code(self.args.n_samples)
         indices = np.array([self.searchspace.query_index_by_arch(self.searchspace.get_spec_by_arch(*self.Encoder.parse_code(c[0], c[1], c[2]))) for c in codebase])
         overhead = time.time() - overhead_st
 
-        niuid, naswotuid, logsynuid, bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau, maxacc, rk_maxacc, ni_time, naswot_time, logsynflow_time, rk_time = self.ranking(indices, [1,1,1], cnt)
+        bestuid, taus, maxacc, rk_maxacc, times = self.ranking(indices, [1,1,1], cnt)
+        times = tuple([x+overhead for x in times])
 
-        return niuid, naswotuid, logsynuid, bestrk_uid, rk_tau, ni_tau, naswot_tau, logsyn_tau, maxacc, rk_maxacc, ni_time + overhead, naswot_time + overhead, logsynflow_time + overhead, rk_time + overhead
+        return bestuid, taus, maxacc, rk_maxacc, times
