@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import copy
 
 def synflow_score(network, train_loader, device):
     @torch.no_grad()
@@ -16,7 +17,8 @@ def synflow_score(network, train_loader, device):
         for name, param in network.state_dict().items():
             param.mul_(signs[name])
     
-    #?
+    network = copy.deepcopy(network)
+    # disable BN layer and dropout
     network.eval()
 
     network = network.to(device)
@@ -50,4 +52,4 @@ def synflow_score(network, train_loader, device):
         score += torch.sum(grads_abs[i])
 
     nonlinearize(network, signs)
-    return score.detach().cpu().numpy()
+    return torch.abs(score).detach().cpu().numpy()
