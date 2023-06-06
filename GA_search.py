@@ -7,9 +7,8 @@ import numpy as np
 import torch
 import os
 import sys
-from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import trange
-from statistics import mean, stdev
+from numpy import std, mean
 import time
 from utils import add_dropout, remap_dataset_names
 from Parser import parser
@@ -59,6 +58,7 @@ topscores = []
 naswot_acc = []
 ni_acc = []
 logsynflow_acc = []
+synflow_acc = []
 
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
 
@@ -69,10 +69,10 @@ for N in runs:
 
     sol = GA(**GA_kwargs)
     if args.verbose:
-        score, acc_, uid, rk, naswotacc, niacc, logsynflowacc, ninaswotacc = sol.search()
+        score, acc_, uid, rk, naswotacc, niacc, synflowacc = sol.search()
         naswot_acc.append(naswotacc)
         ni_acc.append(niacc)
-        logsynflow_acc.append(logsynflowacc)
+        synflow_acc.append(synflowacc)
         ninaswot_acc.append(ninaswotacc)
     else:
         score, acc_, uid, rk = sol.search()
@@ -82,9 +82,9 @@ for N in runs:
 
     times.append(time.time()-start)
     if args.verbose:
-        runs.set_description(f"rk-acc: {mean(acc):.3f}%({(stdev(acc) if len(acc) > 1 else 0):.3f}), naswot-acc: {mean(naswot_acc):.3f}%({(stdev(naswot_acc) if len(naswot_acc) > 1 else 0):.3f}), ni-acc: {mean(ni_acc):.3f}%({(stdev(ni_acc) if len(ni_acc) > 1 else 0):.3f}), logsyn-acc: {mean(logsynflow_acc):.3f}%({(stdev(logsynflow_acc) if len(logsynflow_acc) > 1 else 0):.3f}), ninaswot-acc: {mean(ninaswot_acc):.3f}%({(stdev(ninaswot_acc) if len(ninaswot_acc) > 1 else 0):.3f}), time:{mean(times):.2f}")
+        runs.set_description(f"rk-acc: {mean(acc):.3f}%({std(acc):.3f}), naswot-acc: {mean(naswot_acc):.3f}%({std(naswot_acc):.3f}), ni-acc: {mean(ni_acc):.3f}%({std(ni_acc):.3f}), syn-acc: {mean(synflow_acc):.3f}%({std(synflow_acc):.3f})")
     else:
-        runs.set_description(f"rk-acc: {mean(acc):.3f}%({(stdev(acc) if len(acc) > 1 else 0):.3f}) time:{mean(times):.2f}")
+        runs.set_description(f"rk-acc: {mean(acc):.3f}%({std(acc):.3f}) time:{mean(times):.2f}")
 
 print(f"Final mean accuracy: {np.mean(acc)}")
 
