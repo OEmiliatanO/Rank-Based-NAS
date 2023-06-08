@@ -47,7 +47,7 @@ searchspace = nasspace.get_search_space(args)
 print(f"Making sure {args.save_loc} exist.")
 os.makedirs(args.save_loc, exist_ok=True)
 
-algo_module = importlib.import_module(f"search.{args.nasspace}_SA_rk")
+algo_module = importlib.import_module(f"search.SA.{args.nasspace}_SA_rk")
 SA = getattr(algo_module, "SA")
 SA_kwargs = {"searchspace": searchspace, "train_loader": train_loader, "acc_type": None, "device": device, "args": args}
 if args.nasspace == "nasbench201":

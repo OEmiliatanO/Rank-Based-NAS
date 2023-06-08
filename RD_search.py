@@ -51,18 +51,18 @@ print(f"Making sure {args.save_loc} exist.")
 os.makedirs(args.save_loc, exist_ok=True)
 
 times = []
-accs = {"ni": [], "naswot": [], "logsynflow": [], "synflow": [], "rank-based": []}
+accs = {"ni": [], "naswot": [], "logsynflow": [], "rank-based": []}
 
 Encoder = encoder.get_encoder(args.nasspace)
 
-algo_module = importlib.import_module(f"search.{args.nasspace}_RD_rk")
+algo_module = importlib.import_module(f"search.RD.{args.nasspace}_RD_rk")
 RD = getattr(algo_module, "RD")
 RD_kwargs = {"searchspace": searchspace, "train_loader": train_loader, "device": device, "args": args, "acc_type": None, "Encoder": Encoder}
 if args.nasspace == "nasbench201":
     RD_kwargs["acc_type"] = acc_type
 
-taus = {"rk":[], "ni": [], "naswot": [], "logsynflow": [], "synflow":[]}
-times = {"rk":[], "ni":[], "naswot":[], "logsynflow":[], "synflow":[], "tot":[]}
+taus = {"rk":[], "ni": [], "naswot": [], "logsynflow": []}
+times = {"rk":[], "ni":[], "naswot":[], "logsynflow":[], "tot":[]}
 cnt = 0
 runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
@@ -72,49 +72,44 @@ for N in runs:
     sol = RD(**RD_kwargs)
     bestuid_, taus_, maxacc, rk_maxacc, times_ = sol.search()
 
-    niuid, naswotuid, synflowuid, bestrk_uid = bestuid_
-    rk_tau, ni_tau, naswot_tau, synflow_tau = taus_
-    ni_time, naswot_time, synflow_time, rk_time = times_
+    niuid, naswotuid, logsynflowuid, bestrk_uid = bestuid_
+    rk_tau, ni_tau, naswot_tau, logsynflow_tau = taus_
+    ni_time, naswot_time, logsynflow_time, rk_time = times_
 
     taus['rk'].append(rk_tau)
     taus['ni'].append(ni_tau)
     taus['naswot'].append(naswot_tau)
-    #taus['logsynflow'].append(logsyn_tau)
-    taus['synflow'].append(synflow_tau)
+    taus['logsynflow'].append(logsyn_tau)
     
     try:
         niuid = int(niuid)
         naswotuid = int(naswotuid)
-        #logsynuid = int(logsynuid)
-        synflowuid = int(synflowuid)
+        logsynuid = int(logsynuid)
         bestrk_uid = int(bestrk_uid)
     except:
         pass
 
     accs["ni"].append(searchspace.get_final_accuracy(niuid, acc_type, args.valid))
     accs["naswot"].append(searchspace.get_final_accuracy(naswotuid, acc_type, args.valid))
-    #accs["logsynflow"].append(searchspace.get_final_accuracy(logsynuid, acc_type, args.valid))
-    accs["synflow"].append(searchspace.get_final_accuracy(synflowuid, acc_type, args.valid))
+    accs["logsynflow"].append(searchspace.get_final_accuracy(logsynflowuid, acc_type, args.valid))
     accs["rank-based"].append(searchspace.get_final_accuracy(bestrk_uid, acc_type, args.valid))
 
     times["ni"].append(ni_time)
     times["naswot"].append(naswot_time)
-    #times["logsynflow"].append(logsynflow_time)
-    times["synflow"].append(synflow_time)
+    times["logsynflow"].append(logsynflow_time)
     times["rk"].append(rk_time)
     times["tot"].append(time.time()-start)
 
-    #runs.set_description(f"acc_ni: {mean(accs['ni']):.3f}({std(accs['ni']):.3f}),t:{mean(times['ni']):.3f}, acc_naswot: {mean(accs['naswot']):.3f}({std(accs['naswot']):.3f}),t:{mean(times['naswot']):.3f}, acc_logsyn: {mean(accs['logsynflow']):.3f}({std(accs['logsynflow']):.3f}),t:{mean(times['logsynflow']):.3f}, acc_syn: {mean(accs['synflow']):.3f}({std(accs['synflow']):.3f}),t:{mean(times['synflow']):.3f} rk-based: {mean(accs['rank-based']):.3f}({std(accs['rank-based']):.3f}), t:{mean(times['rk']):.3f}")
-    runs.set_description(f"acc_ni: {mean(accs['ni']):.3f}({std(accs['ni']):.3f}),t:{mean(times['ni']):.3f}, acc_naswot: {mean(accs['naswot']):.3f}({std(accs['naswot']):.3f}),t:{mean(times['naswot']):.3f}, acc_syn: {mean(accs['synflow']):.3f}({std(accs['synflow']):.3f}),t:{mean(times['synflow']):.3f} rk-based: {mean(accs['rank-based']):.3f}({std(accs['rank-based']):.3f}), t:{mean(times['rk']):.3f}")
+    runs.set_description(f"acc_ni: {mean(accs['ni']):.3f}({std(accs['ni']):.3f}),t:{mean(times['ni']):.3f}, acc_naswot: {mean(accs['naswot']):.3f}({std(accs['naswot']):.3f}),t:{mean(times['naswot']):.3f}, acc_logsyn: {mean(accs['logsynflow']):.3f}({std(accs['logsynflow']):.3f}),t:{mean(times['logsynflow']):.3f}, rk-based: {mean(accs['rank-based']):.3f}({std(accs['rank-based']):.3f}), t:{mean(times['rk']):.3f}")
 
 state = {'ni-accs': accs["ni"],
          'naswot': accs["naswot"],
-         #'logsynflow': accs["logsynflow"],
+         'logsynflow': accs["logsynflow"],
          'rank-based': accs["rank-based"],
          'tot-times': times["tot"],
          'ni-times': times["ni"],
          'naswot-times': times["naswot"],
-         #'logsynflow-times': times["logsynflow"],
+         'logsynflow-times': times["logsynflow"],
          'rk-times': times["rk"],
          }
 
