@@ -105,7 +105,10 @@ for N in runs:
     times["tot"].append(time.time()-start)
 
     #runs.set_description(f"acc_ni: {mean(accs['ni']):.3f}({std(accs['ni']):.3f}),t:{mean(times['ni']):.3f}, acc_naswot: {mean(accs['naswot']):.3f}({std(accs['naswot']):.3f}),t:{mean(times['naswot']):.3f}, acc_logsyn: {mean(accs['logsynflow']):.3f}({std(accs['logsynflow']):.3f}),t:{mean(times['logsynflow']):.3f}, acc_syn: {mean(accs['synflow']):.3f}({std(accs['synflow']):.3f}),t:{mean(times['synflow']):.3f} rk-based: {mean(accs['rank-based']):.3f}({std(accs['rank-based']):.3f}), t:{mean(times['rk']):.3f}")
-    runs.set_description(f"acc_ni: {mean(accs['ni']):.3f}({std(accs['ni']):.3f}),t:{mean(times['ni']):.3f}, acc_naswot: {mean(accs['naswot']):.3f}({std(accs['naswot']):.3f}),t:{mean(times['naswot']):.3f}, acc_syn: {mean(accs['synflow']):.3f}({std(accs['synflow']):.3f}),t:{mean(times['synflow']):.3f} rk-based: {mean(accs['rank-based']):.3f}({std(accs['rank-based']):.3f}), t:{mean(times['rk']):.3f}")
+    if args.nasspace == "nasbench101":
+        runs.set_description(f"acc_ni: {mean(accs['ni'])*100:.3f}({std(accs['ni'])*100:.3f}),t:{mean(times['ni']):.3f}, acc_naswot: {mean(accs['naswot'])*100:.3f}({std(accs['naswot'])*100:.3f}),t:{mean(times['naswot']):.3f}, acc_syn: {mean(accs['synflow'])*100:.3f}({std(accs['synflow'])*100:.3f}),t:{mean(times['synflow']):.3f} rk-based: {mean(accs['rank-based'])*100:.3f}({std(accs['rank-based'])*100:.3f}), t:{mean(times['rk']):.3f}")
+    else: 
+        runs.set_description(f"acc_ni: {mean(accs['ni']):.3f}({std(accs['ni']):.3f}),t:{mean(times['ni']):.3f}, acc_naswot: {mean(accs['naswot']):.3f}({std(accs['naswot']):.3f}),t:{mean(times['naswot']):.3f}, acc_syn: {mean(accs['synflow']):.3f}({std(accs['synflow']):.3f}),t:{mean(times['synflow']):.3f} rk-based: {mean(accs['rank-based']):.3f}({std(accs['rank-based']):.3f}), t:{mean(times['rk']):.3f}")
 
 state = {'ni-accs': accs["ni"],
          'naswot': accs["naswot"],
