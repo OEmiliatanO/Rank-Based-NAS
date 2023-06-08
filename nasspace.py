@@ -173,18 +173,18 @@ class Nasbench101:
     def get_accuracy(self, unique_hash, acc_type, trainval=True):
         spec = self.get_spec(unique_hash)
         _, stats = self.api.get_metrics_from_spec(spec)
-        maxacc = 0.
+        maxacc = 0
         for ep in stats:
             for statmap in stats[ep]:
                 newacc = statmap['final_test_accuracy']
                 if newacc > maxacc:
                     maxacc = newacc
-        return maxacc
+        return maxacc*100
     def get_final_accuracy(self, uid, acc_type, trainval):
         spec = self.get_spec(uid)
         if trainval:
-            return self.api.query(spec)["validation_accuracy"]
-        return self.api.query(spec)["test_accuracy"]
+            return self.api.query(spec)["validation_accuracy"]*100
+        return self.api.query(spec)["test_accuracy"]*100
     def get_training_time(self, unique_hash):
         spec = self.get_spec(unique_hash)
         _, stats = self.api.get_metrics_from_spec(spec)
