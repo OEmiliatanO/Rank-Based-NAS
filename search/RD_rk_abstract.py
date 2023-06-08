@@ -100,12 +100,6 @@ class abstract_RD():
         #logsyn_tau, p = kendalltau(scores["logsynflow"], accs)
         synflow_tau, p = kendalltau(np.array(scores["synflow"])[np.isfinite(scores["synflow"])], np.array(accs)[np.isfinite(scores["synflow"])])
         rk_time = time.time() - rk_st
-        ####
-        #print(f"ni tau = {ni_tau}, naswot tau = {naswot_tau}, logsynflow tau = {logsyn_tau}, synflow tau = {synflow_tau}, rk tau = {rk_tau}")
-        #np.savez("./correlation_info.npy", ind_rk = ind_rk, score_ni = scores["ni"], score_naswot = scores["naswot"], score_synflow = scores["synflow"], score_logsyn = scores["logsynflow"], acc = accs, rk_tau = np.array([rk_tau]), ni_tau = np.array([ni_tau]), naswot_tau = np.array([naswot_tau]), synflow_tau = np.array([synflow_tau]), logsyn_tau = np.array([logsyn_tau]))
-        print(f"ni tau = {ni_tau}, naswot tau = {naswot_tau}, synflow tau = {synflow_tau}, rk tau = {rk_tau}")
-        np.savez("./correlation_info.npy", ind_rk = ind_rk, score_ni = scores["ni"], score_naswot = scores["naswot"], score_synflow = scores["synflow"], acc = accs, rk_tau = np.array([rk_tau]), ni_tau = np.array([ni_tau]), naswot_tau = np.array([naswot_tau]), synflow_tau = np.array([synflow_tau]))
-        ####
         
         bestuid = (rk_ni[-1], 
                    rk_naswot[-1], 
