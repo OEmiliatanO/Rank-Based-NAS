@@ -303,9 +303,12 @@
     In \cite{tanaka2020pruning}, Tanaka et al. generalized the synaptic saliency scores as 
     \begin{equation}
         \label{equ:synflow}
-        S_p(\theta)=\frac{\partial \mathcal L}{\partial \theta}\odot\theta,
+        S_p(\theta)=\frac{\partial \mathcal R}{\partial \theta}\odot\theta,
     \end{equation}
-    which is named SynFlow. 
+    where $\mathcal R$ is a scalar loss function. 
+    For example, SNIP can be rewritten as $\lvert\frac{\partial L}{\partial \theta}\odot\theta\rvert$, 
+    GraSP $-(H\frac{\partial L}{\partial \theta})\odot\theta$. 
+    
     Abdelfattah et al. \cite{abdelfattah2021zerocost} extended the work, conclude that summing 
     synaptic saliency score over all parameters in the model can be used to score a network 
     architecture, which is formula as 
