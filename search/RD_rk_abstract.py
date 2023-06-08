@@ -95,10 +95,10 @@ class abstract_RD():
         ind_rk = [totrk[uid] for uid in indices]
         #ind_rk = np.argsort(ind_rk)
         rk_tau, p = kendalltau(ind_rk, accs)
-        ni_tau, p = kendalltau(scores["ni"][np.isfinite(scores["ni"])], accs[np.isfinite(scores["ni"])])
-        naswot_tau, p = kendalltau(scores["naswot"][np.isfinite(scores["naswot"])], accs[np.isfinite(scores["naswot"])])
+        ni_tau, p = kendalltau(np.array(scores["ni"])[np.isfinite(scores["ni"])], np.array(accs)[np.isfinite(scores["ni"])])
+        naswot_tau, p = kendalltau(np.array(scores["naswot"])[np.isfinite(scores["naswot"])], np.array(accs)[np.isfinite(scores["naswot"])])
         #logsyn_tau, p = kendalltau(scores["logsynflow"], accs)
-        synflow_tau, p = kendalltau(scores["synflow"][np.isfinite(scores["synflow"])], accs[np.isfinite(scores["synflow"])])
+        synflow_tau, p = kendalltau(np.array(scores["synflow"])[np.isfinite(scores["synflow"])], np.array(accs)[np.isfinite(scores["synflow"])])
         rk_time = time.time() - rk_st
         ####
         #print(f"ni tau = {ni_tau}, naswot tau = {naswot_tau}, logsynflow tau = {logsyn_tau}, synflow tau = {synflow_tau}, rk tau = {rk_tau}")
