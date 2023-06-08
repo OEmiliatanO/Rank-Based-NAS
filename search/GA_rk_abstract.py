@@ -6,7 +6,6 @@ import numpy as np
 
 class chromosome():
     def __init__(self, gene = None, fitness = None, acc = None, uid = None):
-        """ fitness: (naswot, ntk, ni, logsynflow, tot) """
         self.gene = gene
         self.fitness = fitness
         self.acc = acc
