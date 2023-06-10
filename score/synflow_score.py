@@ -46,5 +46,4 @@ def synflow_score(network, train_loader, device):
     for i in range(len(grads)):
         score += torch.sum(grads[i])
 
-    nonlinearize(network, signs)
     return score.detach().cpu().numpy()
