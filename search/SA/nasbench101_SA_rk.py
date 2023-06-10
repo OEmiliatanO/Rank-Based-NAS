@@ -15,6 +15,7 @@ class SA(abstract_SA):
         self.Encoder = encoder.get_encoder("nasbench101")
 
     def neighbor(self, arch):
+        arch = [list(x) for x in arch]
         random.shuffle(arch[1])
         pos = random.sample([*range(0,5)], random.randint(0,5))
         for p in pos:
