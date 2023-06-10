@@ -59,19 +59,26 @@ class abstract_SA():
                 best_sol_uid = bestrk_uid
 
             T *= self.Rt
-        return best_sol_uid, self.searchspace.get_final_accuracy(int(best_sol_uid) if type(best_sol_uid)!=str else best_sol_uid, self.acc_type, self.args.valid)
+            try:
+                best_sol_uid = int(best_sol_uid)
+            except:
+                pass
+        return best_sol_uid, self.searchspace.get_final_accuracy(best_sol_uid, self.acc_type, self.args.valid)
     
     def ranking(self, indices, weight):
         scores = {"ni": [], "naswot": [], "logsynflow": []}
         
         for uid in indices:
-            uid = int(uid)
+            try:
+                uid = int(uid)
+            except:
+                pass
             network = self.searchspace.get_network(uid, self.args)
             network = network.to(self.device)
             if uid not in self.DICT:
                 nisc = ni_score(network, self.train_loader, self.device, self.args)
                 naswotsc = naswot_score(network, self.train_loader, self.device, self.args)
-                logsynsc = logsynflow_score(network, self.train_loader, self.device)
+                logsynflowsc = logsynflow_score(network, self.train_loader, self.device)
                 scores["ni"].append(nisc)
                 scores["naswot"].append(naswotsc)
                 scores["logsynflow"].append(logsynflowsc)
