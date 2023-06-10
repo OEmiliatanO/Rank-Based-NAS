@@ -44,6 +44,14 @@
   \providecommand\BibTeX{{%
     \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
 
+\algrenewcommand\alglinenumber[1]{\footnotesize #1}
+
+\algnewcommand\algorithmicassume{\textbf{Assumption:}}
+\algnewcommand\Assume{\item[\algorithmicassume]}
+
+\algnewcommand\algorithmicinput{\textbf{Input:}}
+\algnewcommand\Input{\item[\algorithmicinput]}
+
 \begin{document}
 
 \title{Rank-based Training-Free NAS Algorithm}
@@ -71,26 +79,24 @@
     % dont we
     % To address
     % To evaluate
-    Although the training-free NASs are typically faster than training-based 
-    NAS method, however, the correlation between score value and the result 
-    of an architecture is not well enough in most cases.
-    To address this problem, we propose a genetic-based training-free NAS 
-    algorithm with hybrid training-free score function, which combines three 
-    highly heterogeneous training-free score functions to evaluate an architecture. 
-    In this method, the genetic algorithm plays a role to guide the searches 
-    of NAS algorithm while the hybrid training-free score function plays the 
-    role to evaluate a new candidate architecture during the convergence process 
-    of GA. More precisely, the first score function is noise immunity (NI), as 
-    an evaluation of the ability to tolerate noise, second one is NASWOT score, as 
-    an measurement of the pattern recognition ability, finally, the last one is 
-    LogSynFlow score, as an evaluation of trainability. 
-    
+    Although the training-free neural architecture search (NAS) are typically 
+    faster than training-based NAS methods, however, the correlation between 
+    the measurement and the final accuracy of an architecture is not well 
+    enough in most cases. 
+    To address this problem, we propose a rank-based training-free NAS 
+    algorithm, which combines three complement training-free score functions 
+    to evaluate an architecture by ranking. 
+    More precisely, noise immunity (NI) and the correlation between binary 
+    activation paterns, named as NASWOT, are used as measurement of image recognition 
+    ability, and, SynFlow are used as measurement of trainability. 
+    With that, a modified version of simulated annealing (SA) algorithm 
+    can applies on and obtains a better performance on searching high accuracy 
+    architectures. 
     To evaluate the performance of the proposed algorithm, this paper compared 
     it with several NAS algorithms, including weight-sharing methods, 
     non-weight-sharing methods, and several state-of-the-art training-free score 
-    functions. 
-    The final result shows that in relatively larger search space, like nats-bench sss, the 
-    proposed algorithm outperforms most of NAS methods. 
+    functions. The final result shows that in relatively larger search space, 
+    like NATS-Bench SSS, the proposed algorithm outperforms most of NAS methods. 
 
 \end{abstract}
 \maketitle
@@ -104,7 +110,7 @@
     architecture. By leveraging machine learning algorithms \cite{https://doi.org/10.48550/arxiv.1611.01578}, 
     NAS algorithms can explore a search space, which is comprised of numerous 
     potential architectures, to find out a good architectures that outperform 
-    those designed by human experts. "In recent years", the use of NAS is 
+    those designed by human experts. Recently, the use of NAS is 
     widespread, from object detection \cite{https://doi.org/10.48550/arxiv.2111.13336}, 
     image recognition \cite{https://doi.org/10.48550/arxiv.2006.04647} 
     and speech recognition \cite{https://doi.org/10.48550/arxiv.2011.05649} 
@@ -129,7 +135,7 @@
     measurement of the correlation between the binary activation paterns, 
     induced by the untrained network at two inputs, named as neural architecture 
     search without training (NASWOT). 
-    % logsynflow
+    % synflow
     On the other hand, Lee et al. \cite{lee2019snip} proposed purning parameters based on a saliency matric, 
     which then extended further by Wang et al. \cite{wang2020picking} and Tanaka et al. \cite{tanaka2020pruning}. 
     In \cite{tanaka2020pruning}, Tanaka et al. proposed Iterative Synaptic Flow Pruning 
@@ -140,93 +146,41 @@
     Cavagnero et al. \cite{Cavagnero_2023} found that SynFlow is likely to suffer from gradient explosion, then 
     proposed the LogSynFlow score function which prevents the problem. 
     % NTK
-    For another example, Chen et al. proposed to compute the condition 
-    number of neural tangent kernel (NTK) \cite{https://doi.org/10.48550/arxiv.2102.11535} 
-    \cite{https://doi.org/10.48550/arxiv.2203.09137} \cite{https://doi.org/10.48550/arxiv.2109.00817}, 
-    which is used as the score to estimate the trainability of an architecture. 
+    For another example, Chen et al. \cite{https://doi.org/10.48550/arxiv.2102.11535} proposed to compute the condition 
+    number of neural tangent kernel (NTK) \cite{https://doi.org/10.48550/arxiv.2203.09137} 
+    \cite{https://doi.org/10.48550/arxiv.2109.00817}, which is used as the score to estimate the trainability of an 
+    architecture. 
 
 % what is unknown?
+    % table放第一頁 不然就不要放
+    % 做成圖表放第一頁
     However, \xtab{table:corr_score} shows most of score functions suffer from low correlation between 
-    score value and the final accuracy of an architecture, leading to a predicament 
+    score values and the final accuracy of architectures, leading to a predicament 
     that no matter how good the search method is used, we can hardly find 
     an optimal architecture. 
     The major problem causes the low correlation is that a single score 
     function can only evaluate one perspect/characteristic of an architecture. 
-    \begin{table*}[htb]
-        \caption{\textsc{The Kendall and Spearman correlation between training-free score and test accuracy, evaluated on the three datasets of NATS-Bench \cite{Dong_2021}. 
-        Each metric has been computed three times with different initialisations and the average is taken as final score. The data is from \cite{Cavagnero_2023}.}}
-        \begin{tabular}{ccccccc}\toprule
-            Training-free score function & \multicolumn{2}{c}{CIFAR-10} & \multicolumn{2}{c}{CIFAR-100} & \multicolumn{2}{c}{ImageNet-16-120} \\ 
-            \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7} & Kendall & Spearman & Kendall & Spearman & Kendall & Spearman \\ \midrule
-            \bf{NTK} & -0.33 & -0.49 & -0.30 & -0.45 & -0.39 & -0.56 \\
-            \bf{Snip} & 0.45 & 0.61 & 0.47 & 0.62 & 0.41 & 0.55 \\
-            \bf{Fisher} & 0.39 & 0.54 & 0.40 & 0.55 & 0.36 & 0.48 \\
-            \bf{Grasp} & 0.28 & 0.41 & 0.35 & 0.50 & 0.35 & 0.49 \\
-            \bf{NASWOT} & 0.61 & 0.79 & 0.62 & 0.81 & 0.60 & 0.78 \\
-            \bf{SynFlow} & 0.57 & 0.77 & 0.56 & 0.76 & 0.56 & 0.75 \\
-            \bf{LogSynFlow} & 0.61 & 0.81 & 0.60 & 0.79 & 0.59 & 0.78 \\ \bottomrule
-            \label{table:corr_score}
-          \vspace{-\baselineskip}
-        \end{tabular}
-    \end{table*}
-    
-% method
-    To address the problem, we propose cooperating three heterogeneous score 
-    functions with rank-based search method, which evaulate an architecture 
-    from different aspects. More specifically, the first score function is 
-    NI \cite{10092788} as an indicator of the ability to distinguish two images. 
-    The second one is NASWOT as score to estimate the ability of expression 
-    of an architecture. The last one is logsynflow used as the measurement of 
-    trainability. 
-    By combining these three training-free score functions, this paper also 
-    compares the different search algorithms, e.g., random search, genetic 
-    algorithm (GA) \cite{mitchell1998introduction}, simulated annealing algorithm (SA)
-    \cite{kirkpatrick1983optimization}. 
-
-    % conclusion
-    The major contribution of this paper can be summarized as follow:
-    \begin{itemize}
-        \item Cooperating three score functions to obtain better ability for searching top accuracy neural architectures. 
-        \item Develope a rank-based neural architecture search with several search algorithms. 
-    \end{itemize}
-    % expect what
-
-    The remainder of this paper is organized as follows: \xsec{sec:related_work} provides the 
-    detail about the three heterogeneous score functions. \xsec{sec:proposed} gives a detailed 
-    description about the proposed method. \xsec{sec:results} begins with parameters setting and 
-    provide the simulation results following is the experiment results in different search space. 
-    The conclusion and further prospect are gived in \xsec{sec:conclusion}.
-    
-    
-
-    \section{Related Works}
-    \label{sec:related_work}
-    \subsection{Training-free Score Function}
-    % naswot
-    In \cite{https://doi.org/10.48550/arxiv.2006.04647}, Mellor et al. proposed a 
-    score function without the requirement for training which is named neural 
-    architecture search without training (NASWOT). \xfig{fig:naswot} 
-	gives a simple example to illustrate the procedure of NASWOT score function. 
-    Consider a mini-batch of data $X=\{x_i\}^N_{i=1}$ passing through a neural network 
-    architecture as $f(x_i)$. The activated ReLU units in every layer of the architecture 
-    form a binary code $c_i$ that define the linear region.
-    The correlation between binary codes for the whole mini-batch can be examined 
-    by computing the kernel matrix 
-    \begin{equation}
-        K_H=\begin{pmatrix}N_A-d_H(c_1,c_2)&\cdots&N_A-d_H(c_1,c_N)\\\vdots&\ddots&\vdots\\N_A-d_H(c_N,c_1)&\cdots&N_A-d_H(c_N,c_1)\end{pmatrix}
-    \end{equation}
-    where $N_A$ is the number of ReLU units and $d_H(c_i,c_j)$ is the hamming 
-    distance between the binary code $c_i$ and $c_j$. 
-    With the kernel matrix, the score of an architecture can be evaluate as 
-    follow: 
-    \begin{equation}
-        s=\log\lvert K_H\rvert
-    \end{equation}
-    The rationale behind is to see how dissimilar the linear region activated by 
-    the ReLU units between two inputs. An architecture shall learn better 
-    when inputs are well separated.
-
-    \begin{figure*}[!htb]
+    \begin{table}[tb]
+        \caption{\textsc{The Kendall correlation between training-free score and test accuracy, evaluated on the three datasets of NATS-Bench \cite{Dong_2021}. 
+        Each metric has been computed three times with different initialisations and the average is taken as final score.}}
+        \resizebox{0.48\textwidth}{!}{
+            \begin{tabular}{cccc}\toprule
+                Training-free score function & CIFAR-10 & CIFAR-100 & ImageNet-16-120 \\ 
+                \midrule
+                \bf{NTK}                     & -0.33    & -0.30     & -0.39 \\
+                \bf{Snip}                    & 0.45     & 0.47      & 0.41  \\
+                \bf{Fisher}                  & 0.39     & 0.40      & 0.36  \\
+                \bf{Grasp}                   & 0.28     & 0.35      & 0.35  \\
+                \bf{NASWOT}                  & 0.61     & 0.62      & 0.60  \\
+                \bf{SynFlow}                 & 0.57     & 0.56      & 0.56  \\
+                \bf{LogSynFlow}              & 0.61     & 0.60      & 0.59  \\
+                \bf{Rank-Based (ours)}       & X        & X         & X     \\ \bottomrule
+                \label{table:corr_score}
+            \vspace{-\baselineskip}
+            \end{tabular}
+        }
+    \end{table}
+    \begin{figure*}[b]
         \vspace{-\baselineskip}
         \resizebox{1.0\textwidth}{!}{\includegraphics{asset/naswot.pdf}}
         \caption{A simple example to illustrate the procedure of NASWOT.}
@@ -234,13 +188,76 @@
         \centering
         \vspace{-\baselineskip}
     \end{figure*}
+% method
+    To address the problem, we propose cooperating three complement score 
+    functions by ranking, which allows every score functions evaluate an 
+    architecture without losing fairness. 
+    The first score function is noise immunity (NI) \cite{10092788}, as 
+    an indicator of the ability to distinguish two images. 
+    The second one is NASWOT, as score to estimate the ability of expression 
+    of an architecture and also a complement of NI. 
+    The last one is SNIP used as the measurement of trainability and 
+    also as a complement to NI and NASWOT. 
+    With these three complement score functions, an evaluation of an 
+    architecture is not simply from a single aspect but three different 
+    aspects, which is like estimate the weight of an object by not only 
+    the length but its height and width. 
+    %compares the different search algorithms for NAS, e.g., random search, genetic 
+    %algorithm (GA) \cite{mitchell1998introduction}, simulated annealing algorithm (SA)
+    %\cite{kirkpatrick1983optimization}. 
+
+    % conclusion
+    %The major contribution of this paper can be summarized as follow:
+    %\begin{itemize}
+    %    \item Cooperating three score functions to obtain better ability for searching top accuracy neural architectures. 
+    %    \item Develope simulated annealing algorithms with rank-based score. 
+    %\end{itemize}
+    % expect what
+
+    The remainder of this paper is organized as follows: \xsec{sec:related_work} provides the 
+    detail about the three complement score functions. \xsec{sec:proposed} gives a detailed 
+    description about the proposed method. \xsec{sec:results} begins with parameters setting and 
+    provide the simulation results following is the experiment results in different search space. 
+    The conclusion and further prospect are gived in \xsec{sec:conclusion}.
+
+    \section{Related Works}
+    \label{sec:related_work}
+    \subsection{Training-free Score Functions}
+    % naswot 對圖描述多一點
+    In \cite{https://doi.org/10.48550/arxiv.2006.04647}, Mellor et al. proposed a 
+    score function without the requirement for training which is named neural 
+    architecture search without training (NASWOT). \xfig{fig:naswot} 
+	gives a simple example to illustrate the procedure of NASWOT score function. 
+    Consider a mini-batch of data $X=\{x_i\}^N_{i=1}$ passing through a neural network 
+    architecture. The activated ReLU units in every layer of the architecture 
+    form a binary code $c_i$ that define the linear region.
+    The correlation between binary codes for the whole mini-batch can be examined 
+    by computing the kernel matrix 
+    \begin{equation}
+        K_H=\begin{pmatrix}N_A-d_H(c_1,c_1)&\cdots&N_A-d_H(c_1,c_N)\\\vdots&\ddots&\vdots\\N_A-d_H(c_N,c_1)&\cdots&N_A-d_H(c_N,c_N)\end{pmatrix},
+    \end{equation}
+    where $N_A$ is the number of ReLU units and $d_H(c_i,c_j)$ is the hamming 
+    distance between the binary code $c_i$ and $c_j$. 
+    With the kernel matrix, the score of an architecture can be evaluated as 
+    follow: 
+    \begin{equation}
+        s=\log\lvert K_H\rvert,
+    \end{equation}
+    The rationale behind is that, the more different between the binary codes 
+    the better the architecture learns. And the determinant of the kernel matrix 
+    measures how "different" they are by calculating the volume formed by the 
+    row vector of $K_H$. 
+    
+    %to see how dissimilar the linear region activated by 
+    %the ReLU units between two inputs. An architecture shall learn better 
+    %when inputs are well separated.
 	
-    % ni
+    % ni 對圖描述多一點
     Wu et al. \cite{10092788} found, in some case, an architecture with high 
     NASWOT score may classify the same kind of input data into different classes. 
     To fix this defect, Wu et al. proposed using noise immunity (NI) to 
     evaluate an architecture. \xfig{fig:ni} gives an example to illustrate how 
-    noise immunity score evaluate an architecture. The score function picks a 
+    noise immunity evaluate an architecture. The score function picks a 
     mini-batch of data, denoted $X$, and then applies Gaussion noise on it. 
     The process can be defined by $X'=X+z$ where $z$ is the Gaussion noise. 
     By passing $X$ and $X'$ through the untrained architecture, then computing 
@@ -248,7 +265,7 @@
     denoted $\eta$. According to the fact that the input data are the same kind, 
     the small $\eta$ the better the noise immunity of the architecture is.
 
-    \begin{figure*}[!hb]
+    \begin{figure*}[tb]
         \vspace{-\baselineskip}
         \resizebox{1.0\textwidth}{!}{\includegraphics{asset/ni.pdf}}
         \caption{A simple example to illustrate the procedure of noise immunity.}
@@ -257,41 +274,44 @@
         \vspace{-\baselineskip}
     \end{figure*}
 
-    % logsynflow
-    Besides from these two model-dependent aspects, Tanaka et al. \cite{tanaka2020pruning} 
-    generalized synaptic saliency scores, and proposed SynFlow algorithm to avoids layer 
-    collapse when performing purning. 
-    Inspired from \cite{tanaka2020pruning}, \cite{wang2020picking}, \cite{lee2019snip}, 
-    Abdelfattah et al. \cite{abdelfattah2021zerocost} proposed summing synaptic saliency scores 
-    over all parameters in the model as an accuracy estimator to a architecture.
-
-    Besides from these two model-dependent aspects, roots from The Lottery Ticket Hypothesis 
-    \cite{frankle2019lottery}, saliency matric is used on purning network parameters in 
-    \cite{lee2019snip}, which can be formula as 
+    % synflow
+    % 再調
+    Besides from these two image-related aspects, there is another aspect to evaluate  
+    a network. 
+    \textit{The Lottery Ticket Hypothesis} \cite{frankle2019lottery}, reveals that a 
+    network may have a "core" which decides the final accuracy of the network. 
+    How to pruning a network correctly is therefore tempting. Lee et al. 
+    \cite{lee2019snip} proposed to use connection sensitivity as a criterion to prune 
+    the network which can be briefly viewed as 
     \begin{equation}
-        \label{equ:snip}
-        S_p(\theta)=\lvert\frac{\partial \mathcal L}{\partial \theta}\odot\theta\rvert
+        \label{equ:snip_connection_sensitivity}
+        s_j=\lvert w_j\frac{\partial L}{\partial w_j}\rvert,
     \end{equation}
-    where $\mathcal L$ is the loss function of a neural network with parameters $\theta$ 
-    and $\theta$ is the Hadamard product. 
-    The saliency matric approximates the change in loss when purning a specific parameters.
-    Later, Wang et al. \cite{wang2020picking} approximates the change in gradient norm when 
-    purning the network, which defined as 
+    where $\textbf{w}$ is the weight of the netwrok, $w_j$ the $j$-th element of 
+    $\textbf{w}$. The meaning behind is to approximate the contribution 
+    to the change of the loss function from a specific connection. By pruning the 
+    connections which has relatively small contribution, the expensive prune, retrain 
+    cycles, can be prevented. 
+    Later, Wang et al. \cite{wang2020picking} noticed that SNIP with a high pruning ratio 
+    tends to cause layer-collapse, which prune all parameters in a single weight layer. 
+    Therefore, they propose to approximate the change in gradient norm which defined as 
     \begin{equation}
         \label{equ:grap}
-        S_p(\theta)=-(H\frac{\partial \mathcal L}{\partial \theta})\odot\theta
+        S_p(\bf{\theta})=-(H\frac{\partial \mathcal L}{\partial \bf{\theta}})\odot\bf{\theta},
     \end{equation}
-    where $\mathcal L$ is the change in gradient norm instead of loss function and $H$ is 
-    the Hessian. 
+    where $H$ is the Hessian matrix, $\bf{\theta}$ the parameters, and $\odot$ is Hadamard product. 
     In \cite{tanaka2020pruning}, Tanaka et al. generalized the synaptic saliency scores as 
     \begin{equation}
         \label{equ:synflow}
-        S_p(\theta)=\frac{\partial \mathcal L}{\partial \theta}\odot\theta
+        S_p(\theta)=\frac{\partial \mathcal R}{\partial \theta}\odot\theta,
     \end{equation}
-    which is named SynFlow. 
+    where $\mathcal R$ is a scalar loss function. 
+    For example, SNIP can be rewritten as $\lvert\frac{\partial L}{\partial \theta}\odot\theta\rvert$, 
+    GraSP $-(H\frac{\partial L}{\partial \theta})\odot\theta$. 
+    
     Abdelfattah et al. \cite{abdelfattah2021zerocost} extended the work, conclude that summing 
     synaptic saliency score over all parameters in the model can be used to score a network 
-    architecture, which is formula as
+    architecture, which is formula as 
     \begin{equation}
         \label{equ:zero_cost}
         S_n=\sum^N_i S_p(\theta)_i
@@ -304,9 +324,9 @@
         S(\theta)=\theta\cdot\log(\frac{\partial \mathcal L}{\partial \theta}+1)
     \end{equation}
 
-    \subsection{Search Algorithm}
+    \subsection{Search Algorithms}
     First assume that input data $D$ are separated into two subset, $D_r$ and $D_t$. Further more, 
-    assume $\mathcal F_A$ is the accuracy function, $\mathcal F_S$ the score function, $A_s$ the 
+    assume $\mathcal F_A$ is the accuracy function, $\mathcal F_S$ the score function, $\mathcal A_s$ the 
     search algorithm of NAS, and $\mathcal A_L$ the learning algorithm. Then, NAS problem can be 
     described as an optimization problem as follows: 
     \begin{equation}
@@ -324,8 +344,8 @@
         \label{equ:training_free_nas}
         \mathbb N^b=\mathcal A_S(\mathcal F_S(\mathbb N^s, D_r), \mathbb N)
     \end{equation}
-    It can be seen that training-free NAS is comprised of two part, search algorithm $A_S$ and score 
-    function $F_S$. 
+    It can be seen that training-free NAS is comprised of two part, search algorithm $\mathcal A_S$ and score 
+    function $\mathcal F_S$. 
     There are several search algorithms applied on NAS, including random search, reinforcement learning, and
     metaheuristic algorithm. 
     
@@ -351,7 +371,8 @@
         \nabla_{\theta_c} J(\theta_c)=\sum^T_t=1 E_{P(a_{1:T};\theta_c)}[\nabla_{\theta_c}\log P(a_t\mid a_{(t-1):1};\theta_c)R]
     \end{equation}
 
-    And in \cite{10.1145/3491396.3506510}, Wu et al. leveraged genetic algorithm (GA) as search strategy. 
+    As for an example of metaheuristic algorithm, in \cite{10.1145/3491396.3506510}, Wu et al. leveraged 
+    genetic algorithm (GA) as search strategy. 
     By encoding the network architecture, the architecture can be viewed as gene. Therefore, GA can be 
     easily applied on. 
     Later in \cite{10092788}, Wu et al. used search economic (SE) \cite{7379579} as search strategy. The 
@@ -362,14 +383,99 @@
         \item The average objective value of the new candidate solutions in the subspace at current iteration. 
         \item The best solution so far in this subspace. 
     \end{itemize}
-
-    \section{The Proposed Algorithm}
+    Based on these design, SE can avoid fall into local optimum, while search for high expected value instead. 
+    
+    \section{Methods}
     \label{sec:proposed}
-    In this work, 
+    \subsection{Motivation}
+    The motivation origins from these three questions: 
 
+    \textit{1. Can we combine multiple score functions to improve the correlation between score values and the final accuracy of architectures?}
+    
+    The answer is yes. It's konwn that if the chosen score functions can complement with 
+    each others, the new correlation can eventually beyond the original ones. \cite{10.1145/3491396.3506510} 
+    shows that possibility. When an architecture gain a high NASWOT score, it may classify 
+    images, which are in the same class originally, into different classes. NI here comes 
+    to rescue. By measuring the noise immunity of an architecture, the miss-classifying 
+    can be solved. Thus, if mix NASWOT with NI, the correlation increases. An example 
+    is shown in \xfig{fig:ninaswot}.
+    \begin{figure*}[htb]
+        \vspace{-\baselineskip}
+        \begin{center}
+            \begin{tabular}{ccc}
+                \subfigure[]{\resizebox{0.33\textwidth}{!}{\includegraphics{asset/naswot-acc.pdf}}}
+                \subfigure[]{\resizebox{0.33\textwidth}{!}{\includegraphics{asset/ni-acc.pdf}}}
+                \subfigure[]{\resizebox{0.33\textwidth}{!}{\includegraphics{asset/ninaswot-acc.pdf}}}
+            \end{tabular}
+            \caption{(a) NASWOT score for 1,000 randomly chosen architectures from NAS-Bench-201 in the CIFAR-10 dataset 
+            (b) NI score for 1,000 identical architectures from NAS-Bench-201 in the CIFAR-10 dataset. 
+            (c) NI score + NASWOT score for 1,000 identical architectures from NAS-Bench-201 in the CIFAR-10 dataset.}
+            \label{fig:ninaswot}
+        \end{center}
+        \vspace{-\baselineskip}
+    \end{figure*}
+
+    \textit{2. How to combine multiple different kinds of score functions together and prevent one from overwhelming the others numerically?}
+    
+    One possible way is normalization, but the necessary information is known only 
+    after evaluating the whole search space, e.g., range, mean or standard deviation, which is practically 
+    impossible. In order to achieve the goal, the proposed score function, named rank-based NAS, leverage 
+    multiple score functions by ranking, which provides a solution to have equal contribution from each 
+    score function. 
+
+    \textit{3. How to choose the score functions?}
+
+    As mentioned, the key is to choose the complement of a score function. For example, 
+    NASWOT and NI. And for NASWOT and NI, which are both description of the ability of 
+    the graphic recognition of an architecture. The complement of them can be a measurement 
+    of trainability, e.g., SynFlow, NTK, which means whether this architecture is easy to 
+    train or not. 
+
+    \subsection{Rank-Based Score Function}
+    \begin{algorithm}[h]
+        \caption{The Rank Algorithm}\label{alg:rank-based}
+        \begin{algorithmic}[1]
+            \Input ${\mathbb N}^{s}\subset{\mathbb N}^{*}$
+            \For{$\text{each }{\mathbb N}^i\text{ in }{\mathbb N}^s$}
+                \For{$\text{each }j\in\{1,\ldots,M\}$}
+                    \State $s_{{\mathcal F}_{j}}({\mathbb N}^i)={\mathcal F}_{j}({\mathbb N}^i)$
+                \EndFor
+            \EndFor
+            \For{$\text{each }j\in\{1,\ldots,M\}$}
+                \State $r_{{\mathcal F}_{j}}({\mathbb N}^i)$ = index of ${\mathbb N}^i$ in list $[s_{{\mathcal F}_{j}}({\mathbb N}^1),\ldots,s_{{\mathcal F}_{j}}({\mathbb N}^{\lvert {\mathbb N}^s\rvert})]$ \par sorted by descending order
+            \EndFor
+            \State $r({\mathbb N}^i)=\sum^M_{j=0} r_{{\mathcal F}_{j}}({\mathbb N}^i)$
+            \State $i^*=\arg\min_{i}\{r({\mathbb N}^i)\}$
+            \State $\textbf{Return }{\mathbb N}^{i^*}$
+        \end{algorithmic}
+    \end{algorithm}
+
+    The proposed rank-based score function is outlined in \xalg{alg:rank-based}. The first step is to evaluate the 
+    network architectures in the subset, denoted $\mathbb N^s$, of search space, denoted $\mathbb N^*$. The evaluation 
+    of an architecture determined by $j$-th score function is denoted $s_{\mathcal F_j}(\mathbb N^i)$. After evaluating 
+    the subset of search space, the rank of each score function is calculated, denoted $r_{\mathcal F}$. Then the final 
+    rank, $r$, calculated by summing up the ranks. 
+    If a network architecture gains higher score in these score functions, the final rank should be higher (smaller index) too. 
+    Therefore, the highest (minimum) rank in $r$ shall be the best network architecture. In summary, the rank-based score 
+    function makes the contribution of each score function even. 
+
+    \subsection{Simulated Annealing with Rank-Based Score function}
+
+    
+
+    \begin{figure*}[htb]
+        \centering
+        \hspace*{-\baselineskip}
+        \vspace*{-\baselineskip}
+        \includegraphics[]{asset/SA.pdf}
+        \caption{A simple example to illustrate an iteration of SA with Rank-based score function.}
+        \label{fig:SA}
+    \end{figure*}
+
+    \xfig{fig:SA} illustrates how SA with rank-based score function works in an iteration. 
 
     \section{experiment result}
-    \label{sec:results} 
+    \label{sec:results}
 
     \subsection*{natsbenchsss}
     The result of natsbenchsss is shown in \xtab{table:overall_sss}.
