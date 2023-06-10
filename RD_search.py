@@ -79,7 +79,8 @@ for N in runs:
     taus['rk'].append(rk_tau)
     taus['ni'].append(ni_tau)
     taus['naswot'].append(naswot_tau)
-    taus['logsynflow'].append(logsyn_tau)
+    taus['logsynflow'].append(logsynflow_tau)
+    #print(taus)
     
     try:
         niuid = int(niuid)
