@@ -4,14 +4,16 @@ import random
 import os
 import numpy as np
 from .GA_rk_abstract import abstract_GA, chromosome
+from encoder import encoder
 
 class GA(abstract_GA):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.NATS_SSS_ops = [8, 16, 24, 32, 40, 48, 56, 64]
+        self.Encoder = encoder.get_encoder("natsbenchsss")
 
     def init_population(self):
-        self.population = [chromosome(random.sample(range(0, 8), k=5)) for i in range(self.MAXN_POPULATION)]
+        self.population = self.Encoder.get_nrand_code(self.MAXN_POPULATION)
 
     def evaluate(self):
         for i in range(len(self.population)):
