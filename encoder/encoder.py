@@ -89,7 +89,7 @@ class nasbench101_encoder:
     def get_rand_code(self):
         operations = self.get_rand_operations()
         backbone,branch = self.get_rand_backbone_branch()
-        return backbone,branch,operations
+        return tuple(backbone),tuple(branch),tuple(operations)
     
     def get_nrand_code(self, n):
         s = set()
