@@ -174,7 +174,7 @@
                 \bf{NASWOT}                  & 0.61     & 0.62      & 0.60  \\
                 \bf{SynFlow}                 & 0.57     & 0.56      & 0.56  \\
                 \bf{LogSynFlow}              & 0.61     & 0.60      & 0.59  \\
-                \bf{Rank-Based (ours)}       & X        & X         & X     \\ \bottomrule
+                \bf{Rank (ours)}             & X        & X         & X     \\ \bottomrule
                 \label{table:corr_score}
             \vspace{-\baselineskip}
             \end{tabular}
@@ -262,8 +262,24 @@
     The process can be defined by $X'=X+z$ where $z$ is the Gaussion noise. 
     By passing $X$ and $X'$ through the untrained architecture, then computing 
     the difference of square of each feature maps captured at all pooling layers, 
-    denoted $\eta$. According to the fact that the input data are the same kind, 
-    the small $\eta$ the better the noise immunity of the architecture is.
+    denoted $\eta$. More specifically, first, calculate the matrix $\kappa$ defined by 
+    \begin{equation}
+        \label{equ:ni_kappa}
+        \kappa=\begin{pmatrix}\frac{(\tau_{1,1}-\tau'_{1,1})^2}{\lvert \tau_{1,1}\rvert}&\cdots&\frac{(\tau_{1,N}-\tau'_{1,N})^2}{\lvert \tau_{1,N}\rvert}\\\vdots&\ddots&\vdots\\\frac{(\tau_{L,1}-\tau'_{L,1})^2}{\lvert \tau_{L,1}\rvert}&\cdots&\frac{(\tau_{L,N}-\tau'_{L,N})^2}{\lvert \tau_{L,N}\rvert}\end{pmatrix},
+    \end{equation}
+    where $L$ is the total number of pooling layers; $N$ the size of mini-batch, 
+    and $\tau_{i,j}$ and $\tau'_{i,j}$ are the feature maps which $X$ passing and 
+    the one perturbed by $X'$ at the $i$-th pooling layer and $j$-th input 
+    data of the mini-batch, respectively. 
+    Then $\eta$ can be calculated by 
+    \begin{equation}
+        \label{equ:ni_eta}
+        \eta=\ln(\epsilon+e_L\kappa e_N),
+    \end{equation}
+    where $\epsilon$ is a small positive number, and $e_L$ and $e_N$ are a row 
+    vector of 1's of size $L$ and a column vector of 1's of size $N$, respectively. 
+    According to the fact that the input data are the same kind, the smaller $\eta$ 
+    is, the better the noise immunity of the architecture is.
 
     \begin{figure*}[tb]
         \vspace{-\baselineskip}
@@ -285,39 +301,44 @@
     the network which can be briefly viewed as 
     \begin{equation}
         \label{equ:snip_connection_sensitivity}
-        s_j=\lvert w_j\frac{\partial L}{\partial w_j}\rvert,
+        s_j=\lvert \frac{\partial \mathcal L}{\partial w_j}w_j\rvert,
     \end{equation}
     where $\textbf{w}$ is the weight of the netwrok, $w_j$ the $j$-th element of 
-    $\textbf{w}$. The meaning behind is to approximate the contribution 
+    $\textbf{w}$, and $\mathcal L$ is the empirical risk. The meaning behind is to approximate the contribution 
     to the change of the loss function from a specific connection. By pruning the 
     connections which has relatively small contribution, the expensive prune, retrain 
     cycles, can be prevented. 
     Later, Wang et al. \cite{wang2020picking} noticed that SNIP with a high pruning ratio 
-    tends to cause layer-collapse, which prune all parameters in a single weight layer. 
-    Therefore, they propose to approximate the change in gradient norm which defined as 
+    tends to cause \textit{layer-collapse}, which prunes all parameters in a single weight 
+    layer. Therefore, they propose Gradient Signal Preservation (GraSP) algorithm, which 
+    aims to preserve the gradient flow at initialization by approximating the change in 
+    gradient norm defined as 
     \begin{equation}
         \label{equ:grap}
-        S_p(\bf{\theta})=-(H\frac{\partial \mathcal L}{\partial \bf{\theta}})\odot\bf{\theta},
+        S_p(\theta)=-(\textbf{H}\frac{\partial \mathcal L}{\partial \theta})\odot\theta,
     \end{equation}
-    where $H$ is the Hessian matrix, $\bf{\theta}$ the parameters, and $\odot$ is Hadamard product. 
-    In \cite{tanaka2020pruning}, Tanaka et al. generalized the synaptic saliency scores as 
+    where $\textbf{H}$ is the Hessian matrix, $\theta$ the parameters, and $\odot$ is Hadamard product. 
+    In \cite{tanaka2020pruning}, to solve the problem that the existing pruning algorithms, e.g., 
+    Magnitude, SNIP, GraSP, using global-masking usually encounter layer-collapse which will make 
+    the pruned network untrainable. 
+    Tanaka et al. generalized the synaptic saliency scores as 
     \begin{equation}
         \label{equ:synflow}
         S_p(\theta)=\frac{\partial \mathcal R}{\partial \theta}\odot\theta,
     \end{equation}
-    where $\mathcal R$ is a scalar loss function. 
-    For example, SNIP can be rewritten as $\lvert\frac{\partial L}{\partial \theta}\odot\theta\rvert$, 
-    GraSP $-(H\frac{\partial L}{\partial \theta})\odot\theta$. 
-    
-    Abdelfattah et al. \cite{abdelfattah2021zerocost} extended the work, conclude that summing 
-    synaptic saliency score over all parameters in the model can be used to score a network 
-    architecture, which is formula as 
+    where $\mathcal R$ is a scalar loss function, and proposed Iterative Synaptic Flow Pruning (SynFlow) 
+    algorithm which is an extension of magnitude pruning algorithm and avoids layer-collapse. 
+    Abdelfattah et al. \cite{abdelfattah2021zerocost} extended the work, proposed to score a 
+    network by summing the synaptic saliency score over all parameters in the model, which is 
+    defined as 
     \begin{equation}
         \label{equ:zero_cost}
-        S_n=\sum^N_i S_p(\theta)_i
+        S_n=\sum^N_i S_p(\theta)_i.
     \end{equation}
+    The rationale behind is to calculate all the contribution to the loss function of parameters. 
+    The higher the score of an architecture, the more trainable this architecture is. 
     Finally, Cavagnero et al. \cite{Cavagnero_2023} imporved SynFlow, which is likely to fall into 
-    gradient explosion problem, and proposed LogSynFlow score function, simply scaling down the gradient. 
+    gradient explosion problem, and proposed LogSynFlow which simply scaling down the gradient. 
     The formula is defined by 
     \begin{equation}
         \label{equ:logsynflow}
@@ -387,6 +408,7 @@
     
     \section{Methods}
     \label{sec:proposed}
+
     \subsection{Motivation}
     The motivation origins from these three questions: 
 
@@ -429,13 +451,13 @@
     NASWOT and NI. And for NASWOT and NI, which are both description of the ability of 
     the graphic recognition of an architecture. The complement of them can be a measurement 
     of trainability, e.g., SynFlow, NTK, which means whether this architecture is easy to 
-    train or not. 
+    train or not. In this paper, NI, NASWOT, and LogSynFlow are used in the ranking algorithm. 
 
-    \subsection{Rank-Based Score Function}
+    \subsection{The Ranking Algorithm}
     \begin{algorithm}[h]
-        \caption{The Rank Algorithm}\label{alg:rank-based}
+        \caption{The Ranking Algorithm}\label{alg:rank-based}
         \begin{algorithmic}[1]
-            \Input ${\mathbb N}^{s}\subset{\mathbb N}^{*}$
+            \Input{a subspace, ${\mathbb N}^{s}$, from search space, ${\mathbb N}^{*}$}
             \For{$\text{each }{\mathbb N}^i\text{ in }{\mathbb N}^s$}
                 \For{$\text{each }j\in\{1,\ldots,M\}$}
                     \State $s_{{\mathcal F}_{j}}({\mathbb N}^i)={\mathcal F}_{j}({\mathbb N}^i)$
@@ -445,47 +467,88 @@
                 \State $r_{{\mathcal F}_{j}}({\mathbb N}^i)$ = index of ${\mathbb N}^i$ in list $[s_{{\mathcal F}_{j}}({\mathbb N}^1),\ldots,s_{{\mathcal F}_{j}}({\mathbb N}^{\lvert {\mathbb N}^s\rvert})]$ \par sorted by descending order
             \EndFor
             \State $r({\mathbb N}^i)=\sum^M_{j=0} r_{{\mathcal F}_{j}}({\mathbb N}^i)$
-            \State $i^*=\arg\min_{i}\{r({\mathbb N}^i)\}$
-            \State $\textbf{Return }{\mathbb N}^{i^*}$
+            %\State $i^*=\arg\min_{i}\{r({\mathbb N}^i)\}$
+            %\State $\textbf{Return }{\mathbb N}^{i^*}$
+            \State $\textbf{Return }r$
         \end{algorithmic}
     \end{algorithm}
 
-    The proposed rank-based score function is outlined in \xalg{alg:rank-based}. The first step is to evaluate the 
-    network architectures in the subset, denoted $\mathbb N^s$, of search space, denoted $\mathbb N^*$. The evaluation 
-    of an architecture determined by $j$-th score function is denoted $s_{\mathcal F_j}(\mathbb N^i)$. After evaluating 
-    the subset of search space, the rank of each score function is calculated, denoted $r_{\mathcal F}$. Then the final 
-    rank, $r$, calculated by summing up the ranks. 
-    If a network architecture gains higher score in these score functions, the final rank should be higher (smaller index) too. 
-    Therefore, the highest (minimum) rank in $r$ shall be the best network architecture. In summary, the rank-based score 
-    function makes the contribution of each score function even. 
+    The proposed ranking algorithm is outlined in \xalg{alg:rank-based}. 
+    The first step is to evaluate the network architectures in the subset, 
+    denoted $\mathbb N^s$, of search space, denoted $\mathbb N^*$. The 
+    evaluation of an architecture determined by $j$-th score function is 
+    denoted $s_{\mathcal F_j}(\mathbb N^i)$. After evaluating the subset 
+    of search space, the rank of each score function is calculated, denoted 
+    $r_{\mathcal F}$. Then the final rank, $r$, calculated by summing up 
+    the ranks. If a network architecture gains higher score in these score 
+    functions, the final rank should be higher (smaller index) too. Therefore, 
+    the highest (minimum) rank in $r$ shall be the best network architecture. 
+    In summary, the rank-based score function makes the contribution of 
+    each score function even, and therefore evaluate an architecture from 
+    different aspects. In this paper, NI and NASWOT are used as a complement 
+    set, which take the ability of images generalization and distinction. 
+    Lastly, LogSynFlow complements NI and NASWOT which takes the trainability 
+    into account. 
 
     \subsection{Simulated Annealing with Rank-Based Score function}
 
-    
+    \begin{algorithm}[h]
+        \caption{The Simulated Annealing with Ranking Algorithm}\label{alg:SA}
+        \begin{algorithmic}[1]
+            \Input{search space $\mathbb N^*$, initial temperature $T$, ending temperature $\tau$, 
+            a real number between 0 and 1, $\alpha$, the number of iteration, $I$}
+            \State $s^*=s=\text{sample a random architecture from }\Bbb N^*$
+            \While{$T>\tau$}
+                \For{$\text{ each }i \in [1\ldots I]$}
+                    \State $r=\text{Ranking}(\{s\}\cup U(s))$ \Comment{Ranking $s$ with the neighbourhood of $s$, denoted $U(s)$}
+                    \State $s^*=\arg\min\{r(\Bbb N^i)\}$ \Comment{Update the expected best algorithm}
+                    \State $\Delta E=r(s^*)-r(s)$
+                    \State $x\sim \mathcal U(0,1)$ \Comment{Sample $x$ from a uniform distribution between 0 and 1}
+                    \If{$x\geq e^{\frac{\Delta E}{T}}$} \Comment{Accept by probability}
+                        \State $s\leftarrow s^*$
+                    \EndIf
+                \EndFor
+                \State $T\leftarrow T\times \alpha$
+            \EndWhile
+            \State $\textbf{Return }s^*$ \Comment{Return the best architecture}
+        \end{algorithmic}
+    \end{algorithm}
 
-    \begin{figure*}[htb]
-        \centering
-        \hspace*{-\baselineskip}
-        \vspace*{-\baselineskip}
-        \includegraphics[]{asset/SA.pdf}
-        \caption{A simple example to illustrate an iteration of SA with Rank-based score function.}
-        \label{fig:SA}
-    \end{figure*}
+    The modified version of the simulated annealing algorithm with ranking algorithm 
+    is outlined in \xalg{alg:SA}. The first step is to sample a architecture, denoted 
+    $s$, from search space. Then use $s$ as a "seed" to generate the neighbourhood of it, 
+    applying ranking algorithm on the neighbourhood, $\{s\}\cup U(s)$. After ranking, 
+    the expected best architecture can be determined and update, but the seed for next 
+    iteration will be replaced by $s^*$ according to probability, $e^{\frac{\Delta E}{T}}$.
+    After the $I$ iterations, the temperature scales down by $\alpha$. The algorithm 
+    is done when $T\leq\tau$, and the best architecture will be retruned. 
 
-    \xfig{fig:SA} illustrates how SA with rank-based score function works in an iteration. 
+    %\begin{figure*}[htb]
+    %    \centering
+    %    \hspace*{-\baselineskip}
+    %    \vspace*{-\baselineskip}
+    %    \includegraphics[]{asset/SA.pdf}
+    %    \caption{A simple example to illustrate an iteration of SA with Rank-based score function.}
+    %    \label{fig:SA}
+    %\end{figure*}
+    %\xfig{fig:SA} illustrates how SA with rank-based score function works in an iteration. 
 
     \section{experiment result}
     \label{sec:results}
-
-    \subsection*{natsbenchsss}
-    The result of natsbenchsss is shown in \xtab{table:overall_sss}.
+    \subsection{Environment and Parameter Settings}
+    The experiment is conducted on a PC with Intel Core i7-11700K (3.60 GHz, 16-MB Cache, and 16 cores), 
+    a single NVIDIA RTX3070 Ti GPU with 8 GB memory, driver version 520.61.05, CUDA version 11.8, and 
+    65 GB available memory running on Ubuntu 20.04.1 with linux kernel 5.15.0-73-generic. All the program 
+    is written in Python 3.7.16 with PyTorch 1.7.1+cu110 package. 
+    \subsection{NATS-bench-SSS}
+    The result of NATS-bench-SSS is shown in \xtab{table:overall_sss}.
     \begin{table*}[htb]
         %\normalsize
         %\centering
         \newcommand{\z}{\phantom{0}}
-        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms.}}
+        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms in NATS-Bench-SSS.}}
           \vspace{-\baselineskip}
-        \begin{tabular}{@{}lccccccl@{}}\toprule
+        \begin{tabular}{@{}lccccccc@{}}\toprule
         Method & Search (s) & \multicolumn{2}{c}{CIFAR-10} & \multicolumn{2}{c}{CIFAR-100} & \multicolumn{2}{c}{ImageNet-16-120} \\ \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
         & & validation & test & validation & test & validation & test \\ \midrule
         &&&&\textbf{Non-weight sharing}&&&\\
@@ -496,52 +559,84 @@
         BOHB      & $12,000$ & $90.05 \pm \z{0.30}$                & $93.03 \pm 0.20$               & $69.04 \pm \z{0.76}$                 & $69.16 \pm \z{0.90}$                & $44.71 \pm 0.78$                 & $44.91 \pm \z{1.05}$                \\ \midrule
         %&& Search (s) & test & Search(s) & test & Search(s) & test \\ \midrule
         &&&&\textbf{Training-free}&&&\\
-        NI (N=1,000) & $X$ & $89.56\pm \z{0.147}$ & $92.55\pm 0.187$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
-        NASWOT (N=1,000) & $X$ & $89.25\pm \z{0.412}$ & $92.21\pm 0.298$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
-        logsynflow (N=1,000) & $X$ & $89.61\pm \z{0.101}$ & $92.60\pm 0.188$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
-        rk (N=1000) & $X$ & $89.59\pm \z{0.136}$ & $92.51\pm 0.171$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
-        GA-rk & $457.54$ & $90.29\pm \z{0.149}$ & $93.27\pm0.193$ & $69.88\pm \z{0.497}$ & $70.06\pm \z{0.481}$ & $45.57\pm 0.425$ & $46.19\pm \z{0.846}$ \\ 
-        SA-rk & $682.36$ & $90.37\pm \z{0.204}$ & $93.29\pm0.182$ & $70.11\pm \z{0.457}$ & $70.32\pm \z{0.458}$ & $45.38\pm 0.499$ & $46.45\pm \z{0.687}$ \\ \bottomrule
+        NI (N=1,000)         & $X$ & $89.56\pm \z{0.147}$ & $92.55\pm 0.187$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        NASWOT (N=1,000)     & $X$ & $89.25\pm \z{0.412}$ & $92.21\pm 0.298$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        LogSynFlow (N=1,000) & $X$ & $89.61\pm \z{0.101}$ & $92.60\pm 0.188$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        rk (N=1000)          & $X$ & $89.59\pm \z{0.136}$ & $92.51\pm 0.171$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        GA-rk                & $457.54$ & $90.29\pm \z{0.149}$ & $93.27\pm0.193$ & $69.88\pm \z{0.497}$ & $70.06\pm \z{0.481}$ & $45.57\pm 0.425$ & $46.19\pm \z{0.846}$ \\ 
+        SA-rk                & $682.36$ & $90.37\pm \z{0.204}$ & $93.29\pm0.182$ & $70.11\pm \z{0.457}$ & $70.32\pm \z{0.458}$ & $45.38\pm 0.499$ & $46.45\pm \z{0.687}$ \\ \bottomrule
         \end{tabular}
         \label{table:overall_sss}
           \vspace{-\baselineskip}
       \end{table*}
 
-    \subsection*{nasbench201}
-    The result of nasbench201 is shown in \xtab{table:overall_201}.
+    \subsection{NAS-Bench-201}
+    The result of NAS-Bench-201 is shown in \xtab{table:overall_201}.
     \begin{table*}[htb]
         %\normalsize
         %\centering
         \newcommand{\z}{\phantom{0}}
-        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms.}}
+        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms in NAS-Bench-201.}}
           \vspace{-\baselineskip}
-        \begin{tabular}{@{}lccccccl@{}}\toprule
+        \begin{tabular}{@{}lrcccccc@{}}\toprule
         Method & Search (s) & \multicolumn{2}{c}{CIFAR-10} & \multicolumn{2}{c}{CIFAR-100} & \multicolumn{2}{c}{ImageNet-16-120} \\ \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
         & & validation & test & validation & test & validation & test \\ \midrule
         &&&&\textbf{Non-weight sharing}&&&\\
-        AREA      & $12,000$ & $91.18 \pm \z{0.43}$                & $93.95 \pm \z{0.39}$               & $71.84 \pm \z{1.21}$                 & $71.92 \pm \z{1.29}$                & $45.04 \pm 1.03$                 & $45.40 \pm \z{1.14}$                \\
-        REA       & $12,000$ & $91.08 \pm \z{0.54}$                & $93.89 \pm \z{0.50}$               & $71.69 \pm \z{1.34}$                 & $71.83 \pm \z{1.33}$                & $44.96 \pm 1.41$                 & $45.30 \pm \z{1.51}$                \\
-        RS        & $12,000$ & $90.91 \pm \z{0.33}$                & $93.67 \pm \z{0.33}$               & $70.91 \pm \z{1.04}$                 & $70.99 \pm \z{0.99}$                & $44.52 \pm 0.99$                 & $44.56 \pm \z{1.25}$                \\
-        RL        & $12,000$ & $90.87 \pm \z{0.41}$                & $93.63 \pm \z{0.36}$               & $70.62 \pm \z{1.08}$                 & $70.77 \pm \z{1.05}$                & $44.20 \pm 1.22$                 & $44.23 \pm \z{1.37}$                \\
-        BOHB      & $12,000$ & $88.47 \pm \z{1.19}$                & $91.79 \pm \z{1.11}$               & $67.18 \pm \z{2.05}$                 & $67.50 \pm \z{2.05}$                & $38.94 \pm 3.58$                 & $39.00 \pm \z{3.73}$                \\ \midrule
+        AREA      & $12,000$ & $91.18 \pm \z{0.43}$                & $93.95 \pm \z{0.39}$               & $71.84 \pm \z{1.21}$                 & $71.92 \pm \z{1.29}$                & $45.04 \pm 1.03$                 & $45.40 \pm 1.14$                \\
+        REA       & $12,000$ & $91.08 \pm \z{0.54}$                & $93.89 \pm \z{0.50}$               & $71.69 \pm \z{1.34}$                 & $71.83 \pm \z{1.33}$                & $44.96 \pm 1.41$                 & $45.30 \pm 1.51$                \\
+        RS        & $12,000$ & $90.91 \pm \z{0.33}$                & $93.67 \pm \z{0.33}$               & $70.91 \pm \z{1.04}$                 & $70.99 \pm \z{0.99}$                & $44.52 \pm 0.99$                 & $44.56 \pm 1.25$                \\
+        RL        & $12,000$ & $90.87 \pm \z{0.41}$                & $93.63 \pm \z{0.36}$               & $70.62 \pm \z{1.08}$                 & $70.77 \pm \z{1.05}$                & $44.20 \pm 1.22$                 & $44.23 \pm 1.37$                \\
+        BOHB      & $12,000$ & $88.47 \pm \z{1.19}$                & $91.79 \pm \z{1.11}$               & $67.18 \pm \z{2.05}$                 & $67.50 \pm \z{2.05}$                & $38.94 \pm 3.58$                 & $39.00 \pm 3.73$                \\ \midrule
         &&&&\textbf{Weight sharing}&&&\\
-        RSWS      & $\z{4,154}$  & $76.95 \pm 16.74$                & $82.60 \pm 12.10$               & $52.51 \pm 18.33$                & $52.93 \pm 18.32$                   & $29.76 \pm 9.50$                 & $29.16 \pm 9.61$               \\
-        DARTS-V1  & $\z{5,475}$  & $39.77 \pm \z{0.00}$                & $54.30 \pm \z{0.00}$               & $15.03 \pm \z{0.00}$                 & $15.61 \pm \z{0.00}$                & $16.43 \pm 0.00$                 & $16.32 \pm \z{0.00}$                \\
-        DARTS-V2  & $16,114$ & $39.77 \pm \z{0.00}$               & $54.30 \pm \z{0.00}$               & $15.03 \pm \z{0.00}$                & $15.61 \pm \z{0.00}$                   & $16.43 \pm 0.00$                 & $16.32 \pm \z{0.00}$                \\
-        GDAS      & $11,183$ & $90.05 \pm \z{0.23}$                & $93.46 \pm \z{0.13}$               & $71.02 \pm \z{0.31}$                 & $70.56 \pm \z{0.24}$                & $41.77 \pm 1.24$                 & $41.96 \pm \z{0.90}$                \\
-        SETN      & $16,787$ & $84.25 \pm \z{5.05}$                & $88.01 \pm \z{4.52}$               & $59.72 \pm \z{7.30}$                & $59.91 \pm \z{7.51}$                   & $33.93 \pm 3.85$                 & $33.48 \pm \z{4.22}$                \\
-        ENAS      & $\z{7,061}$  & $40.11 \pm \z{3.28}$                & $56.33 \pm \z{3.70}$               & $14.09 \pm \z{1.60}$                 & $14.77 \pm \z{1.45}$                & $16.20 \pm 0.48$                 & $15.93 \pm \z{0.67}$                \\ \midrule
+        RSWS      & $4,154$  & $76.95 \pm 16.74$                   & $82.60 \pm 12.10$                  & $52.51 \pm 18.33$                    & $52.93 \pm 18.32$                   & $29.76 \pm 9.50$                 & $29.16 \pm 9.61$                \\
+        DARTS-V1  & $5,475$  & $39.77 \pm \z{0.00}$                & $54.30 \pm \z{0.00}$               & $15.03 \pm \z{0.00}$                 & $15.61 \pm \z{0.00}$                & $16.43 \pm 0.00$                 & $16.32 \pm 0.00$                \\
+        DARTS-V2  & $16,114$ & $39.77 \pm \z{0.00}$                & $54.30 \pm \z{0.00}$               & $15.03 \pm \z{0.00}$                 & $15.61 \pm \z{0.00}$                & $16.43 \pm 0.00$                 & $16.32 \pm 0.00$                \\
+        GDAS      & $11,183$ & $90.05 \pm \z{0.23}$                & $93.46 \pm \z{0.13}$               & $71.02 \pm \z{0.31}$                 & $70.56 \pm \z{0.24}$                & $41.77 \pm 1.24$                 & $41.96 \pm 0.90$                \\
+        SETN      & $16,787$ & $84.25 \pm \z{5.05}$                & $88.01 \pm \z{4.52}$               & $59.72 \pm \z{7.30}$                 & $59.91 \pm \z{7.51}$                & $33.93 \pm 3.85$                 & $33.48 \pm 4.22$                \\
+        ENAS      & $7,061$  & $40.11 \pm \z{3.28}$                & $56.33 \pm \z{3.70}$               & $14.09 \pm \z{1.60}$                 & $14.77 \pm \z{1.45}$                & $16.20 \pm 0.48$                 & $15.93 \pm 0.67$                \\ \midrule
         &&&&\textbf{Training-free}&&&\\
-        NI (N=1,000) & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
-        NASWOT (N=1,000) & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
-        logsynflow (N=1,000) & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
-        rk (N=1000) & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
-        GA-rk & $747.25$ & $89.93\pm \z{0.196}$ & $93.41\pm0.083$ & $70.70\pm \z{0.417}$ & $70.76\pm \z{0.378}$ & $42.70\pm 1.315$ & $43.10\pm \z{1.428}$ \\ 
-        SA-rk & $X$ & $89.95\pm \z{0.194}$ & $93.37\pm0.114$ & $70.69\pm \z{0.391}$ & $70.75\pm \z{0.532}$ & $X\pm X$ & $43.10\pm \z{1.506}$ \\ \bottomrule
+        NI (N=1,000)         & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        NASWOT (N=1,000)     & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        LogSynFlow (N=1,000) & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        rk (N=1000)          & $X$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ & $X\pm \z{X}$ & $X\pm X$ & $X\pm \z{X}$ \\ 
+        GA-rk                & $747.25$ & $89.93\pm \z{0.196}$ & $93.41\pm0.083$ & $70.70\pm \z{0.417}$ & $70.76\pm \z{0.378}$ & $42.70\pm 1.315$ & $43.10\pm \z{1.428}$ \\ 
+        SA-rk                & $X$ & $89.95\pm \z{0.194}$ & $93.37\pm0.114$ & $70.69\pm \z{0.391}$ & $70.75\pm \z{0.532}$ & $X\pm X$ & $43.10\pm \z{1.506}$ \\ \bottomrule
         \end{tabular}
         \label{table:overall_201}
           \vspace{-\baselineskip}
       \end{table*}
+
+      \subsection{NAS-Bench-101}
+      The result of NAS-Bench-101 is shown in \xtab{table:overall_101}.
+      \begin{table}[htb]
+        %\normalsize
+        %\centering
+        \newcommand{\z}{\phantom{0}}
+        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms in NAS-Bench-101.}}
+          \vspace{-\baselineskip}
+        \resizebox{0.5 \textwidth}{!}{
+        \begin{tabular}{@{}lrcc@{}}\toprule
+        Method & Search (s) & \multicolumn{2}{c}{CIFAR-10} \\ \cmidrule(lr){3-4}
+               &            & validation & test \\ \midrule
+               &            &            \textbf{Non-weight sharing}&\\
+        AREA   & $12,000$   & $93.67 \pm \z{0.48}$  & $93.02 \pm \z{0.48}$\\
+        REA    & $12,000$   & $93.63 \pm \z{0.50}$  & $93.02 \pm \z{0.52}$\\ \midrule
+               &            &            \textbf{Weight sharing}&\\
+        DARTS-V1 & $20,483$ & $83.50 \pm \z{0.11}$ & $83.74 \pm \z{0.03}$ \\
+        ENAS     & $22,325$ & $93.83 \pm \z{0.28}$ & $93.34 \pm \z{0.26}$ \\ \midrule
+                 &          &            \textbf{Training-free}&\\
+        Zero-Cost NASWOT     & $18,940$  & $91.72 \pm \z{1.80}$ & $91.29 \pm \z{1.82}$ \\
+        NI (N=1,000)         & $280$ & $93.15 \pm \z{1.48}$ & $92.72 \pm \z{1.06}$ \\ 
+        NASWOT (N=1,000)     & $162$ & $92.40 \pm \z{4.07}$ & $91.97 \pm \z{4.20}$ \\ 
+        LogSynFlow (N=1,000) & $105$ & $90.70 \pm \z{8.41}$ & $90.98 \pm \z{2.56}$ \\ 
+        rank (N=1000)        & $516$ & $92.84 \pm \z{1.19}$ & $92.51 \pm \z{1.14}$ \\ 
+        GA-rank              & $X$   & $X \pm X$ & $X\pm X$\\ 
+        SA-rank              & $374$ & $93.01 \pm \z{1.19}$ & $92.37 \pm \z{1.63}$  \\ \bottomrule
+        \end{tabular}
+        }
+        \label{table:overall_101}
+          \vspace{-\baselineskip}
+      \end{table}
     
     \section{Conclusion}
     \label{sec:conclusion}
