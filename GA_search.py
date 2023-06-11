@@ -59,9 +59,9 @@ naswot_acc = []
 ni_acc = []
 logsynflow_acc = []
 
+print("\n======================================")
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
-
-print(f"========================================")
+print("======================================\n\n")
 runs = trange(args.n_runs, desc='Unavailable')
 for N in runs:
     start = time.time()

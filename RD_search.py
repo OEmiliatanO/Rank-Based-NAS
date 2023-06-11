@@ -47,7 +47,7 @@ else:
 print(f"dataset = {args.dataset}, validation = {args.valid}")
 searchspace = nasspace.get_search_space(args)
 
-print(f"Making sure {args.save_loc} exist.")
+print(f"Making sure {args.save_loc} exist.\n")
 os.makedirs(args.save_loc, exist_ok=True)
 
 times = []

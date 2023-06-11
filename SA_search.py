@@ -56,9 +56,9 @@ if args.nasspace == "nasbench201":
 times     = []
 chosen    = []
 acc       = []
-
+print("\n=====================================")
 print(f"parameter:\nendT = {args.end_T}\nmaxIter = {args.maxn_iter}\nRt = {args.Rt}\ninit_T = {args.init_T}\nmaxN = {args.maxN}")
-print("=====================================\n")
+print("=====================================\n\n")
 runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
     start = time.time()
