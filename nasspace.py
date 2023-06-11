@@ -173,18 +173,18 @@ class Nasbench101:
     def get_accuracy(self, unique_hash, acc_type, trainval=True):
         spec = self.get_spec(unique_hash)
         _, stats = self.api.get_metrics_from_spec(spec)
-        maxacc = 0.
+        maxacc = 0
         for ep in stats:
             for statmap in stats[ep]:
                 newacc = statmap['final_test_accuracy']
                 if newacc > maxacc:
                     maxacc = newacc
-        return maxacc
+        return maxacc*100
     def get_final_accuracy(self, uid, acc_type, trainval):
         spec = self.get_spec(uid)
         if trainval:
-            return self.api.query(spec)["validation_accuracy"]
-        return self.api.query(spec)["test_accuracy"]
+            return self.api.query(spec)["validation_accuracy"]*100
+        return self.api.query(spec)["test_accuracy"]*100
     def get_training_time(self, unique_hash):
         spec = self.get_spec(unique_hash)
         _, stats = self.api.get_metrics_from_spec(spec)
@@ -327,6 +327,15 @@ class NatsbenchTSS:
     def __getitem__(self, index):
         return index
 
+    def get_index_by_code(self,code):
+        node_str = "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*[self.operations[c] for c in code[:6]])
+        index = self.api.query_index_by_arch(node_str)
+        return index
+
+    def get_arch_str_by_code(self,code):
+        node_str = "|{}~0|+|{}~0|{}~1|+|{}~0|{}~1|{}~2|".format(*[self.operations[c] for c in code[:6]])
+        return node_str
+
     def query_index_by_arch(self, arch):
         return self.api.query_index_by_arch(arch)
 
@@ -444,7 +453,8 @@ class NDS:
 
 def get_search_space(args):
     if args.nasspace == 'nasbench201':
-        return Nasbench201(args.dataset, args.api_loc)
+        #return Nasbench201(args.dataset, args.api_loc)
+        return NatsbenchTSS(args.dataset, args.api_loc, args)
     elif args.nasspace == 'nasbench101':
         return Nasbench101(args.dataset, args.api_loc, args)
     elif args.nasspace == 'natsbenchsss':

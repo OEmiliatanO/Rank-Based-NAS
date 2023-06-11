@@ -45,7 +45,7 @@ searchspace = nasspace.get_search_space(args)
 print(f"Making sure {args.save_loc} exist.")
 os.makedirs(args.save_loc, exist_ok=True)
 
-algo_module = importlib.import_module(f"search.{args.nasspace}_GA_rk")
+algo_module = importlib.import_module(f"search.GA.{args.nasspace}_GA_rk")
 GA = getattr(algo_module, "GA")
 GA_kwargs = {"searchspace": searchspace, "train_loader": train_loader, "device": device, "args": args}
 if args.nasspace == "nasbench201":
@@ -58,21 +58,20 @@ topscores = []
 naswot_acc = []
 ni_acc = []
 logsynflow_acc = []
-synflow_acc = []
 
+print("\n======================================")
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
-
-print(f"========================================")
+print("======================================\n\n")
 runs = trange(args.n_runs, desc='Unavailable')
 for N in runs:
     start = time.time()
 
     sol = GA(**GA_kwargs)
     if args.verbose:
-        score, acc_, uid, rk, naswotacc, niacc, synflowacc = sol.search()
+        score, acc_, uid, rk, naswotacc, niacc, logsynflowacc = sol.search()
         naswot_acc.append(naswotacc)
         ni_acc.append(niacc)
-        synflow_acc.append(synflowacc)
+        logsynflow_acc.append(logsynflowacc)
         ninaswot_acc.append(ninaswotacc)
     else:
         score, acc_, uid, rk = sol.search()
@@ -82,7 +81,7 @@ for N in runs:
 
     times.append(time.time()-start)
     if args.verbose:
-        runs.set_description(f"rk-acc: {mean(acc):.3f}%({std(acc):.3f}), naswot-acc: {mean(naswot_acc):.3f}%({std(naswot_acc):.3f}), ni-acc: {mean(ni_acc):.3f}%({std(ni_acc):.3f}), syn-acc: {mean(synflow_acc):.3f}%({std(synflow_acc):.3f})")
+        runs.set_description(f"rk-acc: {mean(acc):.3f}%({std(acc):.3f}), naswot-acc: {mean(naswot_acc):.3f}%({std(naswot_acc):.3f}), ni-acc: {mean(ni_acc):.3f}%({std(ni_acc):.3f}), syn-acc: {mean(logsynflow_acc):.3f}%({std(logsynflow_acc):.3f})")
     else:
         runs.set_description(f"rk-acc: {mean(acc):.3f}%({std(acc):.3f}) time:{mean(times):.2f}")
 

@@ -4,14 +4,16 @@ import random
 import os
 import numpy as np
 from .GA_rk_abstract import abstract_GA, chromosome
+from encoder import encoder
 
 class GA(abstract_GA):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.NATS_SSS_ops = [8, 16, 24, 32, 40, 48, 56, 64]
+        self.Encoder = encoder.get_encoder("natsbenchsss")
 
     def init_population(self):
-        self.population = [chromosome(random.sample(range(0, 8), k=5)) for i in range(self.MAXN_POPULATION)]
+        self.population = self.Encoder.get_nrand_code(self.MAXN_POPULATION)
 
     def evaluate(self):
         for i in range(len(self.population)):
@@ -21,10 +23,10 @@ class GA(abstract_GA):
             self.population[i].uid = uid
             if self.population[i].uid not in self.DICT:
                 uid = self.population[i].uid
-                """ fitness: (naswot, ni, synflow) """
+                """ fitness: (naswot, ni, logsynflow) """
                 x = [naswot_score(network, self.train_loader, self.device, self.args), \
                 ni_score(network, self.train_loader, self.device, self.args), \
-                synflow_score(network, self.train_loader, self.device)]
+                logsynflow_score(network, self.train_loader, self.device)]
 
                 self.population[i].fitness = self.DICT[uid] = tuple(x)
             else:
@@ -43,11 +45,11 @@ class GA(abstract_GA):
                     self.best_chrom["ni"].acc = self.population[i].acc
                     self.best_chrom["ni"].uid = self.population[i].uid
                     self.best_chrom["ni"].gene = copy.deepcopy(self.population[i].gene)
-                if self.best_chrom["synflow"].gene == None or self.population[i].fitness[3] > self.best_chrom["synflow"].fitness[3]:
-                    self.best_chrom["synflow"].fitness = self.population[i].fitness
-                    self.best_chrom["synflow"].acc = self.population[i].acc
-                    self.best_chrom["synflow"].uid = self.population[i].uid
-                    self.best_chrom["synflow"].gene = copy.deepcopy(self.population[i].gene)
+                if self.best_chrom["logsynflow"].gene == None or self.population[i].fitness[3] > self.best_chrom["logsynflow"].fitness[3]:
+                    self.best_chrom["logsynflow"].fitness = self.population[i].fitness
+                    self.best_chrom["logsynflow"].acc = self.population[i].acc
+                    self.best_chrom["logsynflow"].uid = self.population[i].uid
+                    self.best_chrom["logsynflow"].gene = copy.deepcopy(self.population[i].gene)
 
     def mutation(self, chrom):
         if chrom == None: return None

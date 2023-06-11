@@ -17,9 +17,9 @@ def synflow_score(network, train_loader, device):
         for name, param in network.state_dict().items():
             param.mul_(signs[name])
     
-    network = copy.deepcopy(network)
+    #network = copy.deepcopy(network)
     # disable BN layer and dropout
-    network.eval()
+    #network.eval()
 
     network = network.to(device)
     signs = linearize(network)
@@ -30,7 +30,7 @@ def synflow_score(network, train_loader, device):
     output, logit = network(input)
     torch.sum(output).backward()
 
-    grads_abs = []
+    grads = []
     
     def synflow(layer):
         if layer.weight.grad is not None:
@@ -39,17 +39,11 @@ def synflow_score(network, train_loader, device):
             return torch.zeros_like(layer.weight)
 
     for layer in network.modules():
-        if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
-            grads_abs.append(synflow(layer))
+        if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear) or isinstance(layer, nn.BatchNorm2d):
+            grads.append(synflow(layer))
 
-    """
-    for p in parameters():
-        scores[id(p)] = torch.clone(np.log(p.grad) * p).detach().abs_().cpu().numpy()
-        p.grad.data.zero_()
-    """
     score = 0
-    for i in range(len(grads_abs)):
-        score += torch.sum(grads_abs[i])
+    for i in range(len(grads)):
+        score += torch.sum(grads[i])
 
-    nonlinearize(network, signs)
-    return torch.abs(score).detach().cpu().numpy()
+    return score.detach().cpu().numpy()

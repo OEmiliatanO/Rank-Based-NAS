@@ -6,7 +6,6 @@ import numpy as np
 
 class chromosome():
     def __init__(self, gene = None, fitness = None, acc = None, uid = None):
-        """ fitness: (naswot, ntk, ni, logsynflow, tot) """
         self.gene = gene
         self.fitness = fitness
         self.acc = acc
@@ -24,8 +23,8 @@ class abstract_GA():
         self.train_loader = train_loader
         self.args = args
         self.device = device
-        self.best_chrom = {"ni": chromosome(), "naswot": chromosome(), "synflow": chromosome(), "logsynflow": chromosome()}
-        self.candiate = {"synflow":set(), "logsynflow":set(), "naswot":set(), "ni":set(), "tot":[]}
+        self.best_chrom = {"ni": chromosome(), "naswot": chromosome(), "logsynflow": chromosome()}
+        self.candiate = {"logsynflow":set(), "naswot":set(), "ni":set()}
 
     def init_population(self):
         #TODO
@@ -52,15 +51,14 @@ class abstract_GA():
         totrk = dict(zip([chrom.uid for chrom in cand], [0 for i in range(N)]))
         rk_naswot     = sorted(cand, key = lambda x: x.fitness[0], reverse = True)
         rk_ni         = sorted(cand, key = lambda x: x.fitness[1], reverse = True)
-        #rk_logsynflow = sorted(cand, key = lambda x: x.fitness[2], reverse = True)
-        rk_synflow = sorted(cand, key = lambda x: x.fitness[2], reverse = True)
+        rk_logsynflow = sorted(cand, key = lambda x: x.fitness[2], reverse = True)
         for rk, chrom in enumerate(rk_ni):
             totrk[chrom.uid] += rk
         
         for rk, chrom in enumerate(rk_naswot):
             totrk[chrom.uid] += rk
 
-        for rk, chrom in enumerate(rk_synflow):
+        for rk, chrom in enumerate(rk_logsynflow):
             totrk[chrom.uid] += rk
 
         chosen = [*map(lambda x: x[0], sorted(totrk.items(), key = lambda x: x[1])[:2])]
@@ -102,16 +100,15 @@ class abstract_GA():
             offsprings = self.population
             self.population = elder + offsprings
             
-            self.add_candiates_by(0, ["naswot", "ni", "synflow"])
-            self.add_candiates_by(1, ["naswot", "ni", "synflow"])
-            self.add_candiates_by(2, ["naswot", "ni", "synflow"])
+            self.add_candiates_by(0, ["naswot", "ni", "logsynflow"])
+            self.add_candiates_by(1, ["naswot", "ni", "logsynflow"])
+            self.add_candiates_by(2, ["naswot", "ni", "logsynflow"])
 
             self.population = elder + offsprings
         
         rk_naswot     = sorted(list(self.candiate["naswot"]), key = lambda this: self.DICT[this][0], reverse = True)
         rk_ni         = sorted(list(self.candiate["ni"]), key = lambda this: self.DICT[this][1], reverse = True)
-        #rk_logsynflow = sorted(list(self.candiate["logsynflow"]), key = lambda this: self.DICT[this][2], reverse = True)
-        rk_synflow = sorted(list(self.candiate["synflow"]), key = lambda this: self.DICT[this][2], reverse = True)
+        rk_logsynflow = sorted(list(self.candiate["logsynflow"]), key = lambda this: self.DICT[this][2], reverse = True)
 
         totrk = dict(zip([uid for uid in self.candiate["naswot"]], [0 for i in range(len(rk_naswot))]))
     
@@ -122,7 +119,7 @@ class abstract_GA():
             totrk[id] += rk
 
         bestrk = np.inf
-        for rk, id in enumerate(rk_synflow):
+        for rk, id in enumerate(rk_logsynflow):
             totrk[id] += rk
 
             if bestrk > totrk[id]:
@@ -132,7 +129,7 @@ class abstract_GA():
         network, uid, acc = self.uid2net(bestrk_uid)
         
         if self.args.verbose:
-            return self.DICT[uid], acc, uid, best_rank, self.best_chrom["naswot"].acc, self.best_chrom["ni"].acc, self.best_chrom["synflow"].acc
+            return self.DICT[uid], acc, uid, best_rank, self.best_chrom["naswot"].acc, self.best_chrom["ni"].acc, self.best_chrom["logsynflow"].acc
         else:
             return self.DICT[uid], acc, uid, bestrk
 

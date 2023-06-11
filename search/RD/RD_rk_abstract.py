@@ -18,12 +18,11 @@ class abstract_RD():
 
     def ranking(self, indices, weight, cnt):
         rk_st = time.time()
-        scores = {"ni": [], "naswot": [], "logsynflow": [], "synflow": []}
+        scores = {"ni": [], "naswot": [], "logsynflow": []}
         
         ni_time = 0
         naswot_time = 0
-        #logsynflow_time = 0
-        synflow_time = 0
+        logsyn_time = 0
         for uid in indices:
             overhead_st = time.time()
             try:
@@ -42,13 +41,9 @@ class abstract_RD():
             scores["naswot"].append(naswot_score(network, self.train_loader, self.device, self.args))
             naswot_time += time.time() - naswot_st + overhead
             
-            #logsynflow_st = time.time()
-            #scores["logsynflow"].append(logsynflow_score(network, self.train_loader, self.device))
-            #logsynflow_time += time.time() - logsynflow_st + overhead
-
-            synflow_st = time.time()
-            scores["synflow"].append(synflow_score(network, self.train_loader, self.device))
-            synflow_time += time.time() - synflow_st + overhead
+            logsyn_st = time.time()
+            scores["logsynflow"].append(logsynflow_score(network, self.train_loader, self.device))
+            logsyn_time += time.time() - logsyn_st + overhead
 
             del network
 
@@ -64,23 +59,14 @@ class abstract_RD():
         for rk, id in enumerate(rk_naswot):
             totrk[id] += (self.args.n_samples - rk)
 
-        m_synflow = np.argsort(scores["synflow"])
-        rk_synflow = indices[m_synflow]
+        m_logsyn = np.argsort(scores["logsynflow"])
+        rk_logsyn = indices[m_logsyn]
         bestrk = np.inf
-        for rk, id in enumerate(rk_synflow):
+        for rk, id in enumerate(rk_logsyn):
             totrk[id] += (self.args.n_samples - rk)
             if bestrk > totrk[id]:
                 bestrk = totrk[id]
                 bestrk_uid = id
-
-        #m_logsyn = np.argsort(scores["logsynflow"])
-        #rk_logsynflow = indices[m_logsyn]
-        #bestrk = np.inf
-        #for rk, id in enumerate(rk_logsynflow):
-        #    totrk[id] += (self.args.n_samples - rk)
-        #    if bestrk > totrk[id]:
-        #        bestrk = totrk[id]
-        #        bestrk_uid = id
         try:
             accs = [self.searchspace.get_final_accuracy(int(uid), self.acc_type, self.args.valid) for uid in indices]
         except:
@@ -93,33 +79,25 @@ class abstract_RD():
         rk_maxacc = self.searchspace.get_final_accuracy(bestrk_uid, self.acc_type, self.args.valid)
         
         ind_rk = [totrk[uid] for uid in indices]
-        #ind_rk = np.argsort(ind_rk)
         rk_tau, p = kendalltau(ind_rk, accs)
-        ni_tau, p = kendalltau(scores["ni"][np.isfinite(scores["ni"])], accs[np.isfinite(scores["ni"])])
-        naswot_tau, p = kendalltau(scores["naswot"][np.isfinite(scores["naswot"])], accs[np.isfinite(scores["naswot"])])
-        #logsyn_tau, p = kendalltau(scores["logsynflow"], accs)
-        synflow_tau, p = kendalltau(scores["synflow"][np.isfinite(scores["synflow"])], accs[np.isfinite(scores["synflow"])])
+        ni_tau, p = kendalltau(np.array(scores["ni"])[np.isfinite(scores["ni"])], np.array(accs)[np.isfinite(scores["ni"])])
+        naswot_tau, p = kendalltau(np.array(scores["naswot"])[np.isfinite(scores["naswot"])], np.array(accs)[np.isfinite(scores["naswot"])])
+        logsyn_tau, p = kendalltau(np.array(scores["logsynflow"])[np.isfinite(scores["logsynflow"])], np.array(accs)[np.isfinite(scores["logsynflow"])])
         rk_time = time.time() - rk_st
-        ####
-        #print(f"ni tau = {ni_tau}, naswot tau = {naswot_tau}, logsynflow tau = {logsyn_tau}, synflow tau = {synflow_tau}, rk tau = {rk_tau}")
-        #np.savez("./correlation_info.npy", ind_rk = ind_rk, score_ni = scores["ni"], score_naswot = scores["naswot"], score_synflow = scores["synflow"], score_logsyn = scores["logsynflow"], acc = accs, rk_tau = np.array([rk_tau]), ni_tau = np.array([ni_tau]), naswot_tau = np.array([naswot_tau]), synflow_tau = np.array([synflow_tau]), logsyn_tau = np.array([logsyn_tau]))
-        print(f"ni tau = {ni_tau}, naswot tau = {naswot_tau}, synflow tau = {synflow_tau}, rk tau = {rk_tau}")
-        np.savez("./correlation_info.npy", ind_rk = ind_rk, score_ni = scores["ni"], score_naswot = scores["naswot"], score_synflow = scores["synflow"], acc = accs, rk_tau = np.array([rk_tau]), ni_tau = np.array([ni_tau]), naswot_tau = np.array([naswot_tau]), synflow_tau = np.array([synflow_tau]))
-        ####
         
         bestuid = (rk_ni[-1], 
                    rk_naswot[-1], 
-                   rk_synflow[-1], 
+                   rk_logsyn[-1], 
                    bestrk_uid)
 
         taus = (rk_tau, 
                 ni_tau, 
                 naswot_tau, 
-                synflow_tau)
+                logsyn_tau)
 
         times = (ni_time, 
                  naswot_time, 
-                 synflow_time, 
+                 logsyn_time, 
                  rk_time)
 
         return bestuid, taus, maxacc, rk_maxacc, times
