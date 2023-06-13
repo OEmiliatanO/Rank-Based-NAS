@@ -315,6 +315,11 @@ class NatsbenchTSS:
         self.dataset = dataset
         self.api = create(apiloc, 'tss', fast_mode=True, verbose=False)
         self.args=args
+        self.operations = ['none',
+                                            'skip_connect',
+                                            'nor_conv_1x1', 
+                                            'nor_conv_3x3', 
+                                            'avg_pool_3x3' ]
 
     def __len__(self):
         return 15625
