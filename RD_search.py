@@ -68,7 +68,6 @@ runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
     start = time.time()
 
-    #w = weight_giver(archstrs)
     sol = RD(**RD_kwargs)
     bestuid_, taus_, maxacc, rk_maxacc, times_ = sol.search()
 
@@ -80,16 +79,15 @@ for N in runs:
     taus['ni'].append(ni_tau)
     taus['naswot'].append(naswot_tau)
     taus['logsynflow'].append(logsynflow_tau)
-    #print(taus)
     
     try:
         niuid = int(niuid)
         naswotuid = int(naswotuid)
-        logsynuid = int(logsynuid)
+        logsynflowuid = int(logsynflowuid)
         bestrk_uid = int(bestrk_uid)
     except:
         pass
-
+    
     accs["ni"].append(searchspace.get_final_accuracy(niuid, acc_type, args.valid))
     accs["naswot"].append(searchspace.get_final_accuracy(naswotuid, acc_type, args.valid))
     accs["logsynflow"].append(searchspace.get_final_accuracy(logsynflowuid, acc_type, args.valid))
@@ -114,5 +112,5 @@ state = {'ni-accs': accs["ni"],
          'rk-times': times["rk"],
          }
 
-fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dataset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.seed}.t7"
+fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dataset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.valid}_{args.test}_{args.seed}.t7"
 torch.save(state, fname)
