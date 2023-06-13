@@ -359,7 +359,7 @@ class NatsbenchTSS:
         validation_accuracy, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset=args.dataset, hp=hp)
         return time_cost
 
-    def get_final_accuracy(self, index, acc_type, trainval):
+    def get_final_accuracy(self, uid, acc_type, trainval):
         if self.dataset == 'cifar10' and trainval:
             info = self.api.query_meta_info_by_index(uid, hp='200').get_metrics('cifar10-valid', 'x-valid')
             #info = self.api.query_by_index(uid, 'cifar10-valid', hp='200')
