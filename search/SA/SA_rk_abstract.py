@@ -31,7 +31,7 @@ class abstract_SA():
         pass
 
     def search(self):
-        now_arch = self.rand_arch_generate()
+        best_arch = now_arch = self.rand_arch_generate()
         now_sol_uid = best_sol_uid = self.searchspace.query_index_by_arch(self.list2arch(now_arch))
         T = self.init_T
         while T > self.end_T:
@@ -40,6 +40,7 @@ class abstract_SA():
                 while len(neighbors) < self.maxN:
                     neighbors.add(tuple(self.neighbor(list(now_arch))))
                 neighbors.add(tuple(now_arch))
+                neighbors.add(tuple(best_arch))
                 
                 neighbors = list(neighbors)
                 now_uid = self.searchspace.query_index_by_arch(self.list2arch(now_arch))
@@ -57,6 +58,7 @@ class abstract_SA():
                     now_arch = neighbors[indices.index(bestrk_uid)]
                 
                 best_sol_uid = bestrk_uid
+                best_arch = neighbors[indices.index(bestrk_uid)]
 
             T *= self.Rt
             try:
