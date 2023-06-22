@@ -158,23 +158,3 @@ def ni_score(network, train_loader, device, args, debug_no=0, debug_code=""):
 
     torch.cuda.empty_cache()
     return na
-
-@torch.no_grad()
-def old_ni_score(network, train_loader, device, args):
-    network = network.to(device)
-    data_iter = iter(train_loader)
-    x, target = next(data_iter)
-    x, target = x.to(device), target.to(device)
-
-    noise = x.new(x.size()).normal_(0, args.sigma).to(device)
-    x2 = x + noise
-
-    o, _ = network(x)
-    o_, _ = network(x2)
-    o = o.detach().cpu().numpy()
-    o_ = o_.detach().cpu().numpy()
-    del network
-    torch.cuda.empty_cache()
-
-    return -np.sum(np.square(o-o_))
-
