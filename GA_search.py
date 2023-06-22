@@ -62,6 +62,14 @@ logsynflow_acc = []
 print("\n======================================")
 print(f"parameter:\nnumber of population={args.maxn_pop}\nnumber of iteration={args.maxn_iter}\nprobability of mutation={args.prob_mut}\nprobability of crossover={args.prob_cr}")
 print("======================================\n\n")
+
+# Reproducibility
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+random.seed(args.seed)
+np.random.seed(args.seed)
+torch.manual_seed(args.seed)
+
 runs = trange(args.n_runs, desc='Unavailable')
 for N in runs:
     start = time.time()

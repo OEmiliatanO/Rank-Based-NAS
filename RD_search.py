@@ -20,13 +20,9 @@ from scipy.stats import kendalltau
 from Parser import parser
 
 args = parser.RD_search_argsparser()
+
 os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-
-print("RD search algo")
-print(f"Use GPU {args.GPU}...")
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(f"The current device used is {device}")
 
 # Reproducibility
 torch.backends.cudnn.deterministic = True
@@ -34,6 +30,11 @@ torch.backends.cudnn.benchmark = False
 random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
+
+print("RD search algo")
+print(f"Use GPU {args.GPU}...")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(f"The current device used is {device}")
 
 print(f"Initialize the train loader...")
 print(f"dataset = {args.dataset}, data location = {args.data_loc}, validation = {args.valid}")
@@ -60,6 +61,13 @@ RD = getattr(algo_module, "RD")
 RD_kwargs = {"searchspace": searchspace, "train_loader": train_loader, "device": device, "args": args, "acc_type": None, "Encoder": Encoder}
 if args.nasspace == "nasbench201":
     RD_kwargs["acc_type"] = acc_type
+
+# Reproducibility
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+random.seed(args.seed)
+np.random.seed(args.seed)
+torch.manual_seed(args.seed)
 
 taus = {"rk":[], "ni": [], "naswot": [], "logsynflow": []}
 times = {"rk":[], "ni":[], "naswot":[], "logsynflow":[], "tot":[]}

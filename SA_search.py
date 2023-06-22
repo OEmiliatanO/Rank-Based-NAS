@@ -59,6 +59,14 @@ acc       = []
 print("\n=====================================")
 print(f"parameter:\nendT = {args.end_T}\nmaxIter = {args.maxn_iter}\nRt = {args.Rt}\ninit_T = {args.init_T}\nmaxN = {args.maxN}")
 print("=====================================\n\n")
+
+# Reproducibility
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+random.seed(args.seed)
+np.random.seed(args.seed)
+torch.manual_seed(args.seed)
+
 runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
     start = time.time()
