@@ -16,10 +16,37 @@ class SA(abstract_SA):
 
     def neighbor(self, arch):
         arch = [list(x) for x in arch]
-        random.shuffle(arch[1])
+        
+        # randomize the branch
+        for i in range(len(arch[1])):
+            arch[1][i] = random.randint(0, 1)
+        
+        # pruning the branch
+        matrix = np.zeros([7,7])
+        previous = -1
+        for x,v in enumerate(arch[0]):
+            if v==0:
+                continue
+            if previous==-1:
+                matrix[0][x+1] = 1
+            else:
+                matrix[previous+1][x+1] = 1
+            previous = x
+        matrix[previous+1][-1] = 1
+        map_backbone = matrix[np.triu_indices_from(matrix,k=1)]
+        combined_m = 2*map_backbone + np.array(arch[1])
+
+        zeros = np.count_nonzero(combined_m == 0)
+        if zeros<12:
+            del_ones_index = random.sample(list(*np.where(combined_m==1)),k=12-zeros)
+            for x in del_ones_index:
+                arch[1][x] = 0
+
+        # randomize the operations
         pos = random.sample([*range(0,5)], random.randint(0,5))
         for p in pos:
             arch[2][p] = (arch[2][p] + random.randint(0,2)) % 3
+
         for i in range(len(arch)):
             arch[i] = tuple(arch[i])
         return arch
