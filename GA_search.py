@@ -70,6 +70,7 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
+cnt = 0
 runs = trange(args.n_runs, desc='Unavailable')
 for N in runs:
     start = time.time()
@@ -88,6 +89,9 @@ for N in runs:
     acc.append(acc_)
 
     times.append(time.time()-start)
+    if cnt == 1 or cnt % 10 == 0:
+        print("")
+    cnt += 1
     if args.verbose:
         runs.set_description(f"rk-acc: {mean(acc):.3f}%({std(acc):.3f}), naswot-acc: {mean(naswot_acc):.3f}%({std(naswot_acc):.3f}), ni-acc: {mean(ni_acc):.3f}%({std(ni_acc):.3f}), syn-acc: {mean(logsynflow_acc):.3f}%({std(logsynflow_acc):.3f})")
     else:

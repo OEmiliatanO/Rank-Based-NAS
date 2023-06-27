@@ -67,6 +67,7 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
+cnt = 0
 runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
     start = time.time()
@@ -79,6 +80,9 @@ for N in runs:
     acc.append(rk_maxacc)
 
     times.append(time.time()-start)
+    if cnt == 1 or cnt % 10 == 0:
+        print("")
+    cnt += 1
     runs.set_description(f"acc: {mean(acc):.3f}({std(acc):.3f}) time:{mean(times):.2f}")
 
 print(f"Final mean test accuracy: {np.mean(acc)}")
