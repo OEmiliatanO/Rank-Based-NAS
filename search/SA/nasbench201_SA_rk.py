@@ -19,7 +19,14 @@ class SA(abstract_SA):
         pos = random.sample([*range(6)], random.randint(0, 5))
         for p in pos:
             l1[p] = (l1[p] + random.randint(0, 4)) % 5
+        #pos = random.sample([*range(3)], random.randint(0, 3))
+        #for p in pos:
+        #    l3[p] = (l3[p] + random.randint(0, 4)) % 5
 
+        l1 = list(l1)
+        l2 = [random.randint(0, 3)]
+        l3 = list(l3)
+        
         return l1+l2+l3
 
     def rand_arch_generate(self):
