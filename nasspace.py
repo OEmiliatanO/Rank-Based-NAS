@@ -185,6 +185,11 @@ class Nasbench101:
         if trainval:
             return self.api.query(spec)["validation_accuracy"]*100
         return self.api.query(spec)["test_accuracy"]*100
+    def get_acc_all(self, uid, args):
+        spec = self.get_spec(uid)
+        info = self.api.query(spec)
+        return info["validation_accuracy"]*100, info["test_accuracy"]*100
+
     def get_training_time(self, unique_hash):
         spec = self.get_spec(unique_hash)
         _, stats = self.api.get_metrics_from_spec(spec)
@@ -298,7 +303,7 @@ class NatsbenchSSS:
         validation_accuracy_cifar10, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='cifar10', hp=90)
         validation_accuracy_cifar100, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='cifar100', hp=90)
         validation_accuracy_imagenet, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='ImageNet16-120', hp=90)        
-        return info_cifar10['test-accuracy'],validation_accuracy_cifar10,info_cifar100['test-accuracy'],validation_accuracy_cifar100,info_imagenet['test-accuracy'],validation_accuracy_imagenet
+        return validation_accuracy_cifar10,info_cifar10['test-accuracy'],validation_accuracy_cifar100,info_cifar100['test-accuracy'],validation_accuracy_imagenet,info_imagenet['test-accuracy']
 
     def get_training_time(self,index,args,hp):
         validation_accuracy, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset=args.dataset, hp=hp)
@@ -369,6 +374,27 @@ class NatsbenchTSS:
             #info = self.api.query_by_index(uid, self.dataset, hp='200')
             #info = self.api.get_more_info(uid, self.dataset, iepoch=None, hp='200', is_random=True)
         return info['accuracy']
+
+    def get_acc_all(self, index, args):
+        index = self.api.query_index_by_arch(index)
+        information = self.api.arch2infos_dict[index]['200']
+
+        valid_info_cifar10 = information.get_metrics('cifar10-valid', 'x-valid')
+        valid_acc_cifar10 = valid_info_cifar10['accuracy']
+        test__info_cifar10 = information.get_metrics('cifar10', 'ori-test')
+        test_acc_cifar10 = test__info_cifar10['accuracy']
+
+        valid_info_cifar100 = information.get_metrics('cifar100', 'x-valid')
+        test__info_cifar100 = information.get_metrics('cifar100', 'x-test')
+        valid_acc_cifar100 = valid_info_cifar100['accuracy']
+        test_acc_cifar100 = test__info_cifar100['accuracy']
+
+        valid_info_imagenet = information.get_metrics('ImageNet16-120', 'x-valid')
+        test__info_imagenet = information.get_metrics('ImageNet16-120', 'x-test')
+        valid_acc_imagenet = valid_info_imagenet['accuracy']
+        test_acc_imagenet = test__info_imagenet['accuracy']
+
+        return valid_acc_cifar10,test_acc_cifar10,valid_acc_cifar100,test_acc_cifar100,valid_acc_imagenet,test_acc_imagenet
 
 class ReturnFeatureLayer(torch.nn.Module):
     def __init__(self, mod):
