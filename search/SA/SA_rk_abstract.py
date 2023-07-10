@@ -13,6 +13,7 @@ class abstract_SA():
         self.Rt = args.Rt
         self.init_T = args.init_T
         self.maxN = args.maxN
+        self.alpha = args.alpha
         self.searchspace = searchspace
         self.train_loader = train_loader
         self.device = device
@@ -33,6 +34,9 @@ class abstract_SA():
     def search(self):
         best_arch = now_arch = self.rand_arch_generate()
         now_sol_uid = best_sol_uid = self.searchspace.query_index_by_arch(self.list2arch(now_arch))
+        ###
+        history_best_arch = set()
+        ###
         T = self.init_T
         while T > self.end_T:
             for i in range(self.maxn_iter):
@@ -40,7 +44,11 @@ class abstract_SA():
                 while len(neighbors) < self.maxN:
                     neighbors.add(tuple(self.neighbor(list(now_arch))))
                 neighbors.add(tuple(now_arch))
-                neighbors.add(tuple(best_arch))
+                ###
+                for arch in history_best_arch:
+                    neighbors.add(tuple(arch))
+                ###
+                #neighbors.add(tuple(best_arch))
                 
                 neighbors = list(neighbors)
                 now_uid = self.searchspace.query_index_by_arch(self.list2arch(now_arch))
@@ -48,24 +56,55 @@ class abstract_SA():
                 
                 # E
                 rk_ni, rk_naswot, rk_logsynflow, bestrk_uid, maxacc, rk_maxacc, ind_rk = self.ranking(np.array(indices), [1,1,1])
-
-                # trans
-                dt = ind_rk[indices.index(bestrk_uid)] - ind_rk[indices.index(now_uid)]
-                if np.log(random.uniform(0,1)) < dt/T:
+                """
+                # trans ver. 1
+                dE = ind_rk[indices.index(bestrk_uid)] - ind_rk[indices.index(now_uid)]
+                if np.log(random.uniform(0,1)) < dE/T:
                     pass
                 else:
                     now_sol_uid = bestrk_uid
                     now_arch = neighbors[indices.index(bestrk_uid)]
-                
+
                 best_sol_uid = bestrk_uid
                 best_arch = neighbors[indices.index(bestrk_uid)]
+                """
+
+                # trans ver. 2
+
+                best_sol_uid = bestrk_uid
+                best_arch = neighbors[indices.index(bestrk_uid)]
+                history_best_arch.add(best_arch)
+
+                bestrk = np.inf
+                if bestrk_uid == now_uid:
+                    now_ind = indices.index(now_uid)
+                    for j in range(len(ind_rk)):
+                        if bestrk > ind_rk[j] and j != now_ind:
+                            bestrk = ind_rk[j]
+                            bestrk_uid = indices[j]
+                
+                dE = ind_rk[indices.index(bestrk_uid)] - ind_rk[indices.index(now_uid)]
+                #print(f"dE={ind_rk[indices.index(bestrk_uid)]}-{ind_rk[indices.index(now_uid)]}={dE}")
+                #print(f"now sol acc = {self.searchspace.get_final_accuracy(now_uid, self.acc_type, self.args.valid)}")
+                if dE < 0 or np.log(random.uniform(0,1)) <= -self.alpha * dE / T:
+                    #print("trans.")
+                    now_uid = bestrk_uid
+                    now_arch = neighbors[indices.index(bestrk_uid)]
+                #print(f"best sol acc = {self.searchspace.get_final_accuracy(best_sol_uid, self.acc_type, self.args.valid)}", end=', ')
 
             T *= self.Rt
             try:
                 best_sol_uid = int(best_sol_uid)
+                now_uid = int(now_uid)
             except:
                 pass
-        return best_sol_uid, self.searchspace.get_final_accuracy(best_sol_uid, self.acc_type, self.args.valid)
+        #print(f"best sol acc = {self.searchspace.get_final_accuracy(best_sol_uid, self.acc_type, self.args.valid)}", end=', ')
+        #print(f"now sol acc = {self.searchspace.get_final_accuracy(now_uid, self.acc_type, self.args.valid)}")
+        try:
+            return best_sol_uid, self.searchspace.get_final_accuracy(best_sol_uid, self.acc_type, self.args.valid), now_uid, self.searchspace.get_final_accuracy(now_uid, self.acc_type, self.args.valid)
+        except:
+            print(best_sol_uid)
+            print(now_uid)
     
     def ranking(self, indices, weight):
         scores = {"ni": [], "naswot": [], "logsynflow": []}
