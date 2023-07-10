@@ -110,7 +110,7 @@ for N in runs:
     if cnt == 1 or cnt % 10 == 0:
         print("")
     cnt += 1
-    runs.set_description(f"acc_ni: {mean(accs['ni']):.3f}({std(accs['ni']):.3f}),t:{mean(times['ni']):.3f}, acc_naswot: {mean(accs['naswot']):.3f}({std(accs['naswot']):.3f}),t:{mean(times['naswot']):.3f}, acc_logsyn: {mean(accs['logsynflow']):.3f}({std(accs['logsynflow']):.3f}),t:{mean(times['logsynflow']):.3f}, rk-based: {mean(accs['rank-based']):.3f}({std(accs['rank-based']):.3f}), t:{mean(times['rk']):.3f}")
+    runs.set_description(f"ni: {mean(accs['ni']):.3f}({std(accs['ni']):.3f}),t:{mean(times['ni']):.3f}, naswot: {mean(accs['naswot']):.3f}({std(accs['naswot']):.3f}),t:{mean(times['naswot']):.3f}, logsyn: {mean(accs['logsynflow']):.3f}({std(accs['logsynflow']):.3f}),t:{mean(times['logsynflow']):.3f}, rk: {mean(accs['rank-based']):.3f}({std(accs['rank-based']):.3f}), t:{mean(times['rk']):.3f}")
 
 state = {'ni-accs': accs["ni"],
          'naswot': accs["naswot"],
