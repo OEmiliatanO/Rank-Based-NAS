@@ -45,5 +45,6 @@ def synflow_score(network, train_loader, device):
     score = 0
     for i in range(len(grads)):
         score += torch.sum(grads[i])
-
+    
+    torch.cuda.empty_cache()
     return score.detach().cpu().numpy()
