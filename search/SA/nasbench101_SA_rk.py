@@ -15,16 +15,39 @@ class SA(abstract_SA):
         self.Encoder = encoder.get_encoder("nasbench101")
 
     def neighbor(self, arch):
+        _BACKBONE = 0
+        _BRANCH = 1
+        _OP = 2
+
         arch = [list(x) for x in arch]
-        
-        # randomize the branch
-        for i in range(len(arch[1])):
-            arch[1][i] = random.randint(0, 1)
-        
+        """
+        # randomize the backbone
+        backbone_nodes = random.sample([0,1,2,3,4], random.randint(1,5))
+        backbone = [0,0,0,0,0]
+        for pos in backbone_nodes:
+            arch[_BACKBONE][pos] = 1
+        """
+
+        # randomize the branches
+        for i in range(len(arch[_BRANCH])):
+            arch[_BRANCH][i] = random.randint(0, 1)
+        """
+        # randomize the backbone
+        pos = random.randint(0, 4)
+        arch[_BACKBONE][pos] = not arch[_BACKBONE][pos]
+        while sum(arch[_BACKBONE]) == 0:
+            pos = random.randint(0, 4)
+            arch[_BACKBONE][pos] = not arch[_BACKBONE][pos]
+
+        # randomize the branches
+        pos = random.randint(0, 20)
+        arch[_BRANCH][pos] = not arch[_BRANCH][pos]
+        """
+
         # pruning the branch
         matrix = np.zeros([7,7])
         previous = -1
-        for x,v in enumerate(arch[0]):
+        for x,v in enumerate(arch[_BACKBONE]):
             if v==0:
                 continue
             if previous==-1:
@@ -34,18 +57,18 @@ class SA(abstract_SA):
             previous = x
         matrix[previous+1][-1] = 1
         map_backbone = matrix[np.triu_indices_from(matrix,k=1)]
-        combined_m = 2*map_backbone + np.array(arch[1])
+        combined_m = 2*map_backbone + np.array(arch[_BRANCH])
 
         zeros = np.count_nonzero(combined_m == 0)
         if zeros<12:
             del_ones_index = random.sample(list(*np.where(combined_m==1)),k=12-zeros)
             for x in del_ones_index:
-                arch[1][x] = 0
+                arch[_BRANCH][x] = 0
 
         # randomize the operations
         pos = random.sample([*range(0,5)], random.randint(0,5))
         for p in pos:
-            arch[2][p] = (arch[2][p] + random.randint(0,2)) % 3
+            arch[_OP][p] = (arch[_OP][p] + random.randint(0,2)) % 3
 
         for i in range(len(arch)):
             arch[i] = tuple(arch[i])

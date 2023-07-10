@@ -15,19 +15,19 @@ class SA(abstract_SA):
         self.Encoder = encoder.get_encoder("nasbench201")
 
     def neighbor(self, arch):
-        l1, l2, l3 = arch[:6], arch[6], arch[7:]
+        branch, backbone_n, backbone = arch[:6], arch[6], arch[7:]
         pos = random.sample([*range(6)], random.randint(0, 5))
         for p in pos:
-            l1[p] = (l1[p] + random.randint(0, 4)) % 5
-        #pos = random.sample([*range(3)], random.randint(0, 3))
-        #for p in pos:
-        #    l3[p] = (l3[p] + random.randint(0, 4)) % 5
+            branch[p] = (branch[p] + random.randint(0, 4)) % 5
+        pos = random.sample([*range(3)], random.randint(0, 3))
+        for p in pos:
+            backbone[p] = (backbone[p] - 1 + random.randint(0, 3)) % 4 + 1
 
-        l1 = list(l1)
-        l2 = [random.randint(0, 3)]
-        l3 = list(l3)
-        
-        return l1+l2+l3
+        branch = list(branch)
+        #backbone_n = [random.randint(0, 3)]
+        backbone = list(backbone)
+        return branch+[backbone_n]+backbone
+        #return self.Encoder.get_rand_code()
 
     def rand_arch_generate(self):
         return self.Encoder.get_rand_code()
