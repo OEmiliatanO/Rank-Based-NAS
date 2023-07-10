@@ -276,7 +276,10 @@ class NatsbenchSSS:
         return index
 
     def query_index_by_arch(self, arch):
-        return self.api.query_index_by_arch(arch)
+        ind = self.api.query_index_by_arch(arch)
+        if ind == -1:
+            raise Exception(f"not found arch: {arch}. return -1.")
+        return ind
 
     def get_network(self,index,args):
         index = self.api.query_index_by_arch(index)
