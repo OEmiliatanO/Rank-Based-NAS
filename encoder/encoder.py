@@ -104,18 +104,21 @@ class nasbench101_encoder:
         return s
 
     def get_rand_backbone_branch(self):
-        backbone = np.random.randint(2, size=5)
         backbone = np.concatenate((np.ones(3),np.zeros(2)))
         random.shuffle(backbone)
         nones = np.count_nonzero(backbone == 1)
         if nones==0:
             del_zero_index = random.choice(range(5))
             backbone[del_zero_index] = 1
+        #backbone_nodes = random.sample([0,1,2,3,4], random.randint(1,5))
+        #backbone = [0,0,0,0,0]
+        #for pos in backbone_nodes:
+        #    backbone[pos] = 1
         
         branch = np.concatenate((np.ones(5),np.zeros(4)))
         branch = np.concatenate((branch,np.zeros(12)))
         random.shuffle(branch)
-        nones = np.count_nonzero(branch == 1)
+        #branch = np.array([random.randint(0,1) for i in range(21)])
         
         #check same edges
         matrix = np.zeros([7,7])
@@ -168,7 +171,7 @@ class nasbench101_encoder:
             print('backbone: ',backbone)
             print(f"[backbone == 1] = {backbone == 1}")
             print(f"np.count_nonzero(backbone == 1) shall not be 0 but {np.count_nonzero(backbone == 1)}")
-            raise ValueError("Invalid backbone.")
+            raise ValueError(f"Invalid backbone: {backbone}.")
         matrix = np.zeros([7,7])
         vector = np.zeros(7)
         #Connect branch
