@@ -115,6 +115,7 @@ def SA_search_argsparser():
     parser.add_argument('--init_T', default=1, type=int)
     parser.add_argument('--maxN', default=10, type=int)
     parser.add_argument('--alpha', default=0.25, type=float)
+    parser.add_argument('--beta', default=1, type=float)
 
     return parser.parse_args()
 

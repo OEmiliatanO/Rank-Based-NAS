@@ -57,7 +57,7 @@ times     = []
 chosen    = []
 acc       = []
 print("\n=====================================")
-print(f"parameter:\nendT = {args.end_T}\nmaxIter = {args.maxn_iter}\nRt = {args.Rt}\ninit_T = {args.init_T}\nmaxN = {args.maxN}")
+print(f"parameter:\nendT = {args.end_T}\nmaxIter = {args.maxn_iter}\nRt = {args.Rt}\ninit_T = {args.init_T}\nmaxN = {args.maxN}\nalpha = {args.alpha}\nbeta = {args.beta}")
 print("=====================================\n\n")
 
 # Reproducibility
@@ -67,23 +67,24 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
+acc = []
+
 cnt = 0
 runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
     start = time.time()
 
     sol = SA(**SA_kwargs)
-    best_sol_uid, rk_maxacc = sol.search()
+    best_sol_uid, rk_maxacc, current_uid, rk_current_acc = sol.search()
     
-    uid = best_sol_uid
-    chosen.append(best_sol_uid)
-    acc.append(rk_maxacc)
+    chosen.append(rk_current_uid)
+    acc.append(rk_current_acc)
 
     times.append(time.time()-start)
     if cnt == 1 or cnt % 10 == 0:
         print("")
     cnt += 1
-    runs.set_description(f"acc: {mean(acc):.3f}({std(acc):.3f}) time:{mean(times):.2f}")
+    runs.set_description(f"acc: {mean(acc):.2f}({std(acc):.2f}), time:{mean(times):.2f}")
 
 print(f"Final mean test accuracy: {np.mean(acc)}")
 
