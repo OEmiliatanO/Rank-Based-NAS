@@ -24,14 +24,15 @@ def logsynflow_score(network, train_loader, device):
     network = network.to(device)
     signs = linearize(network)
 
+    network.zero_grad()
     data, _ = next(iter(train_loader))
     input_dim = list(data[0,:].shape)
     input = torch.ones([1]+input_dim).to(device)
-    output, logit = network(input)
+    output = network(input)
+    if isinstance(output, tuple):
+        output = output[1]
     torch.sum(output).backward()
 
-    grads_abs = []
-    
     def synflow(layer):
         if layer.weight.grad is not None:
             res = torch.abs(torch.log(layer.weight.grad+1) * layer.weight)
