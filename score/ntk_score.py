@@ -1,9 +1,11 @@
 import numpy as np
 import torch
 import time
+import copy
 
-def ntk_score(network, train_loader, device, recalbn=0, train_mode=True, num_batch=1):
+def ntk_score(network, train_loader, device, args, recalbn=0, train_mode=True, num_batch=1):
     ntk = []
+    network = copy.deepcopy(network)
     if train_mode:
         network.train()
     else:
@@ -33,8 +35,7 @@ def ntk_score(network, train_loader, device, recalbn=0, train_mode=True, num_bat
     grads = torch.stack(grads, 0)
     ntk = torch.einsum('nc,mc->nm', [grads, grads])
     conds = []
-    eigenvalues = torch.linalg.eigvalsh(ntk, UPLO='U')  # ascending
+    eigenvalues, eigenvectors = torch.symeig(ntk, upper=True)  # ascending
     score = np.nan_to_num((eigenvalues[-1] / eigenvalues[0]).item(), copy=True, nan=100000.0)
     del network
-    torch.cuda.empty_cache()
     return score

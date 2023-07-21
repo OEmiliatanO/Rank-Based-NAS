@@ -37,12 +37,8 @@ def naswot_score(network, train_loader, device, args):
 
     for name, module in network.named_modules():
         if 'ReLU' in str(type(module)):
-            if hasattr(module, 'register_full_forward_hook'):
-                module.register_full_forward_hook(counting_forward_hook)
-                module.register_full_backward_hook(counting_backward_hook)
-            else:
-                module.register_forward_hook(counting_forward_hook)
-                module.register_backward_hook(counting_backward_hook)
+            module.register_forward_hook(counting_forward_hook)
+            module.register_backward_hook(counting_backward_hook)
 
     network = network.to(device)    
     s = []
@@ -58,7 +54,8 @@ def naswot_score(network, train_loader, device, args):
     s.append(hooklogdet(network.K, target))
 
     del network
-    torch.cuda.empty_cache()
+    del x
+    del x2
     return np.mean(s)
 
 def ni_extract(network, x, target, device, args):
@@ -114,6 +111,9 @@ def ni_extract(network, x, target, device, args):
     metric = network.K
     channel = network.channel
 
+    del network
+    del x
+    del x2
     return metric, n_conv, channel
 
 def ni_score(network, train_loader, device, args, debug_no=0, debug_code=""):
@@ -150,11 +150,8 @@ def ni_score(network, train_loader, device, args, debug_no=0, debug_code=""):
 
     except:
         na = 0
-
-    del(noise_layers)
-    del(data_layers)
-    del(n1)
-    del(n2)
-
-    torch.cuda.empty_cache()
+ 
+    del network
+    del x
+    del x2
     return na

@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 import copy
 
-def synflow_score(network, train_loader, device):
+def synflow_score(network, train_loader, device, args):
     @torch.no_grad()
     def linearize(network):
         signs = {}
@@ -17,17 +17,20 @@ def synflow_score(network, train_loader, device):
         for name, param in network.state_dict().items():
             param.mul_(signs[name])
     
-    #network = copy.deepcopy(network)
+    network = copy.deepcopy(network)
     # disable BN layer and dropout
-    #network.eval()
+    network.eval()
 
     network = network.to(device)
     signs = linearize(network)
-
+    
+    network.zero_grad()
     data, _ = next(iter(train_loader))
     input_dim = list(data[0,:].shape)
     input = torch.ones([1]+input_dim).to(device)
-    output, logit = network(input)
+    output = network(input)
+    if isinstance(output, tuple):
+        output = output[1]
     torch.sum(output).backward()
 
     grads = []
@@ -39,12 +42,14 @@ def synflow_score(network, train_loader, device):
             return torch.zeros_like(layer.weight)
 
     for layer in network.modules():
-        if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear) or isinstance(layer, nn.BatchNorm2d):
+        if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
             grads.append(synflow(layer))
 
     score = 0
     for i in range(len(grads)):
         score += torch.sum(grads[i])
+
+    del data
+    del network
     
-    torch.cuda.empty_cache()
     return score.detach().cpu().numpy()

@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 import copy
 
-def logsynflow_score(network, train_loader, device):
+def logsynflow_score(network, train_loader, device, args):
     @torch.no_grad()
     def linearize(network):
         signs = {}
@@ -45,5 +45,6 @@ def logsynflow_score(network, train_loader, device):
     for layer in network.modules():
         if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
             score += torch.sum(synflow(layer))
-
+    
+    del network
     return score.detach().cpu().numpy()
