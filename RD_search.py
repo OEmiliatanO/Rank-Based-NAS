@@ -51,8 +51,6 @@ searchspace = nasspace.get_search_space(args)
 print(f"Making sure {args.save_loc} exist.\n")
 os.makedirs(args.save_loc, exist_ok=True)
 
-times = []
-accs = {"ni": [], "naswot": [], "logsynflow": [], "rank-based": []}
 
 Encoder = encoder.get_encoder(args.nasspace)
 
@@ -69,49 +67,54 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
-taus = {"rk":[], "ni": [], "naswot": [], "logsynflow": []}
-times = {"rk":[], "ni":[], "naswot":[], "logsynflow":[], "tot":[]}
+enroll_sc_fn_names = ["ni", "naswot", "logsynflow", "synflow", "ntk"]
+enroll_sc_fns = {"ni": ni_score, "naswot": naswot_score, "logsynflow": logsynflow_score, "synflow": synflow_score, "ntk": ntk_score}
+accs = dict(zip(enroll_sc_fn_names, [[]] * len(enroll_sc_fn_names)))
+taus = dict(zip(enroll_sc_fn_names, [[]] * len(enroll_sc_fn_names)))
+times = dict(zip(enroll_sc_fn_names, [[]] * len(enroll_sc_fn_names)))
+accs["rank"] = []
+taus["rank"] = []
+times["rank"] = []
+bestacc = []
+
 cnt = 0
-runs = trange(args.n_runs, desc='acc: ')
+runs = trange(args.n_runs, desc='RS algorithm')
 for N in runs:
     start = time.time()
 
-    sol = RD(**RD_kwargs)
-    bestuid_, taus_, maxacc, rk_maxacc, times_ = sol.search()
+    alg = RD(**RD_kwargs)
+    for fn_name in enroll_sc_fn_names:
+        alg.enroll(fn_name, enroll_sc_fns[fn_name])
 
-    niuid, naswotuid, logsynflowuid, bestrk_uid = bestuid_
-    rk_tau, ni_tau, naswot_tau, logsynflow_tau = taus_
-    ni_time, naswot_time, logsynflow_time, rk_time = times_
+    rank_alg_fns = ["ni", "naswot", "logsynflow"]
 
-    taus['rk'].append(rk_tau)
-    taus['ni'].append(ni_tau)
-    taus['naswot'].append(naswot_tau)
-    taus['logsynflow'].append(logsynflow_tau)
-    
-    try:
-        niuid = int(niuid)
-        naswotuid = int(naswotuid)
-        logsynflowuid = int(logsynflowuid)
-        bestrk_uid = int(bestrk_uid)
-    except:
-        pass
-    
-    accs["ni"].append(searchspace.get_final_accuracy(niuid, acc_type, args.valid))
-    accs["naswot"].append(searchspace.get_final_accuracy(naswotuid, acc_type, args.valid))
-    accs["logsynflow"].append(searchspace.get_final_accuracy(logsynflowuid, acc_type, args.valid))
-    accs["rank-based"].append(searchspace.get_final_accuracy(bestrk_uid, acc_type, args.valid))
+    best_uids_, taus_, maxacc, rk_maxacc, times_ = alg.search(rank_alg_fns)
 
-    times["ni"].append(ni_time)
-    times["naswot"].append(naswot_time)
-    times["logsynflow"].append(logsynflow_time)
-    times["rk"].append(rk_time)
-    times["tot"].append(time.time()-start)
+    for fn_name in enroll_sc_fn_names:
+        if not isinstance(best_uids_[fn_name], str):
+            best_uids_[fn_name] = int(best_uids_[fn_name])
+        accs[fn_name].append(searchspace.get_final_accuracy(best_uids_[fn_name], acc_type, args.valid))
+        taus[fn_name].append(taus_[fn_name])
+        times[fn_name].append(times_[fn_name])
+
+    accs["rank"].append(rk_maxacc)
+    taus["rank"].append(taus_["rank"])
+    times["rank"].append(times_["rank"])
+
+    bestacc.append(maxacc)
 
     if cnt == 1 or cnt % 10 == 0:
         print("")
     cnt += 1
-    runs.set_description(f"ni:{mean(accs['ni']):.2f}({std(accs['ni']):.2f})({mean(taus['ni']):.2f}),t:{mean(times['ni']):.2f}, naswot:{mean(accs['naswot']):.2f}({std(accs['naswot']):.2f})({mean(taus['naswot']):.2f}),t:{mean(times['naswot']):.2f}, logsyn:{mean(accs['logsynflow']):.2f}({std(accs['logsynflow']):.2f})({mean(taus['logsynflow']):.2f}),t:{mean(times['logsynflow']):.2f}, rk:{mean(accs['rank-based']):.2f}({std(accs['rank-based']):.2f})({mean(taus['rk']):.2f}), t:{mean(times['rk']):.2f}")
 
+    info_ = ""
+    for fn_name in enroll_sc_fn_names:
+        info_ += f"{fn_name}: {mean(accs[fn_name]):.2f}({std(accs[fn_name]):.2f}), tau: {mean(taus[fn_name]):.2f}, time:{mean(times[fn_name]):.2f}\n"
+    info_ += f"rank: {mean(accs['rank']):.2f}({std(accs['rank']):.2f}), tau: {mean(taus['rank']):.2f}, time:{mean(times['rank']):.2f}\n"
+
+    runs.set_description(info_)
+
+"""
 state = {'ni-accs': accs["ni"],
          'naswot': accs["naswot"],
          'logsynflow': accs["logsynflow"],
@@ -125,3 +128,4 @@ state = {'ni-accs': accs["ni"],
 
 fname = f"{args.save_loc}/{args.save_string}_{args.nasspace}_{args.dataset}_{args.kernel}_{args.dropout}_{args.augtype}_{args.sigma}_{args.repeat}_{args.batch_size}_{args.n_runs}_{args.n_samples}_{args.valid}_{args.test}_{args.seed}.t7"
 torch.save(state, fname)
+"""

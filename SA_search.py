@@ -68,16 +68,21 @@ np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
 acc = []
+enroll_sc_fn_names = ["ni", "naswot", "logsynflow"]
+enroll_sc_fns = {"ni": ni_score, "naswot": naswot_score, "logsynflow": logsynflow_score}
 
 cnt = 0
 runs = trange(args.n_runs, desc='acc: ')
 for N in runs:
     start = time.time()
 
-    sol = SA(**SA_kwargs)
-    best_sol_uid, rk_maxacc, current_uid, rk_current_acc = sol.search()
+    alg = SA(**SA_kwargs)
+    for fn_name in enroll_sc_fn_names:
+        alg.enroll(fn_name = fn_name, fn = enroll_sc_fns[fn_name])
+
+    best_sol_uid, rk_maxacc, current_uid, rk_current_acc = alg.search()
     
-    chosen.append(rk_current_uid)
+    chosen.append(current_uid)
     acc.append(rk_current_acc)
 
     times.append(time.time()-start)
