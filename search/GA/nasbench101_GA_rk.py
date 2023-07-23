@@ -14,7 +14,6 @@ class GA(abstract_GA):
         self.MAXN_OPERATION = 3
         self.NAS_101_ops = ['conv1x1-bn-relu', 'conv3x3-bn-relu', 'maxpool3x3']
         self.Encoder = encoder.get_encoder("nasbench101")
-        torch.autograd.set_detect_anomaly(True)
 
     def init_population(self):
         s = set()
@@ -65,6 +64,7 @@ class GA(abstract_GA):
                     self.best_chrom["logsynflow"].gene = copy.deepcopy(self.population[i].gene)
 
     def mutation(self, chrom):
+        if chrom == None: return None
         random.shuffle(chrom.gene[1])
         pos = random.sample([*range(0,5)], random.randint(0,5))
         for p in pos:
@@ -72,6 +72,7 @@ class GA(abstract_GA):
         return chrom
 
     def crossover(self, p0, p1):
+        assert False, "not implement yet."
         l0 = random.randint(0, 4)
         len = random.randint(1, 5-l0)
         r0 = l0 + len
@@ -80,6 +81,7 @@ class GA(abstract_GA):
         p0.gene[2] = p0.gene[2][:l0] + p1.gene[2][l1:r1] + p0.gene[2][r0:]
         p1.gene[2] = p1.gene[2][:l1] + p0.gene[2][l0:r0] + p1.gene[2][r1:]
         
+        # 1 in branch = 9
         l0 = random.randint(0, 20)
         len = random.randint(1, 21-l0)
         r0 = l0 + len
