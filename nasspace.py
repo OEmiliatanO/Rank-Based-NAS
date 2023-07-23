@@ -44,7 +44,7 @@ class Nasbench201:
             dataset_name = self.dataset
         config = self.api.get_net_config(uid, dataset_name)
         #config = self.api.get_net_config(uid, 'cifar10-valid')
-        config['num_classes'] = 1
+        #config['num_classes'] = 1
         network = get_cell_based_tiny_net(config)
         return network
     def __iter__(self):
@@ -288,7 +288,7 @@ class NatsbenchSSS:
         else:
             dataname = args.dataset
         config = self.api.get_net_config(index, dataname)
-        config['num_classes'] = 1
+        #config['num_classes'] = 1
         network = get_cell_based_tiny_net(config)
         return network
     
@@ -359,7 +359,7 @@ class NatsbenchTSS:
         else:
             dataname = args.dataset
         config = self.api.get_net_config(index, dataname)
-        config['num_classes'] = 1
+        #config['num_classes'] = 1
         network = get_cell_based_tiny_net(config)
         return network
     
