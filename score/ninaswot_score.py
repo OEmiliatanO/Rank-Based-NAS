@@ -28,6 +28,8 @@ def naswot_score(network, train_loader, device, args):
             x = (inp > 0).float()
             K = x @ x.t()
             K2 = (1.-x) @ (1.-x.t())
+            K = K.detach()
+            K2 = K2.detach()
             network.K = network.K + K.cpu().numpy() + K2.cpu().numpy()
         except:
             pass
@@ -35,10 +37,11 @@ def naswot_score(network, train_loader, device, args):
     def counting_backward_hook(module, inp, out):    
         module.visited_backwards = True
 
+    all_hooks = []
     for name, module in network.named_modules():
         if 'ReLU' in str(type(module)):
-            module.register_forward_hook(counting_forward_hook)
-            module.register_backward_hook(counting_backward_hook)
+            all_hooks.append(module.register_forward_hook(counting_forward_hook))
+            all_hooks.append(module.register_backward_hook(counting_backward_hook))
 
     network = network.to(device)    
     s = []
@@ -53,9 +56,9 @@ def naswot_score(network, train_loader, device, args):
     network(x2.to(device))
     s.append(hooklogdet(network.K, target))
 
-    del network
-    del x
-    del x2
+    for hook in all_hooks:
+        hook.remove()
+    del network, x, x2, all_hooks
     return np.mean(s)
 
 def ni_extract(network, x, target, device, args):
@@ -92,14 +95,15 @@ def ni_extract(network, x, target, device, args):
     def counting_backward_hook_conv(module, inp, out):
         module.visited_backwards_conv = True
 
+    all_hooks = []
     for name, module in network.named_modules():
         if 'Pool' in str(type(module)):
-            module.register_forward_hook(counting_forward_hook)
-            module.register_backward_hook(counting_backward_hook)
+            all_hooks.append(module.register_forward_hook(counting_forward_hook))
+            all_hooks.append(module.register_backward_hook(counting_backward_hook))
         
         if 'Conv' in str(type(module)):
-            module.register_forward_hook(counting_forward_hook_conv)
-            module.register_backward_hook(counting_backward_hook_conv)
+            all_hooks.append(module.register_forward_hook(counting_forward_hook_conv))
+            all_hooks.append(module.register_backward_hook(counting_backward_hook_conv))
  
     x2 = torch.clone(x)
     x2 = x2.to(device)
@@ -110,14 +114,14 @@ def ni_extract(network, x, target, device, args):
     n_conv = network.n_conv
     metric = network.K
     channel = network.channel
-
-    del network
-    del x
-    del x2
+    
+    for hook in all_hooks:
+        hook.remove()
+    del network, x, x2, all_hooks
     return metric, n_conv, channel
 
 def ni_score(network, train_loader, device, args, debug_no=0, debug_code=""):
-    network = network.cuda()
+    network = network.to(device)
     data_iter = iter(train_loader)
     x, target = next(data_iter)
     x, target = x.to(device), target.float().to(device)
@@ -151,7 +155,5 @@ def ni_score(network, train_loader, device, args, debug_no=0, debug_code=""):
     except:
         na = 0
  
-    del network
-    del x
-    del x2
+    del network, x, x2
     return na
