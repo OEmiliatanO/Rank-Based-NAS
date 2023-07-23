@@ -67,11 +67,11 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
-enroll_sc_fn_names = ["ni", "naswot", "logsynflow", "synflow", "ntk"]
-enroll_sc_fns = {"ni": ni_score, "naswot": naswot_score, "logsynflow": logsynflow_score, "synflow": synflow_score, "ntk": ntk_score}
-accs = dict(zip(enroll_sc_fn_names, [[]] * len(enroll_sc_fn_names)))
-taus = dict(zip(enroll_sc_fn_names, [[]] * len(enroll_sc_fn_names)))
-times = dict(zip(enroll_sc_fn_names, [[]] * len(enroll_sc_fn_names)))
+enroll_sc_fn_names = ["ni", "naswot", "logsynflow", "synflow", "ntk", "grasp", "snip"]
+enroll_sc_fns = {"ni": ni_score, "naswot": naswot_score, "logsynflow": logsynflow_score, "synflow": synflow_score, "ntk": ntk_score, "grasp": grasp_score, "snip": snip_score}
+accs = dict((fn_names, []) for fn_names in enroll_sc_fn_names)
+taus = dict((fn_names, []) for fn_names in enroll_sc_fn_names)
+times = dict((fn_names, []) for fn_names in enroll_sc_fn_names)
 accs["rank"] = []
 taus["rank"] = []
 times["rank"] = []
@@ -109,10 +109,13 @@ for N in runs:
 
     info_ = ""
     for fn_name in enroll_sc_fn_names:
-        info_ += f"{fn_name}: {mean(accs[fn_name]):.2f}({std(accs[fn_name]):.2f}), tau: {mean(taus[fn_name]):.2f}, time:{mean(times[fn_name]):.2f}\n"
-    info_ += f"rank: {mean(accs['rank']):.2f}({std(accs['rank']):.2f}), tau: {mean(taus['rank']):.2f}, time:{mean(times['rank']):.2f}\n"
+        info_ += f"{fn_name}: "
+        info_ += " " * (10 - len(fn_name))
+        info_ += f"{mean(accs[fn_name]):.2f}({std(accs[fn_name]):.2f}), tau: {mean(taus[fn_name]):.2f}, time:{mean(times[fn_name]):.2f}\n"
+    info_ += f"rank: {mean(accs['rank']):11.2f}({std(accs['rank']):.2f}), tau: {mean(taus['rank']):.2f}, time:{mean(times['rank']):.2f}\n"
+    print(info_)
 
-    runs.set_description(info_)
+    #runs.set_description(info_)
 
 """
 state = {'ni-accs': accs["ni"],
