@@ -45,18 +45,20 @@ class abstract_RD():
             if not isinstance(uid, str):
                 uid = int(uid)
             network = self.searchspace.get_network(uid, self.args)
-            network = network.to(self.device)
 
             for fn_name in self.enrolled_fn_names:
+                #mem__ = torch.cuda.memory_allocated()
+                #print(f"before {fn_name}: {mem__}")
                 t0 = time.time()
                 scores[fn_name].append(self.enrolled_fns[fn_name](network, self.train_loader, self.device, self.args))
-                times[fn_name] += time.time() - t0
+                duration = time.time() - t0
+                times[fn_name] += duration
+                #print(f"after {fn_name}: {torch.cuda.memory_allocated()}")
+                #print(f"diff: {torch.cuda.memory_allocated() - mem__}\n")
                 if fn_name in rk_fn_names:
-                    times["rank"] += times[fn_name]
+                    times["rank"] += duration
 
             del network
-        
-        t0 = time.time()
         
         if not isinstance(indices[0], str):
             accs = [self.searchspace.get_final_accuracy(int(uid), self.acc_type, self.args.valid) for uid in indices]
@@ -65,21 +67,25 @@ class abstract_RD():
         maxacc = max(accs)
 
         for fn_name in self.enrolled_fn_names:
+            t0_ = time.time()
             m = np.argsort([*enumerate(scores[fn_name])], axis=0)
             best_uids[fn_name] = indices[m[-1][1]]
             valid_m = np.isfinite(scores[fn_name])
             taus[fn_name], p = kendalltau(np.array(scores[fn_name])[valid_m], np.array(accs)[valid_m])
+            times[fn_name] += time.time() - t0_
             if fn_name in rk_fn_names:
+                t0 = time.time()
                 for ind_rk in m:
                     ind = ind_rk[1]
                     rk = ind_rk[0]
                     scores["rank"][ind] += len(indices) - rk
+                times["rank"] += time.time() - t0
 
-        times["rank"] += time.time() - t0
         best_uids["rank"] = indices[np.argmin(scores["rank"])]
         rk_maxacc = accs[np.argmin(scores["rank"])]
         taus["rank"], p = kendalltau(np.array(scores["rank"]), np.array(accs))
-
+ 
+        del scores
         return best_uids, taus, maxacc, rk_maxacc, times
 
     def ranking(self, indices, weight, cnt):
