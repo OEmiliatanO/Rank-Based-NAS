@@ -43,7 +43,7 @@
 }
 
 @inproceedings{mehrotra2021nasbenchasr,
-title={{\{}NAS{\}}-Bench-{\{}ASR{\}}: Reproducible Neural Architecture Search for Speech Recognition},
+title={NAS-Bench-ASR: Reproducible Neural Architecture Search for Speech Recognition},
 author={Abhinav Mehrotra and Alberto Gil C. P. Ramos and Sourav Bhattacharya and {\L}ukasz Dudziak and Ravichander Vipperla and Thomas Chau and Mohamed S Abdelfattah and Samin Ishtiaq and Nicholas Donald Lane},
 booktitle={International Conference on Learning Representations},
 year={2021},
@@ -145,6 +145,17 @@ url={https://openreview.net/forum?id=CU0APx9LMaL}
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 
+@INPROCEEDINGS{10030904,
+  author={Cavagnero, Niccolò and Robbiano, Luca and Caputo, Barbara and Averta, Giuseppe},
+  booktitle={2023 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)}, 
+  title={FreeREA: Training-Free Evolution-based Architecture Search}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={1493-1502},
+  doi={10.1109/WACV56688.2023.00154}
+}
+
 @misc{https://doi.org/10.48550/arxiv.2101.08134,
   doi = {10.48550/ARXIV.2101.08134},
   url = {https://arxiv.org/abs/2101.08134},
@@ -154,24 +165,6 @@ url={https://openreview.net/forum?id=CU0APx9LMaL}
   publisher = {arXiv},
   year = {2021},
   copyright = {Creative Commons Attribution Non Commercial No Derivatives 4.0 International}
-}
-
-@inproceedings{10.1145/3491396.3506510,
-  author = {Wu, Meng-Ting and Lin, Hung-I and Tsai, Chun-Wei},
-  title = {A Training-Free Genetic Neural Architecture Search},
-  year = {2022},
-  isbn = {9781450391603},
-  publisher = {Association for Computing Machinery},
-  address = {New York, NY, USA},
-  url = {https://doi.org/10.1145/3491396.3506510},
-  doi = {10.1145/3491396.3506510},
-  abstract = {The so-called neural architecture search (NAS) provides an alternative way to construct a "good neural architecture," which would normally outperform hand-made architectures, for solving complex problems without domain knowledge. However, a critical issue for most of the NAS techniques is in that it is computationally very expensive because several complete/partial training processes are involved in evaluating the goodness of a neural architecture during the process of NAS. To mitigate this problem for evaluating a single neural architecture found by the search algorithm of NAS, we present an efficient NAS in this study, called genetic algorithm and noise immunity for neural architecture search without training (GA-NINASWOT). The genetic algorithm (GA) in the proposed algorithm is used to search for high potential neural architectures while a modified scoring method based on the neural architecture search without training (NASWOT) is used to replace the training process of each neural architecture found by the GA for measuring its quality. To evaluate the performance of GA-NINASWOT, we compared it with several state-of-the-art NAS techniques, which include weight-sharing methods, non-weight-sharing methods, and NASWOT. Simulation results show that GA-NINASWOT outperforms all the other state-of-the-art weight-sharing methods and NASWOT compared in this study in terms of the accuracy and computational time. Moreover, GA-NINASWOT gives a result that is comparable to those found by the non-weight-sharing methods while reducing 99% of the search time.},
-  booktitle = {Proceedings of the 2021 ACM International Conference on Intelligent Computing and Its Emerging Applications},
-  pages = {65–70},
-  numpages = {6},
-  keywords = {training-free, genetic algorithm, Neural architecture search},
-  location = {Jinan, China},
-  series = {ACM ICEA '21}
 }
 
 @misc{https://doi.org/10.48550/arxiv.1912.13053,
@@ -221,7 +214,7 @@ url={https://openreview.net/forum?id=CU0APx9LMaL}
   year={2023},
   volume={},
   number={},
-  pages={1-1},
+  pages={},
   doi={10.1109/TEVC.2023.3264533}
 }
 @misc{tanaka2020pruning,
@@ -257,7 +250,7 @@ url={https://openreview.net/forum?id=CU0APx9LMaL}
 	url = {https://doi.org/10.1109%2Ftpami.2021.3054824},
 	year = 2021,
 	publisher = {Institute of Electrical and Electronics Engineers ({IEEE})},
-	pages = {1--1},
+	pages = {},
 	author = {Xuanyi Dong and Lu Liu and Katarzyna Musial and Bogdan Gabrys},
 	title = {{NATS}-Bench: Benchmarking {NAS} Algorithms for Architecture Topology and Size},
 	journal = {{IEEE} Transactions on Pattern Analysis and Machine Intelligence}
@@ -361,6 +354,17 @@ url={https://openreview.net/forum?id=CU0APx9LMaL}
   pages     = {855-861},
   year      = {2021},
   month     = {12}
+}
+
+@inproceedings{Dong_2019,
+	doi = {10.1109/iccv.2019.00378},
+	url = {https://doi.org/10.1109%2Ficcv.2019.00378},
+	year = {2019},
+	month = {oct},
+	publisher = {{IEEE}},
+	author = {Xuanyi Dong and Yi Yang},
+	title = {One-Shot Neural Architecture Search via Self-Evaluated Template Network},
+	booktitle = {2019 {IEEE}/{CVF} International Conference on Computer Vision ({ICCV})}
 }
 
 @inproceedings{10.1145/3491396.3506510,
@@ -469,24 +473,6 @@ url={https://openreview.net/forum?id=CU0APx9LMaL}
       primaryClass={cs.CV}
 }
 
-@inproceedings{Dong_2019,
-	doi = {10.1109/iccv.2019.00378},
-  
-	url = {https://doi.org/10.1109%2Ficcv.2019.00378},
-  
-	year = 2019,
-	month = {oct},
-  
-	publisher = {{IEEE}
-},
-  
-	author = {Xuanyi Dong and Yi Yang},
-  
-	title = {One-Shot Neural Architecture Search via Self-Evaluated Template Network},
-  
-	booktitle = {2019 {IEEE}/{CVF} International Conference on Computer Vision ({ICCV})}
-}
-
 @misc{pham2018efficient,
       title={Efficient Neural Architecture Search via Parameter Sharing}, 
       author={Hieu Pham and Melody Y. Guan and Barret Zoph and Quoc V. Le and Jeff Dean},
@@ -495,6 +481,7 @@ url={https://openreview.net/forum?id=CU0APx9LMaL}
       archivePrefix={arXiv},
       primaryClass={cs.LG}
 }
+
 @misc{xu2021knas,
       title={KNAS: Green Neural Architecture Search}, 
       author={Jingjing Xu and Liang Zhao and Junyang Lin and Rundong Gao and Xu Sun and Hongxia Yang},
