@@ -30,7 +30,10 @@ def logsynflow_score(network, train_loader, device, args):
     input = torch.ones([1]+input_dim).to(device)
     output = network(input)
     if isinstance(output, tuple):
-        output = output[1]
+        if args.nasspace == 'nasbench201' or args.nasspace == 'nasbench101':
+            output = output[1]
+        elif args.nasspace == 'natsbenchsss':
+            output = output[0]
     torch.sum(output).backward()
 
     def synflow(layer):

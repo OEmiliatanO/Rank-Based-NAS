@@ -80,7 +80,10 @@ def fisher_score(net, train_loader, device, args, loss_fn = nn.CrossEntropyLoss(
     outputs = net(data)
     print(f"in fisher, after net(data): {torch.cuda.memory_allocated()}")
     if isinstance(outputs, tuple):
-        outputs = outputs[0]
+        if args.nasspace == 'nasbench201' or args.nasspace == 'nasbench101':
+            outputs = outputs[0]
+        elif args.nasspace == 'natsbenchsss':
+            outputs = outputs[1]
     loss = loss_fn(outputs, targets)
     loss.backward()
 

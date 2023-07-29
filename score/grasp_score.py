@@ -37,12 +37,14 @@ def grasp_score(net, train_loader, device, args, mode = 'param', loss_fn = nn.Cr
     data = data.to(device)
     targets = targets.to(device)
     net.zero_grad()
-
     #forward/grad pass #1
     grad_w = None
     outputs = net.forward(data)
     if isinstance(outputs, tuple):
-        outputs = outputs[0]
+        if args.nasspace == 'nasbench201' or args.nasspace == 'nasbench101':
+            outputs = outputs[0]
+        elif args.nasspace == 'natsbenchsss':
+            outputs = outputs[1]
     loss = loss_fn(outputs, targets)
     grad_w_p = autograd.grad(loss, weights, allow_unused=True)
     if grad_w is None:
@@ -54,7 +56,10 @@ def grasp_score(net, train_loader, device, args, mode = 'param', loss_fn = nn.Cr
     # forward/grad pass #2
     outputs = net.forward(data)
     if isinstance(outputs, tuple):
-        outputs = outputs[0]
+        if args.nasspace == 'nasbench201' or args.nasspace == 'nasbench101':
+            outputs = outputs[0]
+        elif args.nasspace == 'natsbenchsss':
+            outputs = outputs[1]
     loss = loss_fn(outputs, targets)
     grad_f = autograd.grad(loss, weights, create_graph=True, allow_unused=True)
         

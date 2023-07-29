@@ -53,7 +53,10 @@ def snip_score(net, train_loader, device, args, mode = 'param', loss_fn=nn.Cross
     net.zero_grad()
     outputs = net.forward(inputs)
     if isinstance(outputs, tuple):
-        outputs = outputs[0]
+        if args.nasspace == 'nasbench201' or args.nasspace == 'nasbench101':
+            outputs = outputs[0]
+        elif args.nasspace == 'natsbenchsss':
+            outputs = outputs[1]
     loss = loss_fn(outputs, targets)
     loss.backward()
 
