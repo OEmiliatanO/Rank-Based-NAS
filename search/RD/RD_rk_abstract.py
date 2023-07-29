@@ -69,9 +69,12 @@ class abstract_RD():
         for fn_name in self.enrolled_fn_names:
             t0_ = time.time()
             m = np.argsort([*enumerate(scores[fn_name])], axis=0)
-            best_uids[fn_name] = indices[m[-1][1]]
             valid_m = np.isfinite(scores[fn_name])
             taus[fn_name], p = kendalltau(np.array(scores[fn_name])[valid_m], np.array(accs)[valid_m])
+            if taus[fn_name] < 0:
+                best_uids[fn_name] = indices[m[0][1]]
+            else:
+                best_uids[fn_name] = indices[m[-1][1]]
             times[fn_name] += time.time() - t0_
             if fn_name in rk_fn_names:
                 t0 = time.time()
