@@ -269,7 +269,7 @@ class NatsbenchSSS:
 
     def __iter__(self):
         for uid in range(len(self)):
-            network = self.get_net(uid)
+            network = self.get_network(uid, self.args)
             yield uid, network
 
     def __getitem__(self, index):
@@ -303,7 +303,7 @@ class NatsbenchSSS:
         info_cifar100 = self.api.get_more_info(index, 'cifar100', hp=90)
         info_imagenet = self.api.get_more_info(index, 'ImageNet16-120', hp=90)
 
-        validation_accuracy_cifar10, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='cifar10', hp=90)
+        validation_accuracy_cifar10, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='cifar10-valid', hp=90)
         validation_accuracy_cifar100, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='cifar100', hp=90)
         validation_accuracy_imagenet, latency, time_cost, current_total_time_cost = self.api.simulate_train_eval(index, dataset='ImageNet16-120', hp=90)        
         return validation_accuracy_cifar10,info_cifar10['test-accuracy'],validation_accuracy_cifar100,info_cifar100['test-accuracy'],validation_accuracy_imagenet,info_imagenet['test-accuracy']
@@ -334,7 +334,7 @@ class NatsbenchTSS:
 
     def __iter__(self):
         for uid in range(len(self)):
-            network = self.get_net(uid)
+            network = self.get_network(uid, self.args)
             yield uid, network
 
     def __getitem__(self, index):
