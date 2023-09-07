@@ -601,6 +601,7 @@
         RS-rank (ours) (N=1000) & $612$& $89.59 \pm 0.14$ & $92.51 \pm 0.17$ & $67.56 \pm 0.75$ & $67.55 \pm 0.82$  & $43.36 \pm 0.62$ & $43.27 \pm 0.45$ \\ 
         \palg{} (ours)          & $725$& $90.33 \pm 0.15$ & $93.26 \pm 0.24$ & $69.89 \pm 0.48$ & $70.24 \pm 0.42$  & $45.41 \pm 0.41$ & $46.43 \pm 0.75$ \\ \midrule
         %SA-NI                  &      & $90.24 \pm 0.10$ & $93.20 \pm 0.19$ & $69.83 \pm 0.56$ & $70.10 \pm 0.40$  & $45.49 \pm 0.50$ & $45.98 \pm 0.89$
+        %SA-NASWOT              &      & $90.21 \pm 0.30$ & $93.16 \pm 0.28$ & $69.16 \pm 1.28$ & $69.27 \pm 1.46$  & $44.89 \pm 1.27$ & $45.49 \pm 1.33$
         Optimal             &          & $90.71$          & $93.65$          & $70.92$          & $71.34$           & $46.73$          & $47.40$          \\ \bottomrule
         \end{tabular}
         \label{table:overall_sss}
@@ -622,7 +623,9 @@
     from different aspects. If an architecture gains higher score in these 
     score functions, the final rank should be higher, i.e., smaller index. 
     Therefore, the highest rank (numerically lowest) in $r$ is the best 
-    network architecture. 
+    network architecture. In practical implementation, to reduce the 
+    evaluation time of training-free score functions, the scores of 
+    architecture can be stored and used in the future. 
     %The first step is to evaluate the network architectures in the subset, 
     %denoted $\mathbb N^s$, of search space, denoted $\mathbb N^*$. The 
     %evaluation of an architecture determined by $j$-th score function 
@@ -695,7 +698,8 @@
         RS-rank (ours) (N=1000) & $887$  & $90.07 \pm \z{0.41}$ & $93.32 \pm 0.42$ & $70.06 \pm 1.34$ & $70.10 \pm 1.45$ & $43.68 \pm 2.11$ & $44.07 \pm 2.19$ \\ 
         TE-NAS                  & $459$  & $90.02 \pm \z{0.56}$ & $93.31 \pm 0.45$ & $70.12 \pm 1.04$ & $70.26 \pm 1.07$ & $43.15 \pm 2.23$ & $43.49 \pm 2.26$ \\
         \palg{} (ours)          & $902$  & $90.20 \pm \z{0.24}$ & $93.53 \pm 0.22$ & $70.51 \pm 0.71$ & $70.63 \pm 0.66$ & $43.80 \pm 1.86$ & $44.63 \pm 1.64$ \\ \midrule
-        %SA-NI                  &        & $90.06 \pm 0.29$     & $93.38 \pm 0.50$ & $70.41 \pm 0.74$ & $70.34 \pm 1.34$ & $42.69 \pm 1.87$ & $43.22 \pm 1.93$
+        %SA-NI                  &        & $90.06 \pm \z{0.29}$ & $93.38 \pm 0.50$ & $70.41 \pm 0.74$ & $70.34 \pm 1.34$ & $42.69 \pm 1.87$ & $43.22 \pm 1.93$
+        %SA-NASWOT              &        & $89.11 \pm \z{1.22}$ & $92.22 \pm 1.32$ & $69.38 \pm 1.23$ & $69.48 \pm 1.46$ & $41.77 \pm 3.96$ & 
         Optimal             &          & $91.61$              & $94.37$          & $73.49$          & $73.51$          & $46.73$          & $47.31$          \\ \bottomrule
         \end{tabular}
         \label{table:overall_201}
@@ -739,12 +743,14 @@
     the constant number adjusting acceptance probability, the number of generated neighbours, and 
     the coefficient of the size of historical best architectures set are set 
     to 1, 0.0008, 0.745, 4, 0.25, 10, 1, so that the maximum number of searching candidates is 1000. 
+    Notbly, in NAS-Bench-101 search space, we conduct experiments with an evaluation budget of 5000 for RS, 
+    since NAS-Bench-101 contains much more architectures.
 
     \subsection{Simulation Results} % 補實驗描述
     % sss
     The simulation results in NATS-Bench-SSS \cite{Dong_2021} is shown in \xtab{table:overall_sss}. 
     The proposed NAS algorithm and ranking function is compared with the other five non-weight sharing 
-    algorithm and three training-free score functions with random search (RS), i.e., RS-NI, RS-NASWOT, 
+    algorithm and three training-free score functions with RS, i.e., RS-NI, RS-NASWOT, 
     and RS-LogSynFlow. For fairness, the searching architectures for the RS with training-free 
     score functions are identical. Among the four training-free score functions with RS, RS-LogSynFlow 
     has the highest accuracy in CIFAR10. The accuracy of RS-NI and RS-rank are similar, but the stability 
@@ -781,14 +787,20 @@
     sharing algorithms, and three training-free score functions with RS. The training-free 
     score functions are same to the ones in NATS-Bench-TSS and NATS-Bench-SSS. In the experiment, ENAS has 
     the best performance, while the computation time is the highest. AREA and REA performs similarly. 
-    In CIFAR10 validation dataset, the accuracy of RS-NI is better than RS-rank, but the standard 
-    deviation is worse than RS-rank. And RS-NASWOT though is higher than RS-LogSynFlow, RS-NASWOT 
-    is the most unstable. \palg{} has better accuracy and stability than all the other training-free 
-    score functions. In CIFAR10 test dataset, RS-NI has higher accuracy than RS-rank, however, the 
-    stability of RS-NI is much worse than RS-rank. The accuracy and stability of \palg{} is the best 
-    among the training-free methods. Compared with \palg{} and the other NAS methods, though the 
-    performance and stability are a little bit worse than AREA, REA and ENAS, the time cost of \palg{} is 
-    much less than them. 
+    Both have higher accuracy than most of others. 
+    In CIFAR10 validation dataset, with $1000$ sampled architectures ($N=1000$), the accuracy of 
+    RS-NI is better than RS-rank, but the standard deviation is worse than RS-rank. And RS-NASWOT 
+    though is higher than RS-LogSynFlow, RS-NASWOT is the most unstable. With $5000$ sampled architectures 
+    ($N=5000$), RS-rank outperforms RS-NI instead and becomes the best method. RS-NASWOT and RS-LogSynFlow
+    performs similarly, but RS-NASWOT is more unstable. Lastly, \palg{} has better accuracy 
+    and stability than all the other training-free score functions. In CIFAR10 test dataset, with $1000$ 
+    sampled architectures ($N=1000$), RS-NI has higher accuracy than RS-rank, however, the stability of 
+    RS-NI is much worse than RS-rank. The accuracy and stability of \palg{} is the best among the 
+    training-free methods. With $5000$ sampled architectures ($N=5000$), RS-NI performs better than 
+    RS-rank but has much lower stability. RS-LogSynFlow performs better than RS-NASWOT which not only 
+    has low accuracy but also low stability. \palg{} is still best among these training-free score 
+    functions. Compared with \palg{} and the other NAS methods, though the performance and stability 
+    are a little bit worse than AREA, REA and ENAS, the time cost of \palg{} is much less than them. 
 
     \begin{table}[t]
         %\normalsize
@@ -807,16 +819,17 @@
             DARTS-V1            & $20,483$   & $83.50 \pm 0.11$ & $83.74 \pm 0.03$ \\
             ENAS                & $22,325$   & $93.83 \pm 0.28$ & $93.34 \pm 0.26$ \\ \midrule
                                 &            & \textbf{Training-free}      &       \\
-            RS-NI (N=1,000)         & $280$  & $92.89 \pm 2.10$ & $92.55 \pm 1.33$ \\ 
-            RS-NASWOT (N=1,000)     & $162$  & $92.27 \pm 6.60$ & $92.10 \pm 4.44$ \\ 
-            RS-LogSynFlow (N=1,000) & $105$  & $91.81 \pm 1.52$ & $91.21 \pm 1.71$ \\ 
-            RS-rank (ours) (N=1000) & $516$  & $92.44 \pm 1.42$ & $91.94 \pm 2.01$ \\
-            %RS-NI (N=5,000)         & $280$  & $92.89 \pm 2.10$ & $92.35 \pm 2.69$ \\ 
-            %RS-NASWOT (N=5,000)     & $162$  & $92.27 \pm 6.60$ & $90.60 \pm 6.64$ \\ 
-            %RS-LogSynFlow (N=5,000) & $105$  & $91.81 \pm 1.52$ & $91.17 \pm 1.86$ \\ 
-            %RS-rank (ours) (N=5,000) & $516$  & $92.44 \pm 1.42$ & $92.32 \pm 1.47$ \\ 
+            RS-NI (N=1,000)         & $476$  & $92.89 \pm 2.10$ & $92.55 \pm 1.33$ \\ 
+            RS-NASWOT (N=1,000)     & $127$  & $92.27 \pm 6.60$ & $92.10 \pm 4.44$ \\ 
+            RS-LogSynFlow (N=1,000) & $76$   & $91.81 \pm 1.52$ & $91.21 \pm 1.71$ \\ 
+            RS-rank (ours) (N=1000) & $679$  & $92.44 \pm 1.42$ & $91.94 \pm 2.01$ \\
+            RS-NI (N=5,000)         & $2390$ & $92.84 \pm 1.55$ & $92.35 \pm 2.69$ \\ 
+            RS-NASWOT (N=5,000)     & $635$  & $91.67 \pm 4.99$ & $90.60 \pm 6.64$ \\ 
+            RS-LogSynFlow (N=5,000) & $408$  & $91.66 \pm 1.72$ & $91.17 \pm 1.86$ \\ 
+            RS-rank (ours) (N=5,000)& $3434$  & $92.87 \pm 0.97$ & $92.32 \pm 1.47$ \\ 
             \palg{} (ours)          & $595$  & $93.16 \pm 0.97$ & $92.77 \pm 1.03$ \\ \midrule
             %SA-NI                  &        & $92.38 \pm 3.50$ & $92.71 \pm 1.97$
+            %SA-NASWOT
             Optimal             &            & $95.12$          & $94.32$          \\ \bottomrule
             \end{tabular}
         }
