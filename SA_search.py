@@ -70,6 +70,7 @@ torch.manual_seed(args.seed)
 acc = []
 enroll_sc_fn_names = ["ni", "naswot", "logsynflow"]
 enroll_sc_fns = {"ni": ni_score, "naswot": naswot_score, "logsynflow": logsynflow_score}
+print(f"score functions used in SA: {enroll_sc_fn_names}")
 
 cnt = 0
 runs = trange(args.n_runs, desc='acc: ')

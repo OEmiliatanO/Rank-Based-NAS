@@ -67,7 +67,7 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
-enroll_sc_fn_names = ["ni", "naswot", "logsynflow", "synflow", "ntk", "grasp", "snip"]
+enroll_sc_fn_names = ["ni", "naswot", "logsynflow"]
 enroll_sc_fns = {"ni": ni_score, "naswot": naswot_score, "logsynflow": logsynflow_score, "synflow": synflow_score, "ntk": ntk_score, "grasp": grasp_score, "snip": snip_score}
 accs = dict((fn_names, []) for fn_names in enroll_sc_fn_names)
 taus = dict((fn_names, []) for fn_names in enroll_sc_fn_names)
@@ -76,6 +76,8 @@ accs["rank"] = []
 taus["rank"] = []
 times["rank"] = []
 bestacc = []
+
+print(f"score functions for RS: {enroll_sc_fn_names}")
 
 cnt = 0
 runs = trange(args.n_runs, desc='RS algorithm')
