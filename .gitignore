@@ -21,3 +21,5 @@ log
 find_the_problem.py
 *.swp
 results/
+*.dvi
+*.xcp

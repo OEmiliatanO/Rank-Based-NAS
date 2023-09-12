@@ -60,7 +60,7 @@
 
 \title{Rank-based Training-Free NAS Algorithm}
 
-\author{Hsieh Cheng-Han}
+\author{Cheng-Han Hsieh}
 \email{emiliaistruelove@gmail.com}
 \affiliation{%
   \institution{Department of Computer Science and Engineering, National Sun Yat-sen University}
@@ -79,24 +79,30 @@
 }
 
 \begin{abstract}
-    The training-free neural architecture search (NAS) typically uses one or 
-    two score functions to evaluate how a neural network architecture performs. 
-    However, an architecture should be treated as a complex system that has 
-    unique characteristics to measure. 
+    The training-free neural architecture search (NAS) typically uses one  
+    score function to evaluate how a neural network architecture performs. 
+    However, every architecture has unique characteristics. To accurately 
+    evaluate an architecture, the score function should take the different 
+    aspects of an neural architecture into account. 
     To achieve the goal, we propose a rank-based training-free NAS algorithm, 
-    which combines three training-free score functions which is "complementary" 
-    to each other to evaluate an architecture by ranking. 
-    In this work, noise immunity (NI) considers the image generalization 
-    ability of the architecture, the correlation between binary activation 
-    patterns, named NASWOT, considers image distinction ability, and LogSynFlow 
-    takes trainability into account. By the three measurements, an 
-    architecture can be evaluated from different aspects. 
-    With that, simulated annealing (SA) algorithm, \palg{}, 
-    can be applied and obtain a better performance on searching high-accuracy architectures.  
-    To evaluate the performance of the proposed algorithm, this paper compared 
+    which combines three ``complementary'' training-free score functions to 
+	evaluate an architecture. 
+	NAS without training score function measures the difference 
+    of the activation patterns between a batch of data passing through an 
+    architecture, i.e., the image distinction ability. 
+	Noise immunity measures the difference between the pooling layers 
+    of an architecture by passing an image and the same image with Gaussian noise, 
+    i.e., the image generalization ability. 
+	And LogSynFlow measures the importance of connections of an architecture, 
+    i.e., the trainability. 
+    Through the three measurements, an architecture can be evaluated from 
+    different aspects. With an integrated score function, the proposed 
+    method, \palg{} applies simulated annealing algorithm to obtain 
+    better performance on searching high-accuracy architectures. 
+    To evaluate the performance of \palg{}, this paper compared 
     it with several NAS algorithms, including weight sharing methods, 
     non-weight sharing methods, and several state-of-the-art training-free 
-    score functions. The final result indicates that \palg{} outperforms most 
+    score functions. The ultimate results show that \palg{} outperforms most 
     training-free score functions and shows the robustness between different 
     search spaces. 
 
@@ -108,7 +114,7 @@
 
 % introduction
     Neural architecture search (NAS) has recently drawn a big amount of 
-    attention, since the ability to automatically design a "good" neural 
+    attention, since the ability to automatically design a ``good'' neural 
     architecture. By leveraging machine learning algorithms 
     \cite{https://doi.org/10.48550/arxiv.1611.01578}, NAS algorithms can 
     automatically search numerous architectures to find out the ones 
@@ -118,32 +124,30 @@
     and speech recognition \cite{https://doi.org/10.48550/arxiv.2011.05649} 
     to natural language processing \cite{jiang-etal-2019-improved}. 
     Despite the promising results of NAS, there are still many challenges 
-    to conquer. One major problem is the extremely high computational 
+    to deal with. One major problem is the extremely high computational 
     cost for searching an optimal architecture, which makes NAS 
     impractical for real-world applications, particularly on resource-constrained 
-    platforms like embedded system. The main reason why NAS is costly is that 
+    platforms like embedded system. NAS is costly because 
     during searching, a candidate architecture must be trained to 
-    evaluate how good of this architecture. 
+    evaluate how good of this architecture. %% compare architectures each of which must be trained
 
-    To eliminate the training cost, recent works proposed lots 
-    of methods which is so called training-free NAS. 
+    To eliminate the training cost, recent works proposed lots of methods 
+    which is so called training-free NAS. 
     % NASWOT
     For example, Mellor et al. \cite{https://doi.org/10.48550/arxiv.2006.04647} 
     proposed the measurement of the correlation between the binary 
     activation paterns, induced by the untrained network at two inputs, 
     abbreviated as NASWOT. 
     % synflow
-    For another example, Lee et al. \cite{lee2019snip} proposed pruning 
-    parameters based on a saliency metric, which is then extended by 
-    Tanaka et al. \cite{tanaka2020pruning}. Tanaka et al. proposed 
-    Iterative Synaptic Flow Pruning (SynFlow) algorithm 
-    which intends to deal with the layer collapse problem when pruning a 
-    network. The score function used in the algorithm is so-called 
+	Another example can be found in \cite{tanaka2020pruning}, Tanaka et al. 
+    presented pruning a network by using Iterative Synaptic Flow Pruning 
+    (SynFlow) algorithm which intends to deal with the layer collapse 
+    problem. The score function used in the algorithm is so-called 
     \it{synaptic saliency} \rm{score}. Later, Abdelfattah et al. 
     \cite{abdelfattah2021zerocost} extended SynFlow to score a network 
     architecture by summing synaptic saliency score over all parameters 
     in the model. The outcome score represents the trainability of an 
-    architecture. Cavagnero et al. \cite{Cavagnero_2023} found that 
+    architecture. Cavagnero et al. \cite{Cavagnero_2023} pointed out that 
     SynFlow is likely to suffer from gradient explosion, then proposed 
     the LogSynFlow score function which prevents the problem. 
     % NTK
@@ -154,11 +158,12 @@
     a score to estimate the trainability of an architecture. 
 
 % what is unknown?
-    % 做成圖表放第一頁
-    However, \xtab{table:corr_score} shows most score functions suffer 
+    Although the training-free score functions are capable of reducing the 
+    computational cost, \xtab{table:corr_score} shows most score functions suffer %
     from the low correlation between score values and the final accuracy of 
-    architectures, leading to a predicament that no matter how good the 
-    searching algorithm, we can hardly find an optimal architecture. 
+    architectures. The shortcoming leads to a predicament that no matter 
+    how good the searching algorithm is, the optimal architectures are still 
+    buried in dirt. %
     The major problem that causes the low correlation is that a single score 
     function can only evaluate one characteristic of an architecture. 
     \begin{table}[tb]
@@ -167,7 +172,7 @@
             \begin{tabular}{cccc}\toprule
                 Training-free score function & CIFAR-10 & CIFAR-100 & ImageNet-16-120 \\ 
                 \midrule
-                \bf{NTK}                     & -0.50    & -0.47     & -0.49 \\
+                \bf{condition number of NTK}                     & -0.50    & -0.47     & -0.49 \\
                 \bf{Snip}                    & 0.46     & 0.46      & 0.42  \\
                 \bf{Grasp}                   & 0.38     & 0.37      & 0.39  \\
                 \bf{NASWOT}                  & 0.62     & 0.65      & 0.62  \\
@@ -200,16 +205,16 @@
         \vspace{-\baselineskip}
     \end{figure*}
 % method
-    To address the problem, we propose cooperating three complementary 
-    score functions by ranking, which allows every score functions 
-    evaluate an architecture without losing fairness. 
-    The first score function is noise immunity (NI) \cite{10092788}, as 
-    a measurement of the ability of image generalization. 
-    The second one is NASWOT, used as a score to estimate the ability of distinction 
-    of architecture and also a complement of NI. 
-    The last one is LogSynFlow used as the measurement of trainability 
-    and also as a complement to NI and NASWOT. 
-    With these three complementary score functions, an evaluation of an 
+    To address the problem, we propose cooperating three heterogeneous 
+    score functions by ranking, which allows every score function 
+    evaluates an architecture without losing fairness. 
+    %The first score function is noise immunity (NI) \cite{10092788}, as 
+    %a measurement of the ability of image generalization. 
+    %The second one is NASWOT, used as a score to estimate the ability of distinction 
+    %of architecture and also a complement of NI. 
+    %The last one is LogSynFlow used as the measurement of trainability 
+    %and also as a complement to NI and NASWOT. 
+    And with these three score functions, the evaluation of an 
     architecture is not simply from a single aspect but three different 
     parts, which is like estimating the weight of an object by not only 
     the length but its height and width. 
@@ -217,45 +222,47 @@
     % conclusion
     % contribution
     The major contribution of this paper can be summarized as follow:
-    \begin{itemize}
-        \item A novel concept of "complementary" is proposed and used as a metric to choose score functions. 
-        \item Cooperating the complementary score functions by ranking algorithm, which prevents one score overwhelming others numerically. 
-        \item Applying simulated annealing algorithm on the ranking algorithm to imporve the searching ability. 
-    \end{itemize}
-    
+    (1) A novel concept of ``complementary'' is presented and used as 
+    a metric to choose score functions. 
+    (2) Cooperating the score functions by ranking algorithm, 
+    which prevents one score overwhelming others numerically. 
+    (3) Applying simulated annealing algorithm on the ranking algorithm 
+    to imporve the searching ability. 
+    (4) Improving simulated annealing algorithm by using a historical 
+    best set. 
     %orginzation
     The remainder of this paper is organized as follows: 
     \xsec{sec:related_work} provides the detail about the training-free 
-    score functions. \xsec{sec:proposed} gives a detailed 
-    description about the proposed method. \xsec{sec:results} begins 
-    with parameters setting and provides the simulation results in 
-    different search spaces. The conclusion and further 
-    prospect are gived in \xsec{sec:conclusion}.
+    score functions. 
+    \xsec{sec:proposed} gives a detailed description about the proposed method. 
+    \xsec{sec:results} begins with parameters setting and provides the 
+    simulation results in different search spaces. 
+    The conclusion and further prospect are gived in \xsec{sec:conclusion}.
 
     \section{Related Works}
     \label{sec:related_work}
-
     \subsection{Problem Definition}
-    First, assume that $D_{\text{train}}$ and $D_{\text{test}}$ are two subsets of input data $D$. Furthermore, 
-    assume $\mathcal F_A$ is the accuracy function, $\mathcal F_S$ the score function, $\mathcal A_s$ the 
+    In \cite{10092788}, the NAS is defined as following: 
+    first, assume that $D_{\text{train}}$ and $D_{\text{test}}$ are two subsets of input data $D$. 
+    Assume $\mathcal F_A$ is the accuracy function, $\mathcal F_S$ the score function, $\mathcal A_s$ the 
     search algorithm of NAS, and $\mathcal A_T$ the training function. Then, the NAS problem can be 
     described as an optimization problem as follows: 
     \begin{equation}
         \label{equ:nas}
-        \mathbb N^*=\max_{\mathbb N^b\in\mathbb N}\mathcal F_A(\mathcal A_T(\mathbb N^b, D_{\text{train}}), D_{\text{test}})
+        \mathbb N^*=\max_{\mathbb N^b\in\mathbb N}\mathcal F_A(\mathcal A_T(\mathbb N^b, D_{\text{train}}), D_{\text{test}}),
     \end{equation}
     where $\mathbb N$ is a set of neural architectures, namely, the search space of NAS. 
     For non-training-free NAS 
     \begin{equation}
         \label{equ:non-training_free_nas}
-        \mathbb N^b=\mathcal A_S(\mathcal F_A(\mathcal A_T(\mathbb N^s, D_{\text{train}}), D_{\text{test}}), \mathbb N)
+        \mathbb N^b=\mathcal A_S(\mathcal F_A(\mathcal A_T(\mathbb N^s, D_{\text{train}}), D_{\text{test}}), \mathbb N),
     \end{equation}
     and for training-free NAS 
     \begin{equation}
         \label{equ:training_free_nas}
-        \mathbb N^b=\mathcal A_S(\mathcal F_S(\mathbb N^s, D_{\text{train}}), \mathbb N)
+        \mathbb N^b=\mathcal A_S(\mathcal F_S(\mathbb N^s, D_{\text{train}}), \mathbb N),
     \end{equation}
-    Since the training function is removed in training-free NAS algorithms, they need much less 
+    Since the training function is replaced by training-free NAS algorithms, they need much less 
     computational resource than non-training-free NAS algorithms. 
     Training-free NAS is comprised of two part, training-free score function $\mathcal F_S$ and 
     search algorithm $\mathcal A_S$. 
@@ -282,19 +289,26 @@
     \end{equation}
     The rationale behind is that, the more different between the binary codes 
     the better the architecture learns. And the determinant of the kernel matrix 
-    measures how "different" they are by calculating the volume formed by the 
+    measures how ``different'' they are by calculating the volume formed by the 
     row vector of $K_H$. 
 
-    Wu et al. \cite{10092788} found in some cases, an architecture with a high 
+    \begin{figure*}[tb]
+        \vspace{-\baselineskip}
+        \resizebox{1.0\textwidth}{!}{\includegraphics{asset/ni.pdf}}
+        \caption{A simple example to illustrate the procedure of NI.}
+        \label{fig:ni}
+        \centering
+        \vspace{-\baselineskip}
+    \end{figure*}
+
+    Wu et al. \cite{10092788} discovered in some cases, an architecture with a high %%
     NASWOT score may classify the same kind of input data into different classes. 
-    To fix this defect, Wu et al. proposed using noise immunity (NI) to 
-    evaluate an architecture. \xfig{fig:ni} gives an example to illustrate how 
-    NI evaluates an architecture. The score function picks a 
-    mini-batch of data, denoted $X$, and then applies Gaussian noise to it. 
-    The process is defined by $X'=X+z$ where $z$ is the Gaussian noise. 
-    By passing $X$ and $X'$ through the untrained architecture, then computing 
-    the difference of square of each feature map captured at all pooling layers. 
-    Calculate the matrix $\kappa$ defined by 
+    \xfig{fig:ni} gives an example to illustrate how NI evaluates an architecture. 
+    The score function picks a mini-batch of data, denoted $X$, and then applies 
+    Gaussian noise to it. The process is defined by $X'=X+z$ where $z$ is the 
+    Gaussian noise. By passing $X$ and $X'$ through the untrained architecture, 
+    then computing the difference of square of each feature map captured at all 
+    pooling layers. Calculate the matrix $\kappa$ defined by 
     \begin{equation}
         \label{equ:ni_kappa}
         \kappa=\begin{pmatrix}\frac{(\tau_{1,1}-\tau'_{1,1})^2}{\lvert \tau_{1,1}\rvert}&\cdots&\frac{(\tau_{N,1}-\tau'_{N,1})^2}{\lvert \tau_{N,1}\rvert}\\\vdots&\ddots&\vdots\\\frac{(\tau_{1,N_P}-\tau'_{1,N_P})^2}{\lvert \tau_{1,N_P}\rvert}&\cdots&\frac{(\tau_{N,N_P}-\tau'_{N,N_P})^2}{\lvert \tau_{N,N_P}\rvert}\end{pmatrix},
@@ -311,25 +325,17 @@
     where $\epsilon$ is a small positive number, and $e_{N_P}$ and $e_N$ are a row 
     vector of 1's of size $N_P$ and a column vector of 1's of size $N$, respectively. 
     According to the fact that the input data are the same kind, the smaller $\eta$ 
-    is, the better the noise immunity of the architecture is.
-
-    \begin{figure*}[tb]
-        \vspace{-\baselineskip}
-        \resizebox{1.0\textwidth}{!}{\includegraphics{asset/ni.pdf}}
-        \caption{A simple example to illustrate the procedure of NI.}
-        \label{fig:ni}
-        \centering
-        \vspace{-\baselineskip}
-    \end{figure*}
+    is, the better the noise immunity of the architecture is. 
 
     % synflow
-    Besides image-related measurements, there is another characteristic to evaluate a network. 
-    \textit{The Lottery Ticket Hypothesis} \cite{frankle2019lottery} reveals that a 
-    network may have a "core" which decides the final accuracy of the network. 
-    How to prune a network correctly is thereby tempting. Lee et al. 
-    \cite{lee2019snip} presented a high performance algorithm that uses connection 
-    sensitivity as a criterion to prune the network, named single-shot network pruning (SNIP). 
-    which can be briefly viewed as 
+    Besides image-related measurements, there is another characteristic to 
+    evaluate a network, trainability. 
+    %%\textit{The Lottery Ticket Hypothesis} \cite{frankle2019lottery} reveals that a 
+    %%network may have a 'core' which decides the final accuracy of the network. %%
+    %%How to prune a network correctly is thereby tempting. Lee et al. 
+    \cite{lee2019snip} presented an algorithm that uses synaptic saliency score as a 
+    criterion to prune the network, named single-shot network pruning (SNIP). 
+    The synaptic saliency score is defined by 
     \begin{equation}
         \label{equ:snip_connection_sensitivity}
         s_j=\lvert \frac{\partial \mathcal L}{\partial w_j}w_j\rvert,
@@ -359,7 +365,7 @@
     \end{equation}
     where $\mathcal R$ is a scalar loss function, and proposed Iterative Synaptic Flow Pruning (SynFlow) 
     algorithm, an extension of magnitude pruning algorithm that avoids layer-collapse. 
-    Abdelfattah et al. \cite{abdelfattah2021zerocost} extended the work, and proposed to score a 
+    Abdelfattah et al. \cite{abdelfattah2021zerocost} extended the work, and presented to score a 
     network by summing the synaptic saliency score over all parameters in the model, which is 
     defined as 
     \begin{equation}
@@ -373,7 +379,7 @@
     The formula is defined by 
     \begin{equation}
         \label{equ:logsynflow}
-        S(\theta)=\theta\cdot\log(\frac{\partial \mathcal L}{\partial \theta}+1)
+        S(\theta)=\theta\cdot\log(\frac{\partial \mathcal L}{\partial \theta}+1).
     \end{equation}
 
     Except using the synaptic saliency score to measure the trainability, 
@@ -388,61 +394,7 @@
     $\frac{\lambda_m}{\lambda_0}$. The higher the condition is, the faster the converge. 
 
     \subsection{Search Algorithms}
-    
-    There are several search algorithms applied on NAS, including random search, reinforcement learning, and
-    metaheuristic algorithms. 
-    
-    In \cite{https://doi.org/10.48550/arxiv.2006.04647} \cite{Lopes_2021}, random search is applied. 
-    The advantage of random search is simple and easy to implement, and the result can be taken as a 
-    baseline compared to more comprehensive search algorithms. Generally speaking, when applying random 
-    search on a small search space, e.g., NAS-Bench-201 \cite{dong2020nasbench201}, the performance is 
-    similar to other search algorithms. But when it comes to a relatively larger search space, e.g., NAS-Bench-101 
-    \cite{ying2019nasbench101} and NATS-Bench-SSS \cite{Dong_2021}, random search can no longer standout 
-    in other search algorithms. 
-
-    In \cite{zoph2017neural}, reinforcement learning is used to find the maximum accuracy of an architecture 
-    generated by a network architecture controller. The actions $a_{1:T}$ of the reinforcement learning is 
-    equivalent to updating the parameters $\theta_c$ for the controller. The goal is to maximize 
-    its expected reward, defined by 
-    \begin{equation}
-        \label{equ:reinforcement_rw}
-        J(\theta_c)=E_{P(a_{1:T};\theta_c)}[R]
-    \end{equation}
-    and the gradient of $J(\theta_c)$ is defined by
-    \begin{equation}
-        \label{equ:reinforcement_grad}
-        \nabla_{\theta_c} J(\theta_c)=\sum^T_t=1 E_{P(a_{1:T};\theta_c)}[\nabla_{\theta_c}\log P(a_t\mid a_{(t-1):1};\theta_c)R]
-    \end{equation}
-
-    As for an example of metaheuristic algorithm, in \cite{10.1145/3491396.3506510}, Wu et al. leveraged 
-    genetic algorithm (GA) as a search strategy. 
-    By encoding the network architecture, the architecture can be viewed as a gene. Therefore, GA can be 
-    easily applied. 
-    Later in \cite{10092788}, Wu et al. used search economic (SE) \cite{7379579} as a search strategy. The 
-    basic idea of SEs is to first divide the search space into a set of subspaces and investigate those 
-    subspaces based on the expected value of each subspace. The expected value is comprised of 
-    \begin{itemize}
-        \item The number of times the subspace has been investiagted. 
-        \item The average objective value of the new candidate solutions in the subspace at current iteration. 
-        \item The best solution so far in this subspace. 
-    \end{itemize}
-    Based on these designs, SE avoids falling into local optimum, while searching for high expected value instead. 
-    
-    \section{Methods}
-    \label{sec:proposed}
-
-    The motivation origins from these three questions: 
-
-    \textit{1. Can we combine multiple score functions to improve the search performance 
-    or the correlation between score values and the final accuracy of architectures?}
-    
-    The answer is yes. If the chosen score functions are complementary, the new correlation 
-    can overtake the original ones. \cite{10.1145/3491396.3506510} 
-    shows that possibility. When an architecture gains a high NASWOT score, 
-    it may misclassify images in the same class into different classes. NI here comes 
-    to the rescue. By measuring the noise immunity of an architecture, the misclassifying problem 
-    can be solved. Thus, combine NASWOT and NI, the correlation and performance increase. 
-    An example shows in \xfig{fig:ninaswot}.
+    %%
     \begin{figure*}[htb]
         \vspace{-\baselineskip}
         \begin{center}
@@ -458,11 +410,63 @@
         \end{center}
         \vspace{-\baselineskip}
     \end{figure*}
+    %%
+    There are several search algorithms applied on NAS, including random search, reinforcement learning, and
+    metaheuristic algorithms. 
+    In \cite{https://doi.org/10.48550/arxiv.2006.04647} \cite{Lopes_2021}, random search is applied. 
+    The advantage of random search is simple and easy to implement, and the result can be taken as a 
+    baseline compared to more comprehensive search algorithms. Generally speaking, when applying random 
+    search on a small search space, e.g., NAS-Bench-201 \cite{dong2020nasbench201}, the performance is 
+    similar to other search algorithms. But when it comes to a relatively larger search space, e.g., NAS-Bench-101 
+    \cite{ying2019nasbench101} and NATS-Bench-SSS \cite{Dong_2021}, random search can no longer standout 
+    in other search algorithms. 
+
+    In \cite{zoph2017neural}, reinforcement learning is used to find the maximum accuracy of an architecture 
+    generated by a network architecture controller. The actions $a_{1:T}$ of the reinforcement learning is 
+    equivalent to updating the parameters $\theta_c$ for the controller. The goal is to maximize 
+    its expected reward, defined by 
+    \begin{equation}
+        \label{equ:reinforcement_rw}
+        J(\theta_c)=E_{P(a_{1:T};\theta_c)}[R], 
+    \end{equation}
+    and the gradient of $J(\theta_c)$ is defined by
+    \begin{equation}
+        \label{equ:reinforcement_grad}
+        \nabla_{\theta_c} J(\theta_c)=\sum^T_t=1 E_{P(a_{1:T};\theta_c)}[\nabla_{\theta_c}\log P(a_t\mid a_{(t-1):1};\theta_c)R]. 
+    \end{equation}
+
+    As for an example of metaheuristic algorithm, in \cite{10.1145/3491396.3506510}, Wu et al. leveraged 
+    genetic algorithm (GA) as a search strategy. 
+    By encoding the network architecture, the architecture can be viewed as a gene. Therefore, GA can be 
+    easily applied. 
+    Later in \cite{10092788}, Wu et al. used search economic (SE) \cite{7379579} as a search strategy. The 
+    basic idea of SEs is to first divide the search space into a set of subspaces and investigate those 
+    subspaces based on the expected value of each subspace. The expected value is comprised of 
+    (1) The number of times the subspace has been investiagted. 
+    (2) The average objective value of the new candidate solutions in the subspace at current iteration. 
+    (3) The best solution so far in this subspace. 
+    Based on these designs, SE avoids falling into local optimum, while searching for high expected value instead. 
+    
+    \section{Methods}
+    \label{sec:proposed}
+    
+    The motivation origins from these three questions: 
+
+    \textit{1. Can we combine multiple score functions to improve the search performance 
+    or the correlation between score values and the final accuracy of architectures?}
+    
+    The answer is yes. If the chosen score functions are complementary, the new correlation 
+    can overtake the original ones. \cite{10.1145/3491396.3506510} 
+    shows that possibility. When an architecture gains a high NASWOT score, 
+    it may misclassify images in the same class into different classes. NI here comes 
+    to the rescue. By measuring the noise immunity of an architecture, the misclassifying problem 
+    can be solved. Thus, combine NASWOT and NI, the correlation and performance increase. 
+    An example shows in \xfig{fig:ninaswot}.
 
     \textit{2. How to choose the score functions?}
 
-    As mentioned, the key is choose the complement of a score function. For example, 
-    score functions that evaluate the expressivity/distinction ability shall have other 
+    As mentioned, the key is to choose the complement of a score function. For example, 
+    score functions that evaluate the expressivity/distinction ability should have other 
     score functions to evaluate the generalization ability. For these two graphic recognition 
     score functions, the complements can be measurements of trainability. 
 
@@ -471,41 +475,42 @@
     
     One possible way is normalization, but the necessary information is known only 
     after evaluating the whole search space, e.g., range, mean, or standard deviation, 
-    which is practically impossible. To make the proposed score function 
+    which is practically impossible. To make the presented score function 
     agnostic to the search space, it leverages multiple score functions by ranking, 
     which also provides a solution to have equal contributions from each score function. 
 
     \subsection{Simulated Annealing with Ranking Algorithm}
+    
     The simulated annealing (SA) algorithm with ranking algorithm (\palg{})
-    is outlined in \xalg{alg:SA}. In line $1\sim2$, the historical best architectures 
+    is outlined in \xalg{alg:SA}. In line 1-2, the historical best architectures 
     set, denoted $H$, is initialized to an empty set, and an architecture is randomly sampled from 
-    search space, denoted $s$. Line $3\sim18$ are the major part of \palg{}, when the temperature 
-    is lower than ending temperature, the algorithm is terminated. Line $4\sim16$ 
-    represent every time the temperature decreases, $I$ iterations with following steps are executed. 
-    In line $5$, $s$ is used as a seed to generate the neighborhood of it, denoted $U$, 
+    search space, denoted $s$. Line 3-18 are the major part of \palg{}, when the temperature 
+    is lower than ending temperature, the algorithm is terminated. Line 4-16 
+    represent every time the temperature decreases, $t$ iterations with following steps are executed. 
+    In line 5, $s$ is used as a seed to generate the neighborhood of it, denoted $U$, 
     and the size of it is decided by a presetting parameter, the number of neighbours, $N$. 
-    In line $6$, $s$, $U$ and the architectures recorded in historical best architectures set are 
+    In line 6, $s$, $U$ and the architectures recorded in historical best architectures set are 
     put into ranking function. 
     After ranking, the best architecture (including $s$) is added into $H$, and the size of the set is 
     maintained by removing the low-rank architectures. 
     And the best architecture (excluding $s$) which has the highest rank is denoted by $s'$. 
-    In line $9$, the difference of the rank between $s'$ and $s$ is calculated and detnote $\Delta E$. 
-    Then in line $10$, a random variable $x$ is sampled from the uniform distribution on $[0,1]$. 
-    Line $11\sim15$ are the transition process. If the rank of $s'$ is higher than $s$ ($\Delta E<0$), 
+    In line 9, the difference of the rank between $s'$ and $s$ is calculated and detnote $\Delta E$. 
+    Then in line 10, a random variable $x$ is sampled from the uniform distribution on $[0,1]$. 
+    Line 11-15 are the transition process. If the rank of $s'$ is higher than $s$ ($\Delta E<0$), 
     the current solution is replaced by $s'$, or be replaced by probability, defined by 
-    \begin{equation}
+    \begin{equation} 
         \label{equ:SA_rk_prob}
-        e^{-\alpha\frac{\Delta E}{T}},
+        e^{-\alpha\frac{\Delta E}{\Psi}},
     \end{equation}
-    where $T$ is the current temperature, $\Delta E$ the difference of the rank between 
+    where $\Psi$ is the current temperature, $\Delta E$ the difference of the rank between 
     $s$ and $s'$, and $\alpha$ is a constant number adjusts the probability. The more 
     the difference between $s$ and $s'$, the smaller the probability of accepting the new solution. 
-    After the $I$ iterations, the temperature scales down by $r_t$ in line $17$. When $T$ is 
+    After the $t$ iterations, the temperature scales down by $r_\Psi$ in line $17$. When $\Psi$ is 
     lower or equal to $\tau$, the algorithm is terminated and the current architecture is returned in line $19$. 
     Notbly, the size of $H$ is based on the maximum search number of SA, defined by 
     \begin{equation}
         \label{equ:SA_rk_size_of_H}
-        \beta (I\cdot N\cdot\frac{\ln{\tau/T}}{\ln{r_t}}),
+        \beta (I\cdot N\cdot\frac{\ln{\tau/\Psi}}{\ln{r_\Psi}}),
     \end{equation}
     where $\beta$ is the coefficient of the size of $H$ and is a constant number between 0 and 1.
 
@@ -513,29 +518,48 @@
         \caption{The Simulated Annealing with Ranking Algorithm}\label{alg:SA}
         \begin{algorithmic}[1]
             \Input{search space $\mathbb N^*$}
-            \Parameter Initial temperature $T$, ending temperature $\tau$, a real number between 0 and 1, $r_t$, the number of iteration, $I$, the number of generated neighbours, $N$, a real number, $\alpha$, the coefficient of the size of $H$, $\beta$
+            \Parameter Initial temperature $\Psi$, ending temperature $\tau$, a real number between 0 and 1, $r_\Psi$, the number of iteration, $t$, the number of generated neighbours, $N$, a real number, $\alpha$, the coefficient of the size of $H$, $\beta$
             \State Initialize historical best architectures set $H$ to empty set
             \State $s=\text{Randomly sample an architecture from }\mathbb N^*$
-            \While{$T>\tau$}
-                \For{$\text{each }i \in [1\ldots I]$}
+            \While{$\Psi>\tau$}
+                \For{$\text{each }i \in [1\ldots t]$}
                     \State $U = \text{Neighbor}(s, N)$
                     \State $r=\text{Rank}(\{s\}\cup U\cup H)$
                     \State $\text{Maintain}(H)$
                     %\State $s'=\text{Best architecture excluding }s$
                     \State $s'=\arg\min_{\mathbb N^i\neq s}(r)$
-                    \State $\Delta E=\text{Diff}(s', s)$
+                    \State $\Delta E=r(s')-r(s)$
                     \State $x\sim U[0,1]$
                     \If{$\Delta E<0$}
                         \State $s\leftarrow s'$
-                    \ElsIf{$x\leq e^{-\alpha\frac{\Delta E}{T}}$}
+                    \ElsIf{$x\leq e^{-\alpha\frac{\Delta E}{\Psi}}$}
                             \State $s\leftarrow s'$
                     \EndIf
                 \EndFor
-                \State $T\leftarrow T\times r_t$
+                \State $\Psi\leftarrow \Psi\times r_\Psi$
             \EndWhile
             \State $\textbf{Return }s$ \Comment{Return the solution}
         \end{algorithmic}
     \end{algorithm}
+
+    An example of an iteration in \palg{} is shown in \xfig{fig:SA-rank-iteration}. 
+    Assume that at the beginning there is a current solution $s$ and the historical best 
+    architectures set $H=\{H_1,H_2\}$. Next, the neighborhood of $s$ is generated, 
+    denoted $U=\{s_A,s_B,s_C,s_D,s_E\}$. The rank of the architectures in the union 
+    set of $H$, $\{s\}$ and $U$ are calculated. The architecture with highest rank 
+    $s_C$ will be recorded by $H$, and the architecture with highest rank excluding 
+    $s$ is denoted $s'$. Then the difference $\Delta E$ of the rank is used for 
+    solution transition. If $\Delta E<0$, the solution is better than the the current 
+    solution. If it is not better, the solution can still be accepted by probability 
+    $e^{-\alpha\frac{\Delta E}{\Psi}}$. 
+    
+    \begin{figure}[htb]
+        \begin{center}
+            \resizebox*{0.48\textwidth}{!}{\includegraphics{asset/SA-rank-iteration.pdf}}
+            \caption{An example of an iteration of \palg{}.}
+            \label{fig:SA-rank-iteration}
+        \end{center}
+    \end{figure}
 
     \subsection{Encoding Schema}
 
@@ -544,7 +568,7 @@
     For example, NAS-Bench-201 provides 5 operations and 6 nodes for a cell, 
     and cells form an architecture, which implies the whole search space can be 
     encoded into 6-integer vectors. However, a broken architecture appears since 
-    one of the operations is "zeroize", which means the measurement of a broken 
+    one of the operations is ``zeroize'', which means the measurement of a broken 
     architecture is meaningless. To exclude the broken architectures, the encoding 
     schema in \cite{10092788} is used in this paper. The detail of the encoding 
     schema differs from search spaces, but they all share the common core idea, 
@@ -554,107 +578,6 @@
     improves. 
 
     \subsection{Ranking Algorithm}
-
-    The general proposed ranking algorithm is in \xalg{alg:rank-based}. 
-    The first step is to evaluate the network architectures in the subset, 
-    denoted $\mathbb N^s$, of search space, denoted $\mathbb N^*$. The 
-    evaluation of an architecture determined by $j$-th score function 
-    is $s_{\mathcal F_j}(\mathbb N^i)$. After evaluating the subset 
-    of search space, the rank of each score function is calculated, denoted 
-    $r_{\mathcal F}$. Then the final rank, $r$, calculated by summing up 
-    the ranks. If a network architecture gains higher score in these score 
-    functions, the final rank should be higher (smaller index) too. Therefore, 
-    the highest (minimum) rank in $r$ shall be the best network architecture. 
-    In summary, the ranking algorithm makes the contribution of 
-    each score function even and therefore evaluate an architecture from 
-    different aspects. 
-
-    \begin{algorithm}[h]
-        \caption{The Ranking Algorithm}\label{alg:rank-based}
-        \begin{algorithmic}[1]
-            \Input{A subspace, ${\mathbb N}^{s}$, from search space, ${\mathbb N}^{*}$}
-            \For{$\text{each }{\mathbb N}^i\text{ in }{\mathbb N}^s$}
-                \For{$\text{each }j\in\{1,\ldots,M\}$}
-                    \State $s_{{\mathcal F}_{j}}({\mathbb N}^i)={\mathcal F}_{j}({\mathbb N}^i)$
-                \EndFor
-            \EndFor
-            \For{$\text{each }j\in\{1,\ldots,M\}$}
-                \State $r_{{\mathcal F}_{j}}({\mathbb N}^i)$ = index of ${\mathbb N}^i$ in list $[s_{{\mathcal F}_{j}}({\mathbb N}^1),\ldots,s_{{\mathcal F}_{j}}({\mathbb N}^{\lvert {\mathbb N}^s\rvert})]$ \par sorted by descending order
-            \EndFor
-            \State $r({\mathbb N}^i)=\sum^M_{j=0} r_{{\mathcal F}_{j}}({\mathbb N}^i)$
-            %\State $i^*=\arg\min_{i}\{r({\mathbb N}^i)\}$
-            %\State $\textbf{Return }{\mathbb N}^{i^*}$
-            \State $\textbf{Return }r$
-        \end{algorithmic}
-    \end{algorithm}
-
-    With the proposed ranking algorithm as a framework, the next question is 
-    to choose complementary score functions. The recent training-free 
-    score functions can be roughly classified into different kinds. NASWOT, 
-    linear regions distribution \cite{https://doi.org/10.48550/arxiv.2102.11535} \cite{lin2021zennas}, 
-    maximum entropy of architecture \cite{sun2022maedet} are measurements 
-    to the ability of distinction and expressivity of an architecture; 
-    NI is a measurement to image generalization ability of an architecture; 
-    the condition number of NTK, modified version of SNIP, GraSP, SynFlow, and 
-    LogSynFlow are measurements to trainability of an architecture. 
-    As mentioned, the chosen score function shall be complementary to each other. 
-    In this paper, NI and NASWOT are a complementary set, which takes 
-    the ability of image generalization and distinction into account. 
-    This complementary set is viewed as the measurement of the ability of graphic 
-    recognition. Therefore, the last missing piece is the trainability of an 
-    architecture, which, LogSynFlow is chosen to measure it. 
-
-    \section{Experiment Results}
-    \label{sec:results}
-
-    We evalute the performance of the proposed algorithm, \palg{}, 
-    for searching the architectures of high accuracy. For comparison, several NAS 
-    algorithms are included, e.g., random search (RS), regularized evolution algorithm 
-    (REA) \cite{real2019regularized}, reinforcement learning (RL) \cite{Williams:92}, 
-    Bayesian optimization with hyper band (BOHB) \cite{falkner2018bohb}, RS with 
-    weight sharing (RSWS) \cite{li2019random}, differentiable architecture search 
-    with first order (DARTS-V1) \cite{liu2019darts}, DARTS with second order 
-    (DARTS-V2) \cite{liu2019darts}, gradient-based search using differentiable 
-    architecture sampler (GDAS) \cite{dong2019searching}, self-evaluated template 
-    network (SETN) \cite{Dong_2019}, efficient NAS (ENAS) \cite{pham2018efficient}, 
-    assisted REA (AREA) \cite{https://doi.org/10.48550/arxiv.2006.04647}, 
-    %zero-cost NAS \cite{https://doi.org/10.48550/arxiv.2101.08134}, 
-    TE-NAS \cite{https://doi.org/10.48550/arxiv.2102.11535}, gradient kernel-based 
-    NAS (KNAS) \cite{xu2021knas}, RS with NASWOT \cite{https://doi.org/10.48550/arxiv.2006.04647}, 
-    RS with noise immunity (NI) \cite{10092788}, RS with LogSynFlow \cite{Cavagnero_2023}, 
-    and RS with ranking.  
-
-    The three search spaces, NATS-bench-SSS, NATS-bench-TSS 
-    \cite{Dong_2021} and NAS-Bench-101 \cite{ying2019nasbench101}, are used 
-    here to evalute the performance of the NAS algorithms. The architectures 
-    of NATS-bench-TSS is same as NAS-Bench-201 \cite{dong2020nasbench201}. 
-    The architectures in NATS-bench-SSS and NATS-bench-TSS are trained by the three datasets: 
-    CIFAR10, CIFAR100, ImageNet-16-120, while NAS-Bench-101 is trained by one: 
-    CIFAR10. 
-
-    \subsection{Environment and Parameter Settings}
-    The experiment is conducted on a PC with Intel Core i7-11700K (3.60 GHz, 16-MB Cache, and 16 cores), 
-    a single NVIDIA RTX3070 Ti GPU with 8 GB memory, driver version 520.61.05, CUDA version 11.8, and 
-    65 GB available memory running on Ubuntu 20.04.1 with linux kernel 5.15.0-73-generic. All the program 
-    is written in Python 3.7.16 with PyTorch 1.7.1+cu110 package. The simulations of all 
-    non-weight sharing NASs are carried out for 500 runs on all the search spaces except AREA, which is 50 runs. 
-    For weight sharing NAS algorithms, each is carried out for 3 runs. And for training-free 
-    algorithms, each is carried out for 100 runs and are given an evaluation 
-    budget of 1000 for all the search space. The parameter settings of \palg{} are as follows: 
-    initial temperature, ending temperature, rate of decrease of temperature, the number of iteration, 
-    the constant number adjusting acceptance probability, the number of generated neighbours, and 
-    the coefficient of the size of historical best architectures set are set 
-    to 1, 0.0008, 0.745, 4, 0.25, 10, 1, so that the maximum number of searching candidates is 1000. 
-
-    % 3 search spaces merge
-    \subsection{Simulation Results}
-    The simulation results in NATS-Bench-SSS \cite{Dong_2021} is shown in \xtab{table:overall_sss}. The proposed 
-    NAS algorithm and ranking function is compared with the other five non-weight sharing 
-    algorithm and NI, NASWOT, and LogSynFlow. 
-    For fairness, the searching architectures for the RS with training-free score 
-    functions are identical. The performance of the ranking algorithm is similar to NI but 
-    lower than LogSynFlow. However, the proposed NAS algorithm improves the results 
-    significantly and outperforms almost all the compared algorithms. 
 
     \begin{table*}[htb]
         %\normalsize
@@ -677,21 +600,75 @@
         RS-LogSynFlow (N=1,000) & $123$& $89.60 \pm 0.11$ & $92.61 \pm 0.18$ & $68.23 \pm 0.49$ & $68.30 \pm 0.54$  & $43.58 \pm 0.58$ & $43.48 \pm 0.40$ \\ 
         RS-rank (ours) (N=1000) & $612$& $89.59 \pm 0.14$ & $92.51 \pm 0.17$ & $67.56 \pm 0.75$ & $67.55 \pm 0.82$  & $43.36 \pm 0.62$ & $43.27 \pm 0.45$ \\ 
         \palg{} (ours)          & $725$& $90.33 \pm 0.15$ & $93.26 \pm 0.24$ & $69.89 \pm 0.48$ & $70.24 \pm 0.42$  & $45.41 \pm 0.41$ & $46.43 \pm 0.75$ \\ \midrule
+        %SA-NI                  &      & $90.24 \pm 0.10$ & $93.20 \pm 0.19$ & $69.83 \pm 0.56$ & $70.10 \pm 0.40$  & $45.49 \pm 0.50$ & $45.98 \pm 0.89$
+        %SA-NASWOT              &      & $90.21 \pm 0.30$ & $93.16 \pm 0.28$ & $69.16 \pm 1.28$ & $69.27 \pm 1.46$  & $44.89 \pm 1.27$ & $45.49 \pm 1.33$
         Optimal             &          & $90.71$          & $93.65$          & $70.92$          & $71.34$           & $46.73$          & $47.40$          \\ \bottomrule
         \end{tabular}
         \label{table:overall_sss}
           \vspace{-\baselineskip}
     \end{table*}
 
-    In NATS-Bench-TSS \cite{Dong_2021}, \xtab{table:overall_201} compares \palg{} with the other non-weight sharing algorithms, six 
-    weight sharing algorithms, and three different training-free score functions, i.e., NI, NASWOT, and 
-    LogSynFlow. Same as the experiment of NATS-Bench-TSS, the searching architectures are identical 
-    for the RS with score functions. Non-weight sharing algorithms like REA and AREA outperform all 
-    the other search algorithms, though the time cost is tremendous. In CIFAR10 and ImageNet16-120 datasets, 
-    the performance of ranking algorithm and \palg{} outperform other training-free and non-weight sharing 
-    algorithms and show a lower standard deviation compared with the others. In CIFAR100, 
-    NI though outperforms the ranking algorithm, \palg{} still has better performance. 
-    
+    The general proposed ranking algorithm is in \xalg{alg:rank-based}. 
+    Line 1-3 are to evaluate the network architectures in the subset 
+    by each score function, and then the rank of each architecture is 
+    obtained through the index of sorted scores. The subset, denoted 
+    $\mathbb N^s$, is sampled from the search space, $\mathbb N^*$. And 
+    the $j$-th score function is $\mathcal F_j(\cdot)$. The rank of the 
+    $i$-th architecture in the results of $j$-th score function are 
+    $r_{\mathcal F_j}(\mathbb N^i)$, as shown in line 2. In Line 4, 
+    the final rank of $i$-th architecture is calculated by summing up 
+    its rank in $j$-th score function. Then the ranking result of each 
+    architecture is returned. In summary, the ranking algorithm makes the 
+    contribution of each score function even and evaluate an architecture 
+    from different aspects. If an architecture gains higher score in these 
+    score functions, the final rank should be higher, i.e., smaller index. 
+    Therefore, the highest rank (numerically lowest) in $r$ is the best 
+    network architecture. In practical implementation, to reduce the 
+    evaluation time of training-free score functions, the scores of 
+    architecture can be stored and used in the future. 
+    %The first step is to evaluate the network architectures in the subset, 
+    %denoted $\mathbb N^s$, of search space, denoted $\mathbb N^*$. The 
+    %evaluation of an architecture determined by $j$-th score function 
+    %is $s_{\mathcal F_j}(\mathbb N^i)$. After evaluating the subset 
+    %of search space, the rank of each score function is calculated, denoted 
+    %$r_{\mathcal F}$. Then the final rank, $r$, calculated by summing up 
+    %the ranks. If a network architecture gains higher score in these score 
+    %functions, the final rank should be higher (smaller index) too. Therefore, 
+    %the highest (minimum) rank in $r$ shall be the best network architecture. 
+    %In summary, the ranking algorithm makes the contribution of 
+    %each score function even and therefore evaluate an architecture from 
+    %different aspects. 
+
+    \begin{algorithm}[h]
+        \caption{The Ranking Algorithm}\label{alg:rank-based}
+        \begin{algorithmic}[1]
+            \Input{A subspace, ${\mathbb N}^{s}$, from search space, ${\mathbb N}^{*}$}
+            \For{$\text{each }j\in\{1,\ldots,M\}$}
+                \State $r_{{\mathcal F}_{j}}({\mathbb N}^i)$ = index of ${\mathbb N}^i$ in list $[{\mathcal F}_{j}({\mathbb N}^1),\ldots,{\mathcal F}_{j}({\mathbb N}^{\lvert {\mathbb N}^s\rvert})]$ \par sorted by descending order
+            \EndFor
+            \State $r({\mathbb N}^i)=\sum^M_{j=0} r_{{\mathcal F}_{j}}({\mathbb N}^i)$
+            \State $\textbf{Return }r$
+        \end{algorithmic}
+    \end{algorithm}
+
+    The next question is choosing ``complementary'' score functions. The recent training-free 
+    score functions can be roughly classified into different kinds. NASWOT, 
+    linear regions distribution \cite{https://doi.org/10.48550/arxiv.2102.11535} \cite{lin2021zennas}, 
+    maximum entropy of architecture \cite{sun2022maedet} are measurements 
+    to the ability of distinction and expressivity of an architecture; 
+    NI is a measurement to image generalization ability of an architecture; 
+    the condition number of NTK, modified version of SNIP, GraSP, SynFlow, and 
+    LogSynFlow are measurements to trainability of an architecture. 
+    As mentioned, the chosen score function should cover every characteristics 
+    of an architecture. In this paper, NI and NASWOT are a complementary set, 
+    which takes the ability of image generalization and distinction into account. 
+    This set is viewed as the measurement of the ability of graphic 
+    recognition. Therefore, the last missing piece is the trainability of an 
+    architecture, which, LogSynFlow is chosen to measure it. 
+
+    \section{Experiment Results}
+    \label{sec:results}
+
     \begin{table*}[htb]
         %\normalsize
         %\centering
@@ -721,19 +698,111 @@
         RS-rank (ours) (N=1000) & $887$  & $90.07 \pm \z{0.41}$ & $93.32 \pm 0.42$ & $70.06 \pm 1.34$ & $70.10 \pm 1.45$ & $43.68 \pm 2.11$ & $44.07 \pm 2.19$ \\ 
         TE-NAS                  & $459$  & $90.02 \pm \z{0.56}$ & $93.31 \pm 0.45$ & $70.12 \pm 1.04$ & $70.26 \pm 1.07$ & $43.15 \pm 2.23$ & $43.49 \pm 2.26$ \\
         \palg{} (ours)          & $902$  & $90.20 \pm \z{0.24}$ & $93.53 \pm 0.22$ & $70.51 \pm 0.71$ & $70.63 \pm 0.66$ & $43.80 \pm 1.86$ & $44.63 \pm 1.64$ \\ \midrule
+        %SA-NI                  &        & $90.06 \pm \z{0.29}$ & $93.38 \pm 0.50$ & $70.41 \pm 0.74$ & $70.34 \pm 1.34$ & $42.69 \pm 1.87$ & $43.22 \pm 1.93$
+        %SA-NASWOT              &        & $89.11 \pm \z{1.22}$ & $92.22 \pm 1.32$ & $69.38 \pm 1.23$ & $69.48 \pm 1.46$ & $41.77 \pm 3.96$ & 
         Optimal             &          & $91.61$              & $94.37$          & $73.49$          & $73.51$          & $46.73$          & $47.31$          \\ \bottomrule
         \end{tabular}
         \label{table:overall_201}
         \vspace{-\baselineskip}
     \end{table*}
 
-    Lastly, the result of the experiment in NAS-Bench-101 \cite{ying2019nasbench101} is shown in \xtab{table:overall_101}. 
-    It compares rank function and \palg{} with two non-weight sharing algorithms and two weight 
-    sharing algorithms. ENAS has the best performance, while the computation time is the highest. 
-    Compared \palg{} with other training-free score functions, the performance and stability are better 
-    than others with a reasonable time cost. 
+    We evalute the performance of the proposed algorithm, \palg{}, 
+    for searching the architectures of high accuracy. For comparison, several NAS 
+    algorithms are included, e.g., random search (RS), regularized evolution algorithm 
+    (REA) \cite{real2019regularized}, reinforcement learning (RL) \cite{Williams:92}, 
+    Bayesian optimization with hyper band (BOHB) \cite{falkner2018bohb}, RS with 
+    weight sharing (RSWS) \cite{li2019random}, differentiable architecture search 
+    with first order (DARTS-V1) \cite{liu2019darts}, DARTS with second order 
+    (DARTS-V2) \cite{liu2019darts}, gradient-based search using differentiable 
+    architecture sampler (GDAS) \cite{dong2019searching}, self-evaluated template 
+    network (SETN) \cite{Dong_2019}, efficient NAS (ENAS) \cite{pham2018efficient}, 
+    assisted REA (AREA) \cite{https://doi.org/10.48550/arxiv.2006.04647}, 
+    %zero-cost NAS \cite{https://doi.org/10.48550/arxiv.2101.08134}, 
+    TE-NAS \cite{https://doi.org/10.48550/arxiv.2102.11535}, RS with NASWOT (RS-NASWOT) \cite{https://doi.org/10.48550/arxiv.2006.04647}, 
+    RS with noise immunity (RS-NI) \cite{10092788}, RS with LogSynFlow (RS-LogSynFlow) \cite{Cavagnero_2023}, 
+    and RS with ranking (RS-rank). 
 
-    \begin{table*}[t]
+    The three search spaces, NATS-bench-SSS, NATS-bench-TSS 
+    \cite{Dong_2021} and NAS-Bench-101 \cite{ying2019nasbench101}, are used 
+    here to evalute the performance of the NAS algorithms. The architectures 
+    of NATS-bench-TSS is same as NAS-Bench-201 \cite{dong2020nasbench201}. 
+    The architectures in NATS-bench-SSS and NATS-bench-TSS are trained by the three datasets: 
+    CIFAR10, CIFAR100, ImageNet-16-120, while NAS-Bench-101 is trained by one: 
+    CIFAR10. 
+
+    \subsection{Environment and Parameter Settings}
+    The experiment is conducted on a PC with Intel Core i7-11700K (3.60 GHz, 16-MB Cache, and 16 cores), 
+    a single NVIDIA RTX3070 Ti GPU with 8 GB memory, driver version 520.61.05, CUDA version 11.8, and 
+    65 GB available memory running on Ubuntu 20.04.1 with linux kernel 5.15.0-73-generic. All the program 
+    is written in Python 3.7.16 with PyTorch 1.7.1+cu110 package. The simulations of all 
+    non-weight sharing NASs are carried out for 500 runs on all the search spaces except AREA, which is 50 runs. 
+    For weight sharing NAS algorithms, each is carried out for 3 runs. And for training-free 
+    algorithms, each is carried out for 100 runs and are given an evaluation 
+    budget of 1000 for all the search space. The parameter settings of \palg{} are as follows: 
+    initial temperature, ending temperature, rate of decrease of temperature, the number of iteration, 
+    the constant number adjusting acceptance probability, the number of generated neighbours, and 
+    the coefficient of the size of historical best architectures set are set 
+    to 1, 0.0008, 0.745, 4, 0.25, 10, 1, so that the maximum number of searching candidates is 1000. 
+    Notbly, in NAS-Bench-101 search space, we conduct experiments with an evaluation budget of 5000 for RS, 
+    since NAS-Bench-101 contains much more architectures.
+
+    \subsection{Simulation Results} % 補實驗描述
+    % sss
+    The simulation results in NATS-Bench-SSS \cite{Dong_2021} is shown in \xtab{table:overall_sss}. 
+    The proposed NAS algorithm and ranking function is compared with the other five non-weight sharing 
+    algorithm and three training-free score functions with RS, i.e., RS-NI, RS-NASWOT, 
+    and RS-LogSynFlow. For fairness, the searching architectures for the RS with training-free 
+    score functions are identical. Among the four training-free score functions with RS, RS-LogSynFlow 
+    has the highest accuracy in CIFAR10. The accuracy of RS-NI and RS-rank are similar, but the stability 
+    of RS-rank is better. In CIFAR100, RS-LogSynFlow performs best, then is RS-NI, RS-rank, RS-NASWOT. 
+    In ImageNet16, RS-LogSynFlow still has the highest accuracy and stability, then is RS-rank, RS-NI, 
+    RS-NASWOT. However, \palg{} improves the results significantly and outperforms almost all the 
+    compared algorithms, including AREA, REA, and RL. It can be seen that, search algorithms guides 
+    the searching direction for searching better architectures, and the training-free score functions
+    accelerate the whole searching process by eliminating the training stage. 
+
+    % tss
+    In NATS-Bench-TSS \cite{Dong_2021}, \xtab{table:overall_201} compares \palg{} with the other 
+    non-weight sharing algorithms, six weight sharing algorithms, three different training-free 
+    score functions with RS, i.e., RS-NI, RS-NASWOT, and RS-LogSynFlow and one 
+    training-free method, TE-NAS. Same as the experiment of NATS-Bench-SSS, the searching 
+    architectures are identical for the RS with score functions. Non-weight sharing algorithms 
+    like REA and AREA outperform all the other search algorithms, though the time cost is 
+    tremendous. Among the four training-free score functions with random search, RS-rank has the 
+    highest accuracy in CIFAR10 and ImageNet16. But in CIFAR100, RS-NI has the highest accuracy. 
+    In CIFAR10 validation dataset, RS-NI is the most stable, RS-rank the second, RS-LogSynFlow the 
+    third and RS-NASWOT the last. In CIFAR10 test dataset, RS-rank is the most stable, then is RS-NI, 
+    RS-LogSynFlow, RS-NASWOT. In CIFAR100, RS-NI is the most stable, RS-NASWOT the second but 
+    has lower accuracy, RS-rank the third, the last is RS-LogSynFlow. In ImageNet16, RS-rank is the 
+    most stable, then is RS-NI, RS-NASWOT, RS-LogSynFlow. According to the results, RS-rank does 
+    integrate the score functions and use them to evaluate an architecture by different characteristics. 
+    With the help of search algorithm, \palg{} outperforms all the others training-free methods, 
+    and obtains a better stability. In CIFAR10 and CIFAR100, the standard deviation of \palg{} is lower 
+    than all the non-weight sharing algorithms. And in ImageNet16, the standard deviation of \palg{} is 
+    lower than all the training-free methods. 
+
+    % 101
+    The result of the experiment in NAS-Bench-101 \cite{ying2019nasbench101} is shown in \xtab{table:overall_101}. 
+    It compares rank function and \palg{} with two non-weight sharing algorithms, two weight 
+    sharing algorithms, and three training-free score functions with RS. The training-free 
+    score functions are same to the ones in NATS-Bench-TSS and NATS-Bench-SSS. In the experiment, ENAS has 
+    the best performance, while the computation time is the highest. AREA and REA performs similarly. 
+    Both have higher accuracy than most of others. 
+    In CIFAR10 validation dataset, with $1000$ sampled architectures ($N=1000$), the accuracy of 
+    RS-NI is better than RS-rank, but the standard deviation is worse than RS-rank. And RS-NASWOT 
+    though is higher than RS-LogSynFlow, RS-NASWOT is the most unstable. With $5000$ sampled architectures 
+    ($N=5000$), RS-rank outperforms RS-NI instead and becomes the best method. RS-NASWOT and RS-LogSynFlow
+    performs similarly, but RS-NASWOT is more unstable. Lastly, \palg{} has better accuracy 
+    and stability than all the other training-free score functions. In CIFAR10 test dataset, with $1000$ 
+    sampled architectures ($N=1000$), RS-NI has higher accuracy than RS-rank, however, the stability of 
+    RS-NI is much worse than RS-rank. The accuracy and stability of \palg{} is the best among the 
+    training-free methods. With $5000$ sampled architectures ($N=5000$), RS-NI performs better than 
+    RS-rank but has much lower stability. RS-LogSynFlow performs better than RS-NASWOT which not only 
+    has low accuracy but also low stability. \palg{} is still best among these training-free score 
+    functions. Compared with \palg{} and the other NAS methods, though the performance and stability 
+    are a little bit worse than AREA, REA and ENAS, the time cost of \palg{} is much less than them. 
+
+    \begin{table}[t]
         %\normalsize
         %\centering
         \newcommand{\z}{\phantom{0}}
@@ -750,28 +819,34 @@
             DARTS-V1            & $20,483$   & $83.50 \pm 0.11$ & $83.74 \pm 0.03$ \\
             ENAS                & $22,325$   & $93.83 \pm 0.28$ & $93.34 \pm 0.26$ \\ \midrule
                                 &            & \textbf{Training-free}      &       \\
-            RS-NI (N=1,000)         & $280$  & $92.89 \pm 2.10$ & $92.55 \pm 1.33$ \\ 
-            RS-NASWOT (N=1,000)     & $162$  & $92.27 \pm 6.60$ & $92.10 \pm 4.44$ \\ 
-            RS-LogSynFlow (N=1,000) & $105$  & $91.81 \pm 1.52$ & $91.21 \pm 1.71$ \\ 
-            RS-rank (ours) (N=1000) & $516$  & $92.44 \pm 1.42$ & $91.94 \pm 2.01$ \\ 
+            RS-NI (N=1,000)         & $476$  & $92.89 \pm 2.10$ & $92.55 \pm 1.33$ \\ 
+            RS-NASWOT (N=1,000)     & $127$  & $92.27 \pm 6.60$ & $92.10 \pm 4.44$ \\ 
+            RS-LogSynFlow (N=1,000) & $76$   & $91.81 \pm 1.52$ & $91.21 \pm 1.71$ \\ 
+            RS-rank (ours) (N=1000) & $679$  & $92.44 \pm 1.42$ & $91.94 \pm 2.01$ \\
+            RS-NI (N=5,000)         & $2390$ & $92.84 \pm 1.55$ & $92.35 \pm 2.69$ \\ 
+            RS-NASWOT (N=5,000)     & $635$  & $91.67 \pm 4.99$ & $90.60 \pm 6.64$ \\ 
+            RS-LogSynFlow (N=5,000) & $408$  & $91.66 \pm 1.72$ & $91.17 \pm 1.86$ \\ 
+            RS-rank (ours) (N=5,000)& $3434$  & $92.87 \pm 0.97$ & $92.32 \pm 1.47$ \\ 
             \palg{} (ours)          & $595$  & $93.16 \pm 0.97$ & $92.77 \pm 1.03$ \\ \midrule
+            %SA-NI                  &        & $92.38 \pm 3.50$ & $92.71 \pm 1.97$
+            %SA-NASWOT
             Optimal             &            & $95.12$          & $94.32$          \\ \bottomrule
             \end{tabular}
         }
         \label{table:overall_101}
         \vspace{-\baselineskip}
-    \end{table*}
+    \end{table}
 
     \section{Conclusion}
     \label{sec:conclusion}
-    In this paper, a novel concept of "complementary" is proposed and used as a basis to choose 
+    In this paper, a novel concept of ``complementary'' is proposed and used as a basis to choose 
     training-free score functions. The new rank algorithm is then applied to simulated annealing 
-    algorithm. The simulation result shows that the proposed algorithm, named SA-rk, not only outperforms the most 
+    algorithm. The simulation result shows that the proposed algorithm, named \palg{}, not only outperforms the most 
     state-of-art training-free score functions but also some of the non-training-free methods. 
     The proposed algorithm also shows robustness, which performs well between different search 
     spaces vary with neural network structures and size. 
-    The limitation of SA-rk is the lack of versatility since the score functions are mainly chosen 
-    for common image recognition. That means SA-rk may not be applied in the search of architectures 
+    The limitation of \palg{} is the lack of versatility since the score functions are mainly chosen 
+    for common image recognition. That means \palg{} may not be applied in the search of architectures 
     designed for other usages, i.e., speech recognition, NLP. However, the problem is able to be solved 
     by choosing the corresponding complementary score functions. Some further questions are how many 
     score functions are required for precisely estimating the performance of architectures and what are they? 
