@@ -83,7 +83,7 @@
     score function to evaluate how a neural network architecture performs. 
     However, every architecture has unique characteristics. To accurately 
     evaluate an architecture, the score function should take the different 
-    aspects of an neural architecture into account. 
+    aspects of a neural architecture into account. 
     To achieve the goal, we propose a rank-based training-free NAS algorithm, 
     which combines three ``complementary'' training-free score functions to 
 	evaluate an architecture. 
@@ -595,13 +595,14 @@
         RL                  & $12,000$ & $90.25 \pm 0.23$ & $93.16 \pm 0.21$ & $69.84 \pm 0.59$ & $69.96 \pm 0.57$  & $45.06 \pm 0.77$ & $45.71 \pm 0.93$ \\
         BOHB                & $12,000$ & $90.07 \pm 0.28$ & $93.01 \pm 0.24$ & $69.75 \pm 0.60$ & $69.90 \pm 0.60$  & $45.11 \pm 0.69$ & $45.56 \pm 0.81$ \\ \midrule
                             &          &                  &                  & \textbf{Training-free} &             &                  &                  \\
-        RS-NI (N=1,000)         & $293$& $89.55 \pm 0.16$ & $92.56 \pm 0.21$ & $67.67 \pm 0.91$ & $67.61 \pm 1.06$  & $43.19 \pm 0.73$ & $43.22 \pm 0.53$ \\ 
-        RS-NASWOT (N=1,000)     & $208$& $89.25 \pm 0.44$ & $92.21 \pm 0.31$ & $65.09 \pm 2.89$ & $64.61 \pm 3.16$  & $41.29 \pm 2.32$ & $41.35 \pm 2.31$ \\ 
-        RS-LogSynFlow (N=1,000) & $123$& $89.60 \pm 0.11$ & $92.61 \pm 0.18$ & $68.23 \pm 0.49$ & $68.30 \pm 0.54$  & $43.58 \pm 0.58$ & $43.48 \pm 0.40$ \\ 
-        RS-rank (ours) (N=1000) & $612$& $89.59 \pm 0.14$ & $92.51 \pm 0.17$ & $67.56 \pm 0.75$ & $67.55 \pm 0.82$  & $43.36 \pm 0.62$ & $43.27 \pm 0.45$ \\ 
+        RS-NI (N=1,000)         & $265$& $89.55 \pm 0.16$ & $92.56 \pm 0.21$ & $67.67 \pm 0.91$ & $67.61 \pm 1.06$  & $43.19 \pm 0.73$ & $43.22 \pm 0.53$ \\ 
+        RS-NASWOT (N=1,000)     & $187$& $89.25 \pm 0.44$ & $92.21 \pm 0.31$ & $65.09 \pm 2.89$ & $64.61 \pm 3.16$  & $41.29 \pm 2.32$ & $41.35 \pm 2.31$ \\ 
+        RS-LogSynFlow (N=1,000) & $127$& $89.60 \pm 0.11$ & $92.61 \pm 0.18$ & $68.23 \pm 0.49$ & $68.30 \pm 0.54$  & $43.58 \pm 0.58$ & $43.48 \pm 0.40$ \\ 
+        RS-rank (ours) (N=1000) & $567$& $89.59 \pm 0.14$ & $92.51 \pm 0.17$ & $67.56 \pm 0.75$ & $67.55 \pm 0.82$  & $43.36 \pm 0.62$ & $43.27 \pm 0.45$ \\ 
+        %SA-NI                   & $214$& $90.24 \pm 0.10$ & $93.20 \pm 0.19$ & $69.83 \pm 0.56$ & $70.10 \pm 0.40$  & $45.49 \pm 0.50$ & $45.98 \pm 0.89$ \\
+        %SA-NASWOT               & $242$& $90.21 \pm 0.30$ & $93.16 \pm 0.28$ & $69.16 \pm 1.28$ & $69.27 \pm 1.46$  & $44.89 \pm 1.27$ & $45.49 \pm 1.33$ \\
+        %SA-LogSynFlow           & $176$& $90.71 \pm 0.00$ & $93.40 \pm 0.00$ & $70.30 \pm 0.04$ & $70.72 \pm 0.00$  & $44.73 \pm 0.00$ & $47.17 \pm 0.00$ \\
         \palg{} (ours)          & $725$& $90.33 \pm 0.15$ & $93.26 \pm 0.24$ & $69.89 \pm 0.48$ & $70.24 \pm 0.42$  & $45.41 \pm 0.41$ & $46.43 \pm 0.75$ \\ \midrule
-        %SA-NI                  &      & $90.24 \pm 0.10$ & $93.20 \pm 0.19$ & $69.83 \pm 0.56$ & $70.10 \pm 0.40$  & $45.49 \pm 0.50$ & $45.98 \pm 0.89$
-        %SA-NASWOT              &      & $90.21 \pm 0.30$ & $93.16 \pm 0.28$ & $69.16 \pm 1.28$ & $69.27 \pm 1.46$  & $44.89 \pm 1.27$ & $45.49 \pm 1.33$
         Optimal             &          & $90.71$          & $93.65$          & $70.92$          & $71.34$           & $46.73$          & $47.40$          \\ \bottomrule
         \end{tabular}
         \label{table:overall_sss}
@@ -669,43 +670,6 @@
     \section{Experiment Results}
     \label{sec:results}
 
-    \begin{table*}[htb]
-        %\normalsize
-        %\centering
-        \newcommand{\z}{\phantom{0}}
-        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms in NATS-Bench-TSS.}}
-        \vspace{-\baselineskip}
-        \begin{tabular}{@{}lrcccccc@{}}\toprule
-        Method & Search (s) & \multicolumn{2}{c}{CIFAR-10} & \multicolumn{2}{c}{CIFAR-100} & \multicolumn{2}{c}{ImageNet-16-120} \\ \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
-                            &          & validation           & test             & validation           & test             & validation       & test \\ \midrule
-                            &          &                      &                  & \textbf{Non-weight sharing} &           &                  &                  \\
-        AREA                & $12,000$ & $91.18 \pm \z{0.43}$ & $93.95 \pm 0.39$ & $71.84 \pm 1.21$ & $71.92 \pm 1.29$ & $45.04 \pm 1.03$ & $45.40 \pm 1.14$ \\
-        REA                 & $12,000$ & $91.25 \pm \z{0.31}$ & $94.02 \pm 0.31$ & $72.28 \pm 0.95$ & $72.23 \pm 0.84$ & $45.71 \pm 0.77$ & $45.77 \pm 0.80$ \\
-        RS                  & $12,000$ & $91.07 \pm \z{0.26}$ & $93.86 \pm 0.23$ & $71.46 \pm 0.97$ & $71.55 \pm 0.97$ & $45.03 \pm 0.91$ & $45.28 \pm 0.97$ \\
-        RL                  & $12,000$ & $91.12 \pm \z{0.25}$ & $93.90 \pm 0.26$ & $71.80 \pm 0.94$ & $71.86 \pm 0.89$ & $45.37 \pm 0.74$ & $45.64 \pm 0.78$ \\
-        BOHB                & $12,000$ & $91.17 \pm \z{0.27}$ & $93.94 \pm 0.28$ & $72.04 \pm 0.93$ & $72.00 \pm 0.86$ & $45.55 \pm 0.79$ & $45.70 \pm 0.86$ \\ \midrule
-                            &          &                      &                  & \textbf{Weight sharing} &               &                  &                  \\
-        RSWS                & $4,154$  & $87.60 \pm \z{0.61}$ & $91.05 \pm 0.66$ & $68.27 \pm 0.72$ & $68.26 \pm 0.96$ & $39.73 \pm 0.34$ & $40.69 \pm 0.36$ \\
-        DARTS-V1            & $5,475$  & $49.27 \pm 13.44$    & $59.84 \pm 7.84$ & $61.08 \pm 4.37$ & $61.26 \pm 4.43$ & $38.07 \pm 2.90$ & $37.88 \pm 2.91$ \\
-        DARTS-V2            & $16,114$ & $58.78 \pm 13.44$    & $65.38 \pm 7.84$ & $59.48 \pm 5.13$ & $60.49 \pm 4.95$ & $37.56 \pm 7.10$ & $36.79 \pm 7.59$ \\
-        GDAS                & $11,183$ & $89.68 \pm \z{0.72}$ & $93.23 \pm 0.13$ & $68.35 \pm 2.71$ & $68.17 \pm 2.50$ & $39.55 \pm 0.00$ & $39.40 \pm 0.00$ \\
-        SETN                & $16,787$ & $90.00 \pm \z{0.97}$ & $92.72 \pm 4.52$ & $69.19 \pm 1.42$ & $69.36 \pm 1.72$ & $39.77 \pm 0.33$ & $39.51 \pm 0.33$ \\
-        ENAS                & $7,061$  & $90.20 \pm \z{0.00}$ & $93.76 \pm 0.00$ & $70.21 \pm 0.71$ & $70.67 \pm 0.62$ & $40.78 \pm 0.00$ & $41.44 \pm 0.00$ \\ \midrule
-                            &          &                      &                  & \textbf{Training-free} &                &                  &                  \\
-        RS-NI (N=1,000)         & $592$  & $90.03 \pm \z{0.30}$ & $93.21 \pm 0.63$ & $70.27 \pm 0.70$ & $70.40 \pm 0.84$ & $42.92 \pm 2.18$ & $43.34 \pm 2.43$ \\ 
-        RS-NASWOT (N=1,000)     & $201$  & $89.63 \pm \z{0.94}$ & $92.80 \pm 1.07$ & $69.76 \pm 1.25$ & $69.66 \pm 1.23$ & $43.51 \pm 2.90$ & $43.84 \pm 2.93$ \\ 
-        RS-LogSynFlow (N=1,000) & $90$   & $89.67 \pm \z{0.89}$ & $92.92 \pm 0.70$ & $69.19 \pm 1.86$ & $68.98 \pm 1.97$ & $39.93 \pm 6.34$ & $40.23 \pm 6.45$ \\ 
-        RS-rank (ours) (N=1000) & $887$  & $90.07 \pm \z{0.41}$ & $93.32 \pm 0.42$ & $70.06 \pm 1.34$ & $70.10 \pm 1.45$ & $43.68 \pm 2.11$ & $44.07 \pm 2.19$ \\ 
-        TE-NAS                  & $459$  & $90.02 \pm \z{0.56}$ & $93.31 \pm 0.45$ & $70.12 \pm 1.04$ & $70.26 \pm 1.07$ & $43.15 \pm 2.23$ & $43.49 \pm 2.26$ \\
-        \palg{} (ours)          & $902$  & $90.20 \pm \z{0.24}$ & $93.53 \pm 0.22$ & $70.51 \pm 0.71$ & $70.63 \pm 0.66$ & $43.80 \pm 1.86$ & $44.63 \pm 1.64$ \\ \midrule
-        %SA-NI                  &        & $90.06 \pm \z{0.29}$ & $93.38 \pm 0.50$ & $70.41 \pm 0.74$ & $70.34 \pm 1.34$ & $42.69 \pm 1.87$ & $43.22 \pm 1.93$
-        %SA-NASWOT              &        & $89.11 \pm \z{1.22}$ & $92.22 \pm 1.32$ & $69.38 \pm 1.23$ & $69.48 \pm 1.46$ & $41.77 \pm 3.96$ & 
-        Optimal             &          & $91.61$              & $94.37$          & $73.49$          & $73.51$          & $46.73$          & $47.31$          \\ \bottomrule
-        \end{tabular}
-        \label{table:overall_201}
-        \vspace{-\baselineskip}
-    \end{table*}
-
     We evalute the performance of the proposed algorithm, \palg{}, 
     for searching the architectures of high accuracy. For comparison, several NAS 
     algorithms are included, e.g., random search (RS), regularized evolution algorithm 
@@ -750,17 +714,55 @@
     % sss
     The simulation results in NATS-Bench-SSS \cite{Dong_2021} is shown in \xtab{table:overall_sss}. 
     The proposed NAS algorithm and ranking function is compared with the other five non-weight sharing 
-    algorithm and three training-free score functions with RS, i.e., RS-NI, RS-NASWOT, 
-    and RS-LogSynFlow. For fairness, the searching architectures for the RS with training-free 
+    algorithm and three training-free score functions with RS, i.e., RS-NI, RS-NASWOT, and 
+    RS-LogSynFlow. For fairness, the searching architectures for the RS with training-free 
     score functions are identical. Among the four training-free score functions with RS, RS-LogSynFlow 
     has the highest accuracy in CIFAR10. The accuracy of RS-NI and RS-rank are similar, but the stability 
     of RS-rank is better. In CIFAR100, RS-LogSynFlow performs best, then is RS-NI, RS-rank, RS-NASWOT. 
     In ImageNet16, RS-LogSynFlow still has the highest accuracy and stability, then is RS-rank, RS-NI, 
-    RS-NASWOT. However, \palg{} improves the results significantly and outperforms almost all the 
+    RS-NASWOT. 
+    However, \palg{} improves the results significantly and outperforms almost all the 
     compared algorithms, including AREA, REA, and RL. It can be seen that, search algorithms guides 
     the searching direction for searching better architectures, and the training-free score functions
     accelerate the whole searching process by eliminating the training stage. 
 
+    \begin{table*}[htb]
+        %\normalsize
+        %\centering
+        \newcommand{\z}{\phantom{0}}
+        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms in NATS-Bench-TSS.}}
+        \vspace{-\baselineskip}
+        \begin{tabular}{@{}lrcccccc@{}}\toprule
+        Method & Search (s) & \multicolumn{2}{c}{CIFAR-10} & \multicolumn{2}{c}{CIFAR-100} & \multicolumn{2}{c}{ImageNet-16-120} \\ \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+                            &          & validation           & test             & validation           & test             & validation       & test \\ \midrule
+                            &          &                      &                  & \textbf{Non-weight sharing} &           &                  &                  \\
+        AREA                & $12,000$ & $91.18 \pm \z{0.43}$ & $93.95 \pm 0.39$ & $71.84 \pm 1.21$ & $71.92 \pm 1.29$ & $45.04 \pm 1.03$ & $45.40 \pm 1.14$ \\
+        REA                 & $12,000$ & $91.25 \pm \z{0.31}$ & $94.02 \pm 0.31$ & $72.28 \pm 0.95$ & $72.23 \pm 0.84$ & $45.71 \pm 0.77$ & $45.77 \pm 0.80$ \\
+        RS                  & $12,000$ & $91.07 \pm \z{0.26}$ & $93.86 \pm 0.23$ & $71.46 \pm 0.97$ & $71.55 \pm 0.97$ & $45.03 \pm 0.91$ & $45.28 \pm 0.97$ \\
+        RL                  & $12,000$ & $91.12 \pm \z{0.25}$ & $93.90 \pm 0.26$ & $71.80 \pm 0.94$ & $71.86 \pm 0.89$ & $45.37 \pm 0.74$ & $45.64 \pm 0.78$ \\
+        BOHB                & $12,000$ & $91.17 \pm \z{0.27}$ & $93.94 \pm 0.28$ & $72.04 \pm 0.93$ & $72.00 \pm 0.86$ & $45.55 \pm 0.79$ & $45.70 \pm 0.86$ \\ \midrule
+                            &          &                      &                  & \textbf{Weight sharing} &               &                  &                  \\
+        RSWS                & $4,154$  & $87.60 \pm \z{0.61}$ & $91.05 \pm 0.66$ & $68.27 \pm 0.72$ & $68.26 \pm 0.96$ & $39.73 \pm 0.34$ & $40.69 \pm 0.36$ \\
+        DARTS-V1            & $5,475$  & $49.27 \pm 13.44$    & $59.84 \pm 7.84$ & $61.08 \pm 4.37$ & $61.26 \pm 4.43$ & $38.07 \pm 2.90$ & $37.88 \pm 2.91$ \\
+        DARTS-V2            & $16,114$ & $58.78 \pm 13.44$    & $65.38 \pm 7.84$ & $59.48 \pm 5.13$ & $60.49 \pm 4.95$ & $37.56 \pm 7.10$ & $36.79 \pm 7.59$ \\
+        GDAS                & $11,183$ & $89.68 \pm \z{0.72}$ & $93.23 \pm 0.13$ & $68.35 \pm 2.71$ & $68.17 \pm 2.50$ & $39.55 \pm 0.00$ & $39.40 \pm 0.00$ \\
+        SETN                & $16,787$ & $90.00 \pm \z{0.97}$ & $92.72 \pm 4.52$ & $69.19 \pm 1.42$ & $69.36 \pm 1.72$ & $39.77 \pm 0.33$ & $39.51 \pm 0.33$ \\
+        ENAS                & $7,061$  & $90.20 \pm \z{0.00}$ & $93.76 \pm 0.00$ & $70.21 \pm 0.71$ & $70.67 \pm 0.62$ & $40.78 \pm 0.00$ & $41.44 \pm 0.00$ \\ \midrule
+                            &          &                      &                  & \textbf{Training-free} &                &                  &                  \\
+        RS-NI (N=1,000)         & $352$  & $90.03 \pm \z{0.30}$ & $93.21 \pm 0.63$ & $70.27 \pm 0.70$ & $70.40 \pm 0.84$ & $42.92 \pm 2.18$ & $43.34 \pm 2.43$ \\ 
+        RS-NASWOT (N=1,000)     & $241$  & $89.63 \pm \z{0.94}$ & $92.80 \pm 1.07$ & $69.76 \pm 1.25$ & $69.66 \pm 1.23$ & $43.51 \pm 2.90$ & $43.84 \pm 2.93$ \\ 
+        RS-LogSynFlow (N=1,000) & $155$  & $89.67 \pm \z{0.89}$ & $92.92 \pm 0.70$ & $69.19 \pm 1.86$ & $68.98 \pm 1.97$ & $39.93 \pm 6.34$ & $40.23 \pm 6.45$ \\ 
+        RS-rank (ours) (N=1000) & $747$  & $90.07 \pm \z{0.41}$ & $93.32 \pm 0.42$ & $70.06 \pm 1.34$ & $70.10 \pm 1.45$ & $43.68 \pm 2.11$ & $44.07 \pm 2.19$ \\ 
+        TE-NAS                  & $459$  & $90.02 \pm \z{0.56}$ & $93.31 \pm 0.45$ & $70.12 \pm 1.04$ & $70.26 \pm 1.07$ & $43.15 \pm 2.23$ & $43.49 \pm 2.26$ \\
+        %SA-NI                   & $319$  & $90.06 \pm \z{0.29}$ & $93.38 \pm 0.50$ & $70.41 \pm 0.74$ & $70.34 \pm 1.34$ & $42.69 \pm 1.87$ & $43.22 \pm 1.93$ \\
+        %SA-NASWOT               & $273$  & $89.11 \pm \z{1.22}$ & $92.22 \pm 1.32$ & $69.38 \pm 1.23$ & $69.48 \pm 1.46$ & $41.77 \pm 3.96$ & $42.13 \pm 4.11$ \\
+        %SA-LogSynFlow           & $213$  & $89.57 \pm \z{1.14}$ & $93.00 \pm 0.81$ & $69.30 \pm 1.86$ & $69.57 \pm 1.41$ & $40.42 \pm 4.61$ & $40.79 \pm 4.77$ \\
+        \palg{} (ours)          & $902$  & $90.20 \pm \z{0.24}$ & $93.53 \pm 0.22$ & $70.51 \pm 0.71$ & $70.63 \pm 0.66$ & $43.80 \pm 1.86$ & $44.63 \pm 1.64$ \\ \midrule
+        Optimal                 &        & $91.61$              & $94.37$          & $73.49$          & $73.51$          & $46.73$          & $47.31$          \\ \bottomrule
+        \end{tabular}
+        \label{table:overall_201}
+        \vspace{-\baselineskip}
+    \end{table*}
     % tss
     In NATS-Bench-TSS \cite{Dong_2021}, \xtab{table:overall_201} compares \palg{} with the other 
     non-weight sharing algorithms, six weight sharing algorithms, three different training-free 
@@ -780,6 +782,44 @@
     and obtains a better stability. In CIFAR10 and CIFAR100, the standard deviation of \palg{} is lower 
     than all the non-weight sharing algorithms. And in ImageNet16, the standard deviation of \palg{} is 
     lower than all the training-free methods. 
+
+    \begin{table}[t]
+        %\normalsize
+        %\centering
+        \newcommand{\z}{\phantom{0}}
+        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms in NAS-Bench-101.}}
+        \vspace{-\baselineskip}
+        \resizebox{0.5 \textwidth}{!}{
+        \begin{tabular}{@{}lrcc@{}}\toprule
+            Method              & Search (s) & \multicolumn{2}{c}{CIFAR-10}        \\ \cmidrule(lr){3-4}
+                                &            & validation       & test             \\ \midrule
+                                &            & \textbf{Non-weight sharing} &       \\
+            AREA                & $12,000$   & $93.67 \pm 0.48$ & $93.02 \pm 0.48$ \\
+            REA                 & $12,000$   & $93.63 \pm 0.50$ & $93.02 \pm 0.52$ \\ \midrule
+                                &            & \textbf{Weight sharing}     &       \\
+            DARTS-V1            & $20,483$   & $83.50 \pm 0.11$ & $83.74 \pm 0.03$ \\
+            ENAS                & $22,325$   & $93.83 \pm 0.28$ & $93.34 \pm 0.26$ \\ \midrule
+                                &            & \textbf{Training-free}      &       \\
+            RS-NI (N=1,000)         & $256$  & $92.84 \pm 2.43$ & $92.74 \pm 0.90$ \\ 
+            RS-NASWOT (N=1,000)     & $137$  & $92.76 \pm 2.85$ & $91.84 \pm 3.68$ \\ 
+            RS-LogSynFlow (N=1,000) & $93$   & $91.62 \pm 1.68$ & $91.42 \pm 1.82$ \\ 
+            RS-rank (ours) (N=1000) & $485$  & $92.65 \pm 1.44$ & $92.25 \pm 1.31$ \\
+
+            RS-NI (N=5,000)         & $2390$ & $92.84 \pm 1.55$ & $92.35 \pm 2.69$ \\ 
+            RS-NASWOT (N=5,000)     & $635$  & $91.67 \pm 4.99$ & $90.60 \pm 6.64$ \\ 
+            RS-LogSynFlow (N=5,000) & $408$  & $91.66 \pm 1.72$ & $91.17 \pm 1.86$ \\ 
+            RS-rank (ours) (N=5,000)& $3434$ & $92.87 \pm 0.97$ & $92.32 \pm 1.47$ \\ 
+            %SA-NI                   & $244$  & $92.38 \pm 3.50$ & $92.71 \pm 1.97$ \\
+            %SA-NASWOT               & $136$  & $92.72 \pm 4.35$ & $91.95 \pm 3.62$ \\
+            %SA-LogSynFlow           & $102$  & $92.21 \pm 1.50$ & $91.48 \pm 1.67$ \\
+            \palg{} (ours)          & $595$  & $93.16 \pm 0.97$ & $92.77 \pm 1.03$ \\ \midrule
+            
+            Optimal             &            & $95.12$          & $94.32$          \\ \bottomrule
+            \end{tabular}
+        }
+        \label{table:overall_101}
+        \vspace{-\baselineskip}
+    \end{table}
 
     % 101
     The result of the experiment in NAS-Bench-101 \cite{ying2019nasbench101} is shown in \xtab{table:overall_101}. 
@@ -801,41 +841,6 @@
     has low accuracy but also low stability. \palg{} is still best among these training-free score 
     functions. Compared with \palg{} and the other NAS methods, though the performance and stability 
     are a little bit worse than AREA, REA and ENAS, the time cost of \palg{} is much less than them. 
-
-    \begin{table}[t]
-        %\normalsize
-        %\centering
-        \newcommand{\z}{\phantom{0}}
-        \caption{\textsc{Comparison of rank-based NAS and all the other NAS algorithms in NAS-Bench-101.}}
-        \vspace{-\baselineskip}
-        \resizebox{0.5 \textwidth}{!}{
-        \begin{tabular}{@{}lrcc@{}}\toprule
-            Method              & Search (s) & \multicolumn{2}{c}{CIFAR-10}        \\ \cmidrule(lr){3-4}
-                                &            & validation       & test             \\ \midrule
-                                &            & \textbf{Non-weight sharing} &       \\
-            AREA                & $12,000$   & $93.67 \pm 0.48$ & $93.02 \pm 0.48$ \\
-            REA                 & $12,000$   & $93.63 \pm 0.50$ & $93.02 \pm 0.52$ \\ \midrule
-                                &            & \textbf{Weight sharing}     &       \\
-            DARTS-V1            & $20,483$   & $83.50 \pm 0.11$ & $83.74 \pm 0.03$ \\
-            ENAS                & $22,325$   & $93.83 \pm 0.28$ & $93.34 \pm 0.26$ \\ \midrule
-                                &            & \textbf{Training-free}      &       \\
-            RS-NI (N=1,000)         & $476$  & $92.89 \pm 2.10$ & $92.55 \pm 1.33$ \\ 
-            RS-NASWOT (N=1,000)     & $127$  & $92.27 \pm 6.60$ & $92.10 \pm 4.44$ \\ 
-            RS-LogSynFlow (N=1,000) & $76$   & $91.81 \pm 1.52$ & $91.21 \pm 1.71$ \\ 
-            RS-rank (ours) (N=1000) & $679$  & $92.44 \pm 1.42$ & $91.94 \pm 2.01$ \\
-            RS-NI (N=5,000)         & $2390$ & $92.84 \pm 1.55$ & $92.35 \pm 2.69$ \\ 
-            RS-NASWOT (N=5,000)     & $635$  & $91.67 \pm 4.99$ & $90.60 \pm 6.64$ \\ 
-            RS-LogSynFlow (N=5,000) & $408$  & $91.66 \pm 1.72$ & $91.17 \pm 1.86$ \\ 
-            RS-rank (ours) (N=5,000)& $3434$  & $92.87 \pm 0.97$ & $92.32 \pm 1.47$ \\ 
-            \palg{} (ours)          & $595$  & $93.16 \pm 0.97$ & $92.77 \pm 1.03$ \\ \midrule
-            %SA-NI                  &        & $92.38 \pm 3.50$ & $92.71 \pm 1.97$
-            %SA-NASWOT
-            Optimal             &            & $95.12$          & $94.32$          \\ \bottomrule
-            \end{tabular}
-        }
-        \label{table:overall_101}
-        \vspace{-\baselineskip}
-    \end{table}
 
     \section{Conclusion}
     \label{sec:conclusion}
