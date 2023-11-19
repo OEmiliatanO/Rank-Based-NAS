@@ -30,12 +30,12 @@ class abstract_SA():
 
     def neighbor(self, arch):
         #TODO
-        assert False, f"implemenation isn't completed"
+        assert False, f"Implemenation isn't completed."
         pass
     
     def rand_arch_generate(self):
         #TODO
-        assert False, f"implemenation isn't completed"
+        assert False, f"Implemenation isn't completed."
         pass
 
     def search(self):
@@ -50,7 +50,6 @@ class abstract_SA():
                     neighbors.add(tuple(self.neighbor(list(now_arch))))
                 neighbors.add(tuple(now_arch))
 
-                # maintain 
                 for arch in history_best_arch:
                     neighbors.add(tuple(arch))
                 
@@ -59,13 +58,21 @@ class abstract_SA():
                 indices = [self.searchspace.query_index_by_arch(self.list2arch(arch)) for arch in neighbors]
                 
                 # E
-                best_uids, maxacc, rk_maxacc, scores = self.ranking2(np.array(indices))
+                best_uids, maxacc, rk_maxacc, scores = self.ranking(np.array(indices))
                 bestrk_uid = best_uids["rank"]
                 ind_rk = scores["rank"]
 
                 best_sol_uid = bestrk_uid
                 best_arch = neighbors[indices.index(bestrk_uid)]
                 history_best_arch.add(best_arch)
+                # maintain the size of set H
+                while len(history_best_arch) > self.beta * (self.maxn_iter * self.maxN * math.log(self.end_T / self.init_T) / math.log(self.Rt)):
+                    history_best_arch = list(history_best_arch)
+                    indices = [self.searchspace.query_index_by_arch(self.list2arch(arch)) for arch in history_best_arch]
+                    best_uids, maxacc, rk_maxacc, scores = self.ranking(np.array(indices))
+                    worst_arch_ind = np.argmax(scores["rank"])
+                    del history_best_arch[worst_arch_ind]
+                    history_best_arch = set(history_best_arch)
 
                 bestrk = np.inf
                 if bestrk_uid == now_uid:
@@ -86,7 +93,7 @@ class abstract_SA():
                 now_uid = int(now_uid)
         return best_sol_uid, self.searchspace.get_final_accuracy(best_sol_uid, self.acc_type, self.args.valid), now_uid, self.searchspace.get_final_accuracy(now_uid, self.acc_type, self.args.valid)
 
-    def ranking2(self, indices):
+    def ranking(self, indices):
         scores = {}
         best_uids = {}
         for fn_name in self.enrolled_fn_names:
@@ -134,62 +141,3 @@ class abstract_SA():
 
         return best_uids, maxacc, rk_maxacc, scores
 
-    def ranking(self, indices, weight):
-        scores = {"ni": [], "naswot": [], "logsynflow": []}
-        
-        for uid in indices:
-            try:
-                uid = int(uid)
-            except:
-                pass
-            if uid not in self.DICT:
-                network = self.searchspace.get_network(uid, self.args)
-                network = network.to(self.device)
-                nisc = ni_score(network, self.train_loader, self.device, self.args)
-                naswotsc = naswot_score(network, self.train_loader, self.device, self.args)
-                logsynflowsc = logsynflow_score(network, self.train_loader, self.device)
-                scores["ni"].append(nisc)
-                scores["naswot"].append(naswotsc)
-                scores["logsynflow"].append(logsynflowsc)
-                self.DICT[uid] = (nisc, naswotsc, logsynflowsc)
-                del network
-            else:
-                scores["ni"].append(self.DICT[uid][0])
-                scores["naswot"].append(self.DICT[uid][1])
-                scores["logsynflow"].append(self.DICT[uid][2])
-
-
-        totrk = dict(zip([uid for uid in indices], [0 for i in range(self.args.n_samples)]))
-        
-        m_ni = np.argsort(scores["ni"])
-        rk_ni = indices[m_ni]
-        for rk, id in enumerate(rk_ni):
-            totrk[id] += (self.args.n_samples - rk) * weight[0]
-        
-        m_naswot = np.argsort(scores["naswot"])
-        rk_naswot = indices[m_naswot]
-        for rk, id in enumerate(rk_naswot):
-            totrk[id] += (self.args.n_samples - rk) * weight[1]
-
-        m_logsyn = np.argsort(scores["logsynflow"])
-        rk_logsynflow = indices[m_logsyn]
-        bestrk = np.inf
-        for rk, id in enumerate(rk_logsynflow):
-            totrk[id] += (self.args.n_samples - rk) * weight[2]
-            if bestrk > totrk[id]:
-                bestrk = totrk[id]
-                bestrk_uid = id
-        try:
-            accs = [self.searchspace.get_final_accuracy(int(uid), self.acc_type, self.args.valid) for uid in indices]
-        except:
-            accs = [self.searchspace.get_final_accuracy(uid, self.acc_type, self.args.valid) for uid in indices]
-
-        maxacc = np.max(accs)
-        try:
-            rk_maxacc = self.searchspace.get_final_accuracy(int(bestrk_uid), self.acc_type, self.args.valid)
-        except:
-            rk_maxacc = self.searchspace.get_final_accuracy(bestrk_uid, self.acc_type, self.args.valid)
-        
-        ind_rk = [totrk[uid] for uid in indices]
-
-        return rk_ni[-1], rk_naswot[-1], rk_logsynflow[-1], bestrk_uid, maxacc, rk_maxacc, ind_rk
