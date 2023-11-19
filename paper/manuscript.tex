@@ -511,11 +511,11 @@
         \caption{The Simulated Annealing with Ranking Algorithm}\label{alg:SA}
         \begin{algorithmic}[1]
             \Input{search space $\mathbb N^*$}
-            \Parameter Initial temperature $\Psi$; ending temperature $\tau$; a real number between 0 and 1, $r_\Psi$; the number of iteration, $t$; the number of generated neighbours, $N$; a real number, $\alpha$; the coefficient of the size of $H$, $\beta$
+            \Parameter Initial temperature $\Psi$; ending temperature $\tau$; a real number between 0 and 1, $r_\Psi$; the number of iteration, $I$; the number of generated neighbours, $N$; a real number, $\alpha$; the coefficient of the size of $H$, $\beta$
             \State Initialize historical best architectures set $H$ to empty set
             \State $s=\text{Randomly sample an architecture from }\mathbb N^*$
             \While{$\Psi>\tau$}
-                \For{$\text{each }i \in [1\ldots t]$}
+                \For{$\text{each }i \in [1\ldots I]$}
                     \State $U = \text{Neighbor}(s, N)$
                     \State $r=\text{Rank}(\{s\}\cup U\cup H)$
                     \State $\text{Maintain}(H)$
