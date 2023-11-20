@@ -1,4 +1,4 @@
-# Rank Based Neural Architecture Search with Hybrid Score Functions
+# Rank Based Neural Architecture Search
 
 ## Usage 
 
