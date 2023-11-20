@@ -5,6 +5,7 @@ import sys
 from tqdm import trange
 import time
 from score import *
+import math
 
 class abstract_SA():
     def __init__(self, searchspace, train_loader, acc_type, device, args):
