@@ -12,9 +12,9 @@ Activate the environment and follow the instructions to install
 
 Install nasbench (see https://github.com/google-research/nasbench)
 
-Download the NASbench101 data (see https://github.com/google-research/nasbench)
-Download the NASbench201 data (see https://github.com/D-X-Y/NAS-Bench-201)
-Download the NATSbenchSSS data
+Download the NAS-Bench-101 data (see https://github.com/google-research/nasbench)
+Download the NATS-Bench-TSS data (see https://github.com/D-X-Y/NATS-Bench)
+Download the NATS-Bench-SSS data (see https://github.com/D-X-Y/NATS-Bench)
 
 Reproduce all of the results by running 
 
@@ -24,7 +24,7 @@ Reproduce all of the results by running
 
 ## Acknowledgement
 - code based on NAS-bench-101
-- code based on NAS-bench-201
+- code based on NAS-bench-TSS
 - code based on NATS-bench-SSS
 - code based on NASWOT
 - code based on TNASSE
