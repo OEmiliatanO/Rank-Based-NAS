@@ -395,9 +395,9 @@
                 \subfigure[]{\resizebox{0.33\textwidth}{!}{\includegraphics{asset/ni-acc.pdf}}}
                 \subfigure[]{\resizebox{0.33\textwidth}{!}{\includegraphics{asset/ninaswot-acc.pdf}}}
             \end{tabular}
-            \caption{(a) NASWOT score for 1,000 randomly chosen architectures from NATS-Bench-TSS in the CIFAR-10 dataset 
-            (b) NI score for 1,000 identical architectures from NATS-Bench-TSS in the CIFAR-10 dataset. 
-            (c) NI score + NASWOT score for 1,000 identical architectures from NATS-Bench-TSS in the CIFAR-10 dataset.}
+            \caption{(a) NASWOT score for 1,000 randomly chosen architectures from NAS-Bench-201 in the CIFAR-10 dataset 
+            (b) NI score for 1,000 identical architectures from NAS-Bench-201 in the CIFAR-10 dataset. 
+            (c) NI score + NASWOT score for 1,000 identical architectures from NAS-Bench-201 in the CIFAR-10 dataset.}
             \label{fig:ninaswot}
         \end{center}
         \vspace{-\baselineskip}
@@ -665,7 +665,7 @@
     We evaluate the performance of the proposed algorithm, \palg{}, 
     for searching the architectures of high accuracy. For comparison, several NAS 
     algorithms are included, e.g., random search (RS), regularized evolution algorithm 
-    (REA) \cite{real2019regularized}, reinforcement learning (RL) \cite{Williams:92}, 
+    (REA) \cite{real2019regularized}, reinforcement learning (RL) \cite{williams1992simple}, 
     Bayesian optimization with hyper band (BOHB) \cite{falkner2018bohb}, RS with 
     weight sharing (RSWS) \cite{li2019random}, differentiable architecture search 
     with first order (DARTS-V1) \cite{liu2019darts}, DARTS with second order 
