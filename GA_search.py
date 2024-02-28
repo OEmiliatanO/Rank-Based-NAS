@@ -15,7 +15,6 @@ from Parser import parser
 
 args = parser.GA_search_argsparser()
 
-os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 # Reproducibility
@@ -27,7 +26,7 @@ torch.manual_seed(args.seed)
 
 print("GA search algo")
 print(f"Use GPU {args.GPU}...")
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:{args.GPU}" if torch.cuda.is_available() else "cpu")
 print(f"The current device used is {device}")
 
 print(f"Initialize the train loader...")
