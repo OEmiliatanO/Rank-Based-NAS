@@ -1,19 +1,36 @@
-from ast import Pass
 import numpy as np
 import random
 
 class nasbench201_encoder:
     def __init__(self):
-        pass
+        self.search_space = self.construct_search_space()
+
+    def __getitem__(self, n):
+        return self.search_space[n]
+
+    def __len__(self):
+        return len(self.search_space)
+    
+    def construct_search_space(self):
+        mapping = {'a':0,'b':2,'c':5,'d':1,'e':3,'f':4}
+        backbone_choices = {0:np.array(['c','d','z']),1:np.array(['e','z','z']),2:np.array(['a','b','c']),3:np.array(['a','f','z'])}
+
+        def has_backbone(net):
+            has = [True, True, True, True]
+            for i, backbones in enumerate(backbone_choices.values()):
+                for backbone in backbones:
+                    has[i] &= (net[backbone] != 0)
+            return np.array(has).any()
+                
+        all_nets = list(itertools.product(range(5), repeat=6))
+        all_nets = filter(has_backbone, all_nets)
+        return all_nets
 
     def get_rand_code(self):
         return tuple(np.concatenate((np.random.randint(5,size=6),np.random.randint(4,size=1),np.random.randint(1,5,size=3))))
     
     def get_nrand_code(self, n):
-        s = set()
-        while len(s) < n:
-            s.add(self.get_rand_code())
-        return [list(c) for c in s]
+        return random.sample(self.search_space, n)
 
     def get_rand_backbone_branch(self):
         pass
@@ -35,6 +52,7 @@ class nasbench201_encoder:
         return np.random.randint(3, size=5)
     
     def parse_code(self,code):
+        """
         newcode = code[:6]
         mapping = {'a':0,'b':2,'c':5,'d':1,'e':3,'f':4}
         backbone_choices = {0:np.array(['c','d','z']),1:np.array(['e','z','z']),2:np.array(['a','b','c']),3:np.array(['a','f','z'])}
@@ -43,13 +61,20 @@ class nasbench201_encoder:
                 break
             newcode[mapping[i]] = code[6+1+n]
         return newcode
+        """
+        return code
 
 class natsbenchSSS_encoder:
     def __init__(self):
         self.candidates = [8, 16, 24, 32, 40, 48, 56, 64]
         self.num_choices = 8
+
+    def __getitem__(self, n):
+        return n
+
     def __len__(self):
-        return 5
+        return 32768
+
     def get_rand_code(self):
         return tuple(random.sample(range(0,self.num_choices),k=5))
     
@@ -71,8 +96,9 @@ class natsbenchSSS_encoder:
             newcode.append(self.candidates[c])
         index = 0
         for i,c in enumerate(newcode):
-            index+=self.candidates.index(c)*pow(self.num_choices,len(self)-1-i)
+            index+=self.candidates.index(c)*pow(self.num_choices,5-1-i)
         return index
+
     def encode_index(self,index):
         code = np.zeros(len(self))
         i=0
