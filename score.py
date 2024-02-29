@@ -112,9 +112,12 @@ for i in range(len(enroll_sc_fn_names)):
         print(f"{corr[i][j]:.3f} ", end='')
     print("\n")
 
-state = {'ni-accs': accs["ni"],
-         'naswot': accs["naswot"],
-         'logsynflow': accs["logsynflow"],
+state = {'ni': scores["ni"],
+         'naswot': scores["naswot"],
+         'logsynflow': scores["logsynflow"],
+         "snip": scores["snip"], 
+         "grasp": scores["grasp"], 
+         "parameter": scores["parameter"], 
          'ni-times': times["ni"],
          'naswot-times': times["naswot"],
          'logsynflow-times': times["logsynflow"],
