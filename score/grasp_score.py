@@ -100,4 +100,4 @@ def grasp_score(net, train_loader, device, args, mode = 'param', loss_fn = nn.Cr
     z.detach()
     del net, weights, grads, data, targets, grad_f, grad_w, grad_w_p, outputs, z
 
-    return ret
+    return float(ret)

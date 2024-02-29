@@ -128,4 +128,4 @@ def fisher_score(net, train_loader, device, args, loss_fn = nn.CrossEntropyLoss(
     print(f"3 in fisher: {torch.cuda.memory_allocated()}")
     #print(f"{torch.cuda.memory_summary()}")
     #print(torch.cuda.memory_stats())
-    return ret
+    return float(ret)

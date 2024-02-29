@@ -38,4 +38,4 @@ def ntk_score(network, train_loader, device, args, recalbn=0, train_mode=True, n
     eigenvalues, eigenvectors = torch.symeig(ntk, upper=True)  # ascending
     score = np.nan_to_num((eigenvalues[-1] / eigenvalues[0]).item(), copy=True, nan=100000.0)
     del network
-    return score
+    return float(score)

@@ -65,7 +65,7 @@ def synflow_score(network, train_loader, device, args):
         grads[i].detach()
         score += torch.sum(grads[i])
 
-    score = score.detach().cpu().numpy()
+    score = float(score.detach().cpu().numpy())
     del network, data, _, grads, output
     
     return score

@@ -50,4 +50,4 @@ def logsynflow_score(network, train_loader, device, args):
             score += torch.sum(synflow(layer))
     
     del network
-    return score.detach().cpu().numpy()
+    return float(score.detach().cpu().numpy())

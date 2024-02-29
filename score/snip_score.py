@@ -74,7 +74,7 @@ def snip_score(net, train_loader, device, args, mode = 'param', loss_fn=nn.Cross
         v = v.detach()
         ret += torch.sum(v)
     loss.detach()
-    ret = ret.detach().cpu().numpy()
+    ret = float(ret.detach().cpu().numpy())
     del net, grads_abs, inputs, targets, outputs, loss
 
     return ret
