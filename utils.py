@@ -11,6 +11,8 @@ class DropChannel(torch.nn.Module):
         ret = self.mod(s0, s1, droppath)
         return ret
 
+def parameter_count(net, a, b, c):
+    return sum(p.numel() for p in net.parameters())
 
 class DropConnect(torch.nn.Module):
     def __init__(self, p):
