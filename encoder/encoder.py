@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import itertools
 
 class nasbench201_encoder:
     def __init__(self):
@@ -13,24 +14,25 @@ class nasbench201_encoder:
     
     def construct_search_space(self):
         mapping = {'a':0,'b':2,'c':5,'d':1,'e':3,'f':4}
-        backbone_choices = {0:np.array(['c','d','z']),1:np.array(['e','z','z']),2:np.array(['a','b','c']),3:np.array(['a','f','z'])}
+        backbone_choices = {0:('c','d','z'),1:('e','z','z'),2:('a','b','c'),3:('a','f','z')}
 
         def has_backbone(net):
             has = [True, True, True, True]
             for i, backbones in enumerate(backbone_choices.values()):
                 for backbone in backbones:
-                    has[i] &= (net[backbone] != 0)
+                    if backbone not in mapping: break
+                    has[i] &= (net[mapping[backbone]] != 0)
             return np.array(has).any()
                 
         all_nets = list(itertools.product(range(5), repeat=6))
-        all_nets = filter(has_backbone, all_nets)
+        all_nets = list(filter(has_backbone, all_nets))
         return all_nets
 
     def get_rand_code(self):
         return tuple(np.concatenate((np.random.randint(5,size=6),np.random.randint(4,size=1),np.random.randint(1,5,size=3))))
     
     def get_nrand_code(self, n):
-        return random.sample(self.search_space, n)
+        return random.sample(range(len(self.search_space)), n)
 
     def get_rand_backbone_branch(self):
         pass

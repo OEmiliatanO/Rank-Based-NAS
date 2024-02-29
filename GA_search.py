@@ -26,7 +26,7 @@ torch.manual_seed(args.seed)
 
 print("GA search algo")
 print(f"Use GPU {args.GPU}...")
-device = torch.device("cuda:{args.GPU}" if torch.cuda.is_available() else "cpu")
+device = torch.device(f"cuda:{args.GPU}" if torch.cuda.is_available() else "cpu")
 print(f"The current device used is {device}")
 
 print(f"Initialize the train loader...")
