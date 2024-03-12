@@ -54,6 +54,7 @@ class nasbench201_encoder:
         return np.random.randint(3, size=5)
     
     def parse_code(self,code):
+        code = self.search_space[code]
         """
         newcode = code[:6]
         mapping = {'a':0,'b':2,'c':5,'d':1,'e':3,'f':4}

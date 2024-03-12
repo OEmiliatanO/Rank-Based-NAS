@@ -124,7 +124,7 @@ def score_argsparser():
     parser.add_argument('--data_loc', default='./cifardata/', type=str, help='dataset folder')
     parser.add_argument('--api_loc', default='./NAS-Bench-201.pth',
                         type=str, help='path to API')
-    parser.add_argument('--save_loc', default='results/ICML', type=str, help='folder to save results')
+    parser.add_argument('--save_loc', default='results/score', type=str, help='folder to save results')
     parser.add_argument('--save_string', default='SA', type=str, help='prefix of results file')
     parser.add_argument('--nasspace', default='nasbench201', type=str, help='the nas search space to use')
     parser.add_argument('--batch_size', default=128, type=int)
